@@ -19,7 +19,7 @@ include_once 'includes/header.php';
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <img src="./assets/images/hero-cake.jpg" alt="Delicious Cakes" class="hero-image">
+                        <img src="./assets/images/Untitled.jpeg" alt="Delicious Cakes" class="hero-image">
                     </div>
                 </div>
             </div>

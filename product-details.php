@@ -49,7 +49,7 @@ include_once 'includes/header.php';
         <!-- Product Image -->
         <div class="col-lg-6 mb-4">
             <div class="product-image-container">
-                <img src="<?php echo $product['image'] ?: 'assets/images/placeholder.jpg'; ?>" 
+                <img src="<?php echo $product['image'] ?: './assets/images/caketwo.jpeg'; ?>" 
                      alt="<?php echo htmlspecialchars($product['name']); ?>" 
                      class="img-fluid rounded shadow">
             </div>
