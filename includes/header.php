@@ -1,25 +1,44 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// We start the session on every page that includes the header.
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+// Including database.php will also define BASE_URL and SITE_NAME
+include_once __DIR__ . '/../config/database.php';
+
+// A simple helper to determine the correct path prefix
+function asset_url($path) {
+    // Remove leading slashes from the path to prevent issues
+    return BASE_URL . '/' . ltrim($path, '/');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?><?php echo SITE_NAME; ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/style.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title><?php echo isset($page_title) ? htmlspecialchars($page_title) . ' | ' : ''; ?><?php echo SITE_NAME; ?></title>
+    
+    <!-- Stylesheets -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="<?php echo asset_url('assets/css/style.css'); ?>">
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- Global JS variables -->
+    <script>
+        const BASE_URL = "<?php echo BASE_URL; ?>";
+        const userLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
+    </script>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="./index.php">
-                <img src="./assets/images/logo.jpeg" alt="<?php echo SITE_NAME; ?>" class="logo">
+            <a class="navbar-brand" href="<?php echo asset_url('index.php'); ?>">
+                <img src="<?php echo asset_url('assets/images/logo.png'); ?>" alt="<?php echo SITE_NAME; ?> Logo" class="logo">
                 <span class="brand-text"><?php echo SITE_NAME; ?></span>
             </a>
             
@@ -28,74 +47,40 @@ ini_set('display_errors', 1);
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="./index.php">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="./products.php">Products</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="./services.php">Services</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="./about.php">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="./contact.php">Contact</a>
-                    </li>
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="<?php echo asset_url('index.php'); ?>">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo asset_url('products.php'); ?>">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo asset_url('about.php'); ?>">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo asset_url('contact.php'); ?>">Contact</a></li>
                 </ul>
                 
                 <ul class="navbar-nav">
                     <?php if(isset($_SESSION['user_id'])): ?>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> <?php echo $_SESSION['full_name']; ?>
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['full_name']); ?>
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="./profile.php">My Profile</a></li>
-                                <li><a class="dropdown-item" href="./~orders.php">My Orders</a></li>
-                                <?php if($_SESSION['role'] == 'admin'): ?>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="<?php echo asset_url('orders.php'); ?>">My Orders</a></li>
+                                <?php if($_SESSION['role'] === 'admin'): ?>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="./admin/dashboard.php">Admin Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo asset_url('admin/dashboard.php'); ?>">Admin Dashboard</a></li>
                                 <?php endif; ?>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="./auth/logout.php">Logout</a></li>
+                                <li><a class="dropdown-item" href="<?php echo asset_url('auth/logout.php'); ?>">Logout</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link position-relative" href="cart.php">
-                                <i class="fas fa-shopping-cart"></i>
-                                <span class="cart-count badge bg-danger" id="cart-count">0</span>
+                            <a class="nav-link position-relative" href="<?php echo asset_url('cart.php'); ?>">
+                                <i class="fas fa-shopping-bag"></i>
+                                <span class="cart-count badge" id="cart-count" style="display: none;">0</span>
                             </a>
                         </li>
                     <?php else: ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="./auth/login.php">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="./auth/register.php">Register</a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="<?php echo asset_url('auth/login.php'); ?>">Login</a></li>
+                        <li class="nav-item"><a href="<?php echo asset_url('auth/register.php'); ?>" class="btn btn-primary ms-2">Sign Up</a></li>
                     <?php endif; ?>
                 </ul>
             </div>
         </div>
     </nav>
-
-    <script>
-        $(document).ready(function() {
-            <?php if(isset($_SESSION['user_id'])): ?>
-                updateCartCount();
-            <?php endif; ?>
-        });
-
-        function updateCartCount() {
-            $.ajax({
-                url: 'api/get_cart_count.php',
-                method: 'GET',
-                success: function(response) {
-                    $('#cart-count').text(response.count);
-                }
-            });
-        }
-    </script>

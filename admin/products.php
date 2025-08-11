@@ -1,259 +1,253 @@
 <?php
-session_start();
-include_once '../config/database.php';
-
-// Check if user is logged in and is admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header('Location: ../auth/login.php');
-    exit;
-}
-
 $page_title = 'Manage Products';
-include_once '../includes/header.php';
+require_once __DIR__ . '/includes/header.php';
 
-// Handle product actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    
-    if ($action === 'add') {
-        $name = trim($_POST['name'] ?? '');
-        $description = trim($_POST['description'] ?? '');
-        $price = (float)($_POST['price'] ?? 0);
-        $category_id = (int)($_POST['category_id'] ?? 0);
-        $flavours = trim($_POST['flavours'] ?? '');
-        $ingredients = trim($_POST['ingredients'] ?? '');
-        $featured = isset($_POST['featured']) ? 1 : 0;
-        $stock_quantity = (int)($_POST['stock_quantity'] ?? 0);
-        
-        if ($name && $price > 0) {
-            try {
-                $stmt = $pdo->prepare("INSERT INTO products (name, description, price, category_id, flavours, ingredients, featured, stock_quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$name, $description, $price, $category_id ?: null, $flavours, $ingredients, $featured, $stock_quantity]);
-                $success = 'Product added successfully!';
-            } catch (Exception $e) {
-                $error = 'Failed to add product: ' . $e->getMessage();
-            }
-        } else {
-            $error = 'Please fill in all required fields';
-        }
-    } elseif ($action === 'delete') {
-        $product_id = (int)($_POST['product_id'] ?? 0);
-        if ($product_id) {
-            try {
-                $stmt = $pdo->prepare("UPDATE products SET status = 'inactive' WHERE id = ?");
-                $stmt->execute([$product_id]);
-                $success = 'Product deleted successfully!';
-            } catch (Exception $e) {
-                $error = 'Failed to delete product: ' . $e->getMessage();
-            }
-        }
+// Handle soft delete
+if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
+    $product_id = (int)$_GET['id'];
+    try {
+        $stmt = $pdo->prepare("UPDATE products SET status = 'inactive' WHERE id = ?");
+        $stmt->execute([$product_id]);
+        $success_message = "Product has been successfully deactivated.";
+    } catch(PDOException $e) {
+        $error_message = "Failed to deactivate product: " . $e->getMessage();
     }
 }
 
-// Get products
+// Fetch all products with their category names
 try {
-    $stmt = $pdo->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.created_at DESC");
-    $stmt->execute();
+    $stmt = $pdo->query("
+        SELECT p.id, p.name, p.price, p.image, p.status, p.stock_quantity, c.name as category_name 
+        FROM products p 
+        LEFT JOIN categories c ON p.category_id = c.id 
+        ORDER BY p.created_at DESC
+    ");
     $products = $stmt->fetchAll();
-    
-    // Get categories for dropdown
-    $stmt = $pdo->prepare("SELECT * FROM categories WHERE status = 'active' ORDER BY name");
-    $stmt->execute();
-    $categories = $stmt->fetchAll();
-} catch (Exception $e) {
+} catch (PDOException $e) {
+    $error_message = "Could not fetch products: " . $e->getMessage();
     $products = [];
-    $categories = [];
 }
 ?>
 
-<div class="container-fluid my-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3">Manage Products</h1>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                    <i class="fas fa-plus"></i> Add New Product
-                </button>
-            </div>
-        </div>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Manage Products</h1>
+    <a href="<?php echo admin_url('add_product.php'); ?>" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Product
+    </a>
+</div>
 
-    <?php if (isset($success)): ?>
-        <div class="alert alert-success alert-dismissible fade show">
-            <?php echo htmlspecialchars($success); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
+<?php if (isset($success_message)): ?>
+    <div class="alert alert-success"><?php echo htmlspecialchars($success_message); ?></div>
+<?php endif; ?>
+<?php if (isset($error_message)): ?>
+    <div class="alert alert-danger"><?php echo htmlspecialchars($error_message); ?></div>
+<?php endif; ?>
 
-    <?php if (isset($error)): ?>
-        <div class="alert alert-danger alert-dismissible fade show">
-            <?php echo htmlspecialchars($error); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Status</th>
-                            <th>Featured</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($products)): ?>
+                        <tr><td colspan="7" class="text-center">No products found.</td></tr>
+                    <?php else: ?>
                         <?php foreach ($products as $product): ?>
                             <tr>
                                 <td>
-                                    <img src="<?php echo $product['image'] ?: '../assets/images/placeholder.jpg'; ?>" 
+                                    <img src="<?php echo BASE_URL . '/' . ($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
                                          alt="<?php echo htmlspecialchars($product['name']); ?>" 
-                                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
                                 </td>
-                                <td>
-                                    <strong><?php echo htmlspecialchars($product['name']); ?></strong>
-                                    <br><small class="text-muted"><?php echo htmlspecialchars(substr($product['description'], 0, 50)); ?>...</small>
-                                </td>
-                                <td><?php echo htmlspecialchars($product['category_name'] ?? 'No Category'); ?></td>
+                                <td><strong><?php echo htmlspecialchars($product['name']); ?></strong></td>
+                                <td><?php echo htmlspecialchars($product['category_name'] ?? 'N/A'); ?></td>
                                 <td>UGX <?php echo number_format($product['price']); ?></td>
                                 <td><?php echo $product['stock_quantity']; ?></td>
                                 <td>
-                                    <span class="badge bg-<?php echo $product['status'] === 'active' ? 'success' : 'danger'; ?>">
+                                    <span class="badge <?php echo $product['status'] === 'active' ? 'bg-success' : 'bg-danger'; ?>">
                                         <?php echo ucfirst($product['status']); ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <?php if ($product['featured']): ?>
-                                        <i class="fas fa-star text-warning"></i>
-                                    <?php else: ?>
-                                        <i class="far fa-star text-muted"></i>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary" onclick="editProduct(<?php echo $product['id']; ?>)">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-outline-danger" onclick="deleteProduct(<?php echo $product['id']; ?>)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
+                                    <a href="<?php echo admin_url('edit_product.php?id=' . $product['id']); ?>" class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="javascript:void(0);" onclick="confirmDelete('<?php echo admin_url('products.php?action=delete&id=' . $product['id']); ?>')" class="btn btn-sm btn-outline-danger" title="Deactivate">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<!-- Add Product Modal -->
-<div class="modal fade" id="addProductModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="">
-                <div class="modal-body">
-                    <input type="hidden" name="action" value="add">
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Product Name *</label>
-                                <input type="text" class="form-control" name="name" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Category</label>
-                                <select class="form-select" name="category_id">
-                                    <option value="">Select Category</option>
-                                    <?php foreach ($categories as $category): ?>
-                                        <option value="<?php echo $category['id']; ?>">
-                                            <?php echo htmlspecialchars($category['name']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>```
 
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3"></textarea>
-                    </div>
+---
 
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Price (UGX) *</label>
-                                <input type="number" class="form-control" name="price" min="0" step="0.01" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Stock Quantity</label>
-                                <input type="number" class="form-control" name="stock_quantity" min="0" value="0">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">&nbsp;</label>
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" name="featured" id="featured">
-                                    <label class="form-check-label" for="featured">Featured Product</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+#### `admin/add_product.php`
+A fully functional form for adding new products with image uploads.
 
-                    <div class="mb-3">
-                        <label class="form-label">Available Flavours</label>
-                        <input type="text" class="form-control" name="flavours" placeholder="e.g., Chocolate, Vanilla, Strawberry">
-                    </div>
+```php
+<?php
+$page_title = 'Add New Product';
+require_once __DIR__ . '/includes/header.php';
 
-                    <div class="mb-3">
-                        <label class="form-label">Ingredients</label>
-                        <textarea class="form-control" name="ingredients" rows="2" placeholder="List main ingredients"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Product</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+$errors = [];
+$inputs = [];
 
-<script>
-function editProduct(id) {
-    // Implement edit functionality
-    alert('Edit product functionality will be implemented');
+// Fetch categories for the select dropdown
+try {
+    $categories = $pdo->query("SELECT id, name FROM categories WHERE status = 'active' ORDER BY name")->fetchAll();
+} catch (PDOException $e) {
+    $errors[] = "Could not fetch categories: " . $e->getMessage();
+    $categories = [];
 }
 
-function deleteProduct(id) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.innerHTML = `
-            <input type="hidden" name="action" value="delete">
-            <input type="hidden" name="product_id" value="${id}">
-        `;
-        document.body.appendChild(form);
-        form.submit();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Sanitize inputs
+    $name = trim($_POST['name'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    $price = filter_var($_POST['price'] ?? 0, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+    $category_id = filter_var($_POST['category_id'] ?? null, FILTER_SANITIZE_NUMBER_INT);
+    $stock_quantity = filter_var($_POST['stock_quantity'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
+    $status = $_POST['status'] ?? 'active';
+    $featured = isset($_POST['featured']) ? 1 : 0;
+    
+    // --- Validation ---
+    if (empty($name)) $errors[] = "Product name is required.";
+    if ($price <= 0) $errors[] = "Price must be a positive number.";
+    if (empty($category_id)) $errors[] = "Please select a category.";
+
+    // --- Image Upload Logic ---
+    $image_path = null;
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['image'];
+        $upload_dir = UPLOAD_PATH;
+        
+        // Ensure upload directory exists
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+
+        // Create a unique filename to prevent overwriting
+        $filename = uniqid('prod_', true) . '_' . basename($file['name']);
+        $target_path = $upload_dir . $filename;
+        $relative_path = 'assets/images/products/' . $filename;
+
+        // Check file type and size
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!in_array($file['type'], $allowed_types)) {
+            $errors[] = "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.";
+        } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
+            $errors[] = "Image file is too large. Maximum size is 2MB.";
+        } else {
+            if (move_uploaded_file($file['tmp_name'], $target_path)) {
+                $image_path = $relative_path;
+            } else {
+                $errors[] = "Failed to upload the image.";
+            }
+        }
+    }
+    
+    if (empty($errors)) {
+        try {
+            $sql = "INSERT INTO products (name, description, price, category_id, stock_quantity, status, featured, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$name, $description, $price, $category_id, $stock_quantity, $status, $featured, $image_path]);
+            
+            // Redirect with success message
+            header("Location: " . admin_url('products.php?status=added'));
+            exit;
+        } catch (PDOException $e) {
+            $errors[] = "Database error: " . $e->getMessage();
+        }
     }
 }
-</script>
+?>
 
-<?php include_once '../includes/footer.php'; ?>
+<h1 class="h3 mb-4">Add New Product</h1>
+
+<?php if (!empty($errors)): ?>
+    <div class="alert alert-danger">
+        <?php foreach ($errors as $error): ?>
+            <p class="mb-0"><?php echo htmlspecialchars($error); ?></p>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
+
+<div class="card shadow">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Product Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="5"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="price" class="form-label">Price (UGX) *</label>
+                            <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="stock_quantity" class="form-label">Stock Quantity</label>
+                            <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" value="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Category *</label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            <option value="">Select a category</option>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?php echo $category['id']; ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="featured" name="featured" value="1">
+                        <label class="form-check-label" for="featured">Featured Product</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Product Image</label>
+                        <input class="form-control" type="file" id="image" name="image" onchange="previewImage(this, 'imagePreview')">
+                        <img id="imagePreview" src="#" alt="Image Preview" class="mt-3 img-fluid rounded" style="display:none; max-height: 200px;">
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Add Product</button>
+                <a href="<?php echo admin_url('products.php'); ?>" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

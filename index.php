@@ -1,103 +1,132 @@
 <?php
-session_start();
-include_once 'config/database.php';
-include_once 'includes/header.php';
+$page_title = 'Welcome to Mama\'s Oven';
+require_once __DIR__ . '/includes/header.php';
+
+// Fetch featured products from the database
+try {
+    $stmt = $pdo->query("
+        SELECT id, name, price, image, description 
+        FROM products 
+        WHERE status = 'active' AND featured = 1 
+        ORDER BY created_at DESC 
+        LIMIT 6
+    ");
+    $featured_products = $stmt->fetchAll();
+} catch (PDOException $e) {
+    // Gracefully handle DB error
+    $featured_products = [];
+    // Optional: log the error
+    // error_log("Error fetching featured products: " . $e->getMessage());
+}
 ?>
 
 <main>
     <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="hero-content">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-lg-6">
-                        <h1 class="hero-title">Welcome to Mama's Oven Uganda</h1>
-                        <p class="hero-description">Freshly baked delights delivered to your doorstep. Experience the taste of homemade goodness with our premium cakes, snacks, and pastries.</p>
-                        <div class="hero-buttons">
-                            <a href="./products.php" class="btn btn-primary btn-lg">View Our Products</a>
-                            <a href="./about.php" class="btn btn-outline-light btn-lg">Learn More</a>
-                        </div>
+    <section class="hero-section text-center text-lg-start">
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="hero-title">Baked with Love, Just for You</h1>
+                    <p class="hero-description my-4">
+                        Discover the taste of authentic, homemade goodness. From celebratory cakes to daily delights, every bite is a piece of heaven.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="<?php echo asset_url('products.php'); ?>" class="btn btn-primary btn-lg">Explore Our Menu</a>
+                        <a href="<?php echo asset_url('about.php'); ?>" class="btn btn-outline-primary btn-lg ms-2">Our Story</a>
                     </div>
-                    <div class="col-lg-6">
-                        <img src="./assets/images/Untitled.jpeg" alt="Delicious Cakes" class="hero-image">
-                    </div>
+                </div>
+                <div class="col-lg-6 d-none d-lg-block">
+                    <img src="<?php echo asset_url('assets/images/hero-image.png'); ?>" alt="A collection of delicious cakes and pastries" class="img-fluid hero-image">
                 </div>
             </div>
         </div>
-        <div class="hero-overlay"></div>
     </section>
 
-    <!-- Featured Products -->
+    <!-- Featured Products Section -->
     <section class="featured-products py-5">
         <div class="container">
-            <h2 class="section-title text-center mb-5">Featured Products</h2>
-            <div class="row" id="featured-products">
-                <!-- Products will be loaded here via AJAX -->
+            <div class="text-center mb-5">
+                <h2 class="section-title">Our Featured Treats</h2>
+                <p class="lead text-muted">Handpicked favorites, loved by our customers.</p>
             </div>
-        </div>
-    </section>
-
-    <!-- Services Section -->
-    <section class="services-section py-5 bg-light">
-        <div class="container">
-            <h2 class="section-title text-center mb-5">Our Services</h2>
-            <div class="row">
-                <div class="col-md-4 text-center mb-4">
-                    <div class="service-card">
-                        <i class="fas fa-birthday-cake service-icon"></i>
-                        <h4>Custom Cakes</h4>
-                        <p>Personalized cakes for your special occasions</p>
+            <div class="row gy-4">
+                <?php if (empty($featured_products)): ?>
+                    <div class="col-12">
+                        <p class="text-center">No featured products available at the moment. Please check back soon!</p>
                     </div>
-                </div>
-                <div class="col-md-4 text-center mb-4">
-                    <div class="service-card">
-                        <i class="fas fa-truck service-icon"></i>
-                        <h4>Home Delivery</h4>
-                        <p>Fresh products delivered right to your door</p>
-                    </div>
-                </div>
-                <div class="col-md-4 text-center mb-4">
-                    <div class="service-card">
-                        <i class="fas fa-clock service-icon"></i>
-                        <h4>Quick Orders</h4>
-                        <p>Fast and easy online ordering system</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</main>
-
-<script>
-$(document).ready(function() {
-    loadFeaturedProducts();
-});
-
-function loadFeaturedProducts() {
-    $.ajax({
-        url: 'api/get_featured_products.php',
-        method: 'GET',
-        dataType: 'json',
-        success: function(products) {
-            let html = '';
-            products.slice(0, 6).forEach(function(product) {
-                html += `
-                    <div class="col-md-4 col-sm-6 mb-4">
-                        <div class="product-card">
-                            <img src="${product.image}" alt="${product.name}" class="product-image">
-                            <div class="product-info">
-                                <h5 class="product-name">${product.name}</h5>
-                                <p class="product-price">UGX ${product.price.toLocaleString()}</p>
-                                <a href="product-details.php?id=${product.id}" class="btn btn-primary btn-sm">View Details</a>
+                <?php else: ?>
+                    <?php foreach ($featured_products as $product): ?>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="product-card">
+                                <a href="<?php echo asset_url('product-details.php?id=' . $product['id']); ?>" class="product-image-wrapper">
+                                    <img src="<?php echo asset_url($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                                         alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image">
+                                </a>
+                                <div class="product-info">
+                                    <div>
+                                        <h5 class="product-name">
+                                            <a href="<?php echo asset_url('product-details.php?id=' . $product['id']); ?>" class="text-decoration-none">
+                                                <?php echo htmlspecialchars($product['name']); ?>
+                                            </a>
+                                        </h5>
+                                        <p class="product-price">UGX <?php echo number_format($product['price']); ?></p>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-primary" onclick="addToCart(<?php echo $product['id']; ?>)">
+                                            <i class="fas fa-shopping-bag me-2"></i> Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
-            });
-            $('#featured-products').html(html);
-        }
-    });
-}
-</script>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+            <div class="text-center mt-5">
+                <a href="<?php echo asset_url('products.php'); ?>" class="btn btn-lg btn-outline-primary">View All Products</a>
+            </div>
+        </div>
+    </section>
 
-<?php include_once 'includes/footer.php'; ?>
+    <!-- Why Choose Us Section -->
+    <section class="why-choose-us py-5 bg-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Why Choose Mama's Oven?</h2>
+            </div>
+            <div class="row text-center">
+                <div class="col-md-4 mb-4">
+                    <i class="fas fa-seedling fa-3x text-primary mb-3"></i>
+                    <h4>Finest Ingredients</h4>
+                    <p class="text-muted">We use only the freshest, locally-sourced ingredients to ensure superior quality and taste.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <i class="fas fa-hand-holding-heart fa-3x text-primary mb-3"></i>
+                    <h4>Baked with Passion</h4>
+                    <p class="text-muted">Every item is crafted by hand with passion, care, and attention to detail.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <i class="fas fa-truck-fast fa-3x text-primary mb-3"></i>
+                    <h4>Delivered Fresh</h4>
+                    <p class="text-muted">Order online and get our delicious baked goods delivered fresh to your doorstep.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<?php if(isset($_GET['registered'])): ?>
+<script>
+    showSuccess('Your account has been created successfully! Welcome to Mama\'s Oven.');
+</script>
+<?php endif; ?>
+
+<?php if(isset($_GET['logout'])): ?>
+<script>
+    showSuccess('You have been logged out successfully.');
+</script>
+<?php endif; ?>
+
+
+<?php require_once __DIR__ . '/includes/footer.php'; ?>
