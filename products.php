@@ -1,249 +1,134 @@
 <?php
-session_start();
-include_once 'config/database.php';
-
 $page_title = 'Our Products';
-include_once 'includes/header.php';
+require_once __DIR__ . '/includes/header.php';
 
-// Get categories for filter
+// Get filter and search parameters from the URL
+$category_filter = $_GET['category'] ?? '';
+$search_query = trim($_GET['search'] ?? '');
+
+// Fetch categories for the filter dropdown
 try {
-    $stmt = $pdo->prepare("SELECT * FROM categories WHERE status = 'active' ORDER BY name");
-    $stmt->execute();
-    $categories = $stmt->fetchAll();
-} catch (Exception $e) {
+    $categories = $pdo->query("SELECT id, name FROM categories WHERE status = 'active' ORDER BY name")->fetchAll();
+} catch (PDOException $e) {
     $categories = [];
 }
 
-$current_category = $_GET['category'] ?? '';
-$search_query = $_GET['search'] ?? '';
+// Base SQL query
+$sql = "SELECT p.id, p.name, p.price, p.image, p.description 
+        FROM products p 
+        LEFT JOIN categories c ON p.category_id = c.id
+        WHERE p.status = 'active'";
+$params = [];
+
+// Add category filter to the query if selected
+if (!empty($category_filter)) {
+    $sql .= " AND c.name = :category";
+    $params[':category'] = $category_filter;
+}
+
+// Add search filter to the query if a search term is provided
+if (!empty($search_query)) {
+    $sql .= " AND (p.name LIKE :search OR p.description LIKE :search)";
+    $params[':search'] = '%' . $search_query . '%';
+}
+
+$sql .= " ORDER BY p.featured DESC, p.created_at DESC";
+
+try {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $products = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $products = [];
+    $error_message = "Could not fetch products. Please try again later.";
+}
 ?>
 
 <div class="container my-5">
     <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12 text-center">
-            <h1 class="section-title">Our Delicious Products</h1>
-            <p class="lead">Fresh, homemade bakery items made with love</p>
-        </div>
+    <div class="text-center mb-5">
+        <h1 class="section-title">Our Delicious Menu</h1>
+        <p class="lead text-muted">Browse our selection of freshly baked goods.</p>
     </div>
 
     <!-- Filters -->
     <div class="row mb-4">
-        <div class="col-lg-8">
-            <div class="card">
+        <div class="col-12">
+            <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-4">
-                            <label class="form-label">Filter by Category:</label>
-                            <select class="form-select" id="category-filter" onchange="filterProducts()">
+                    <form method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label for="category-filter" class="form-label">Filter by Category:</label>
+                            <select class="form-select" id="category-filter" name="category">
                                 <option value="">All Categories</option>
                                 <?php foreach ($categories as $category): ?>
-                                    <option value="<?php echo $category['name']; ?>" 
-                                            <?php echo $current_category === $category['name'] ? 'selected' : ''; ?>>
+                                    <option value="<?php echo htmlspecialchars($category['name']); ?>" 
+                                            <?php echo ($category_filter === $category['name']) ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($category['name']); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Search Products:</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="search-input" 
-                                       placeholder="Search for products..." 
-                                       value="<?php echo htmlspecialchars($search_query); ?>">
-                                <button class="btn btn-primary" onclick="filterProducts()">
-                                    <i class="fas fa-search"></i>
+                        <div class="col-md-5">
+                            <label for="search-input" class="form-label">Search Products:</label>
+                            <input type="text" class="form-control" id="search-input" name="search"
+                                   placeholder="e.g., Chocolate Cake" 
+                                   value="<?php echo htmlspecialchars($search_query); ?>">
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php if (isset($error_message)): ?>
+        <div class="alert alert-danger"><?php echo $error_message; ?></div>
+    <?php endif; ?>
+
+    <!-- Products Grid -->
+    <div class="row gy-4">
+        <?php if (empty($products)): ?>
+            <div class="col-12">
+                <div class="alert alert-info text-center" role="alert">
+                    <h4 class="alert-heading">No Products Found</h4>
+                    <p>We couldn't find any products matching your criteria. Try adjusting your filters or search term.</p>
+                    <hr>
+                    <a href="products.php" class="btn btn-outline-primary">Clear Filters</a>
+                </div>
+            </div>
+        <?php else: ?>
+            <?php foreach ($products as $product): ?>
+                <div class="col-lg-4 col-md-6">
+                    <div class="product-card">
+                        <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper">
+                            <img src="<?php echo $product['image'] ?: 'assets/images/placeholder.jpg'; ?>" 
+                                 alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image">
+                        </a>
+                        <div class="product-info">
+                            <div>
+                                <h5 class="product-name">
+                                    <a href="product-details.php?id=<?php echo $product['id']; ?>" class="text-decoration-none">
+                                        <?php echo htmlspecialchars($product['name']); ?>
+                                    </a>
+                                </h5>
+                                <p class="product-price">UGX <?php echo number_format($product['price']); ?></p>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-primary" onclick="addToCart(<?php echo $product['id']; ?>)">
+                                    <i class="fas fa-shopping-bag me-2"></i> Add to Cart
                                 </button>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
-                            <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
-                                Clear
-                            </button>
-                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="d-flex justify-content-end align-items-end h-100">
-                <div class="text-end">
-                    <span class="text-muted" id="product-count">Loading products...</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Products Grid -->
-    <div class="row" id="products-container">
-        <!-- Products will be loaded here via AJAX -->
-    </div>
-
-    <!-- Pagination -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div id="pagination-container"></div>
-        </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 </div>
 
-<script>
-$(document).ready(function() {
-    loadProducts(
-        '<?php echo $current_category; ?>', 
-        '<?php echo $search_query; ?>'
-    );
-});
-
-function filterProducts() {
-    const category = $('#category-filter').val();
-    const search = $('#search-input').val();
-    loadProducts(category, search);
-    
-    // Update URL without reloading page
-    const url = new URL(window.location);
-    if (category) {
-        url.searchParams.set('category', category);
-    } else {
-        url.searchParams.delete('category');
-    }
-    if (search) {
-        url.searchParams.set('search', search);
-    } else {
-        url.searchParams.delete('search');
-    }
-    window.history.pushState({}, '', url);
-}
-
-function clearFilters() {
-    $('#category-filter').val('');
-    $('#search-input').val('');
-    loadProducts('', '');
-    
-    // Clear URL parameters
-    const url = new URL(window.location);
-    url.searchParams.delete('category');
-    url.searchParams.delete('search');
-    window.history.pushState({}, '', url);
-}
-
-function loadProducts(category = '', search = '', page = 1) {
-    $.ajax({
-        url: 'api/get_products.php',
-        method: 'GET',
-        data: {
-            category: category,
-            search: search,
-            page: page
-        },
-        dataType: 'json',
-        beforeSend: function() {
-            $('#products-container').html('<div class="col-12 text-center"><div class="loading"></div> Loading products...</div>');
-            $('#product-count').text('Loading...');
-        },
-        success: function(response) {
-            displayProducts(response.products);
-            displayPagination(response.pagination);
-            updateProductCount(response.pagination);
-        },
-        error: function() {
-            $('#products-container').html('<div class="col-12"><div class="alert alert-danger">Failed to load products</div></div>');
-            $('#product-count').text('Error loading products');
-        }
-    });
-}
-
-function displayProducts(products) {
-    let html = '';
-    if (products.length === 0) {
-        html = '<div class="col-12"><div class="alert alert-info text-center">No products found matching your criteria</div></div>';
-    } else {
-        products.forEach(function(product) {
-            html += `
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="product-card" data-product-id="${product.id}">
-                        <img src="${product.image || 'assets/images/placeholder.jpg'}" 
-                             alt="${product.name}" class="product-image">
-                        <div class="product-info">
-                            <h5 class="product-name">${product.name}</h5>
-                            <p class="product-price">UGX ${product.price.toLocaleString()}</p>
-                            <p class="product-description">${product.description || ''}</p>
-                            ${product.flavours ? `<p class="text-muted small"><strong>Flavours:</strong> ${product.flavours}</p>` : ''}
-                            <div class="d-flex gap-2">
-                                <a href="product-details.php?id=${product.id}" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-eye"></i> View Details
-                                </a>
-                                <button onclick="addToCart(${product.id})" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-cart-plus"></i> Add to Cart
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-    }
-    $('#products-container').html(html);
-}
-
-function displayPagination(pagination) {
-    if (pagination.total_pages <= 1) {
-        $('#pagination-container').html('');
-        return;
-    }
-
-    let html = '<nav><ul class="pagination justify-content-center">';
-    
-    // Previous page
-    if (pagination.current_page > 1) {
-        html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="loadProducts($('#category-filter').val(), $('#search-input').val(), ${pagination.current_page - 1})">
-                        Previous
-                    </a>
-                </li>`;
-    }
-    
-    // Page numbers
-    for (let i = 1; i <= pagination.total_pages; i++) {
-        if (i === pagination.current_page) {
-            html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
-        } else if (i === 1 || i === pagination.total_pages || (i >= pagination.current_page - 2 && i <= pagination.current_page + 2)) {
-            html += `<li class="page-item">
-                        <a class="page-link" href="#" onclick="loadProducts($('#category-filter').val(), $('#search-input').val(), ${i})">
-                            ${i}
-                        </a>
-                    </li>`;
-        } else if (i === pagination.current_page - 3 || i === pagination.current_page + 3) {
-            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-        }
-    }
-    
-    // Next page
-    if (pagination.current_page < pagination.total_pages) {
-        html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="loadProducts($('#category-filter').val(), $('#search-input').val(), ${pagination.current_page + 1})">
-                        Next
-                    </a>
-                </li>`;
-    }
-    
-    html += '</ul></nav>';
-    $('#pagination-container').html(html);
-}
-
-function updateProductCount(pagination) {
-    const start = (pagination.current_page - 1) * pagination.per_page + 1;
-    const end = Math.min(pagination.current_page * pagination.per_page, pagination.total_products);
-    $('#product-count').text(`Showing ${start}-${end} of ${pagination.total_products} products`);
-}
-
-// Make userLoggedIn available to main.js
-<?php if (isset($_SESSION['user_id'])): ?>
-var userLoggedIn = true;
-<?php else: ?>
-var userLoggedIn = false;
-<?php endif; ?>
-</script>
-
-<?php include_once 'includes/footer.php'; ?>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>
