@@ -12,7 +12,7 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Service 1: Custom Cakes -->
     <div class="row align-items-center g-5 mb-5 pb-5 border-bottom">
         <div class="col-lg-6">
-            <img src="<?php echo asset_url('assets/images/service-cakes.jpg'); ?>" alt="A beautiful custom celebration cake" class="img-fluid rounded shadow-sm">
+            <img src="assets/images/service-cakes.jpeg" alt="A beautiful custom celebration cake" class="img-fluid rounded shadow-sm">
         </div>
         <div class="col-lg-6">
             <h2 class="display-6">Custom Cakes</h2>
@@ -24,14 +24,14 @@ require_once __DIR__ . '/includes/header.php';
                 <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i>Wide range of flavors and fillings.</li>
                 <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i>Options for various dietary needs.</li>
             </ul>
-            <a href="<?php echo asset_url('contact.php'); ?>" class="btn btn-primary mt-3">Request a Quote</a>
+            <a href="contact.php" class="btn btn-primary mt-3">Request a Quote</a>
         </div>
     </div>
 
     <!-- Service 2: Event Catering -->
     <div class="row align-items-center g-5 mb-5 pb-5 border-bottom flex-lg-row-reverse">
         <div class="col-lg-6">
-            <img src="<?php echo asset_url('assets/images/service-catering.jpg'); ?>" alt="A dessert table at a catered event" class="img-fluid rounded shadow-sm">
+            <img src="assets/images/service-catering.jpg" alt="A dessert table at a catered event" class="img-fluid rounded shadow-sm">
         </div>
         <div class="col-lg-6">
             <h2 class="display-6">Event Catering</h2>
@@ -43,14 +43,14 @@ require_once __DIR__ . '/includes/header.php';
                 <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i>Beautifully arranged dessert tables.</li>
                 <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i>Professional and timely service.</li>
             </ul>
-            <a href="<?php echo asset_url('contact.php'); ?>" class="btn btn-primary mt-3">Plan Your Event</a>
+            <a href="contact.php" class="btn btn-primary mt-3">Plan Your Event</a>
         </div>
     </div>
 
     <!-- Service 3: Home Delivery -->
     <div class="row align-items-center g-5 mb-5">
         <div class="col-lg-6">
-            <img src="<?php echo asset_url('assets/images/service-delivery.jpg'); ?>" alt="A delivery box from Mama's Oven" class="img-fluid rounded shadow-sm">
+            <img src="assets/images/service-delivery.jpg" alt="A delivery box from Mama's Oven" class="img-fluid rounded shadow-sm">
         </div>
         <div class="col-lg-6">
             <h2 class="display-6">Freshly Delivered</h2>
@@ -62,7 +62,7 @@ require_once __DIR__ . '/includes/header.php';
                 <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i>Carefully packaged to ensure freshness.</li>
                 <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i>Reliable delivery to your home or office.</li>
             </ul>
-            <a href="<?php echo asset_url('products.php'); ?>" class="btn btn-primary mt-3">Order Now</a>
+            <a href="products.php" class="btn btn-primary mt-3">Order Now</a>
         </div>
     </div>
 

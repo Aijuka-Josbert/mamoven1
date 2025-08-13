@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/header.php';
 
 // User must be logged in to view their cart
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ' . asset_url('auth/login.php?redirect=' . urlencode(asset_url('cart.php'))));
+    header('Location: ' . 'auth/login.php?redirect=' . urlencode('cart.php'));
     exit;
 }
 $user_id = $_SESSION['user_id'];
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log("Cart update error: " . $e->getMessage());
     }
     // Redirect to the same page using GET to prevent form resubmission
-    header("Location: " . asset_url('cart.php'));
+    header("Location: " . 'cart.php');
     exit;
 }
 
@@ -79,7 +79,7 @@ try {
                     <i class="fas fa-shopping-bag fa-4x text-muted mb-3"></i>
                     <h4 class="mb-3">Your cart is empty</h4>
                     <p class="text-muted">Looks like you haven't added any delicious treats yet.</p>
-                    <a href="<?php echo asset_url('products.php'); ?>" class="btn btn-primary mt-3">Start Shopping</a>
+                    <a href="products.php" class="btn btn-primary mt-3">Start Shopping</a>
                 </div>
             </div>
         <?php else: ?>
@@ -90,7 +90,7 @@ try {
                         <?php foreach ($cart_items as $item): ?>
                             <div class="row align-items-center mb-4">
                                 <div class="col-md-2">
-                                    <img src="<?php echo asset_url($item['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                                    <img src="<?php echo 'assets/images/' . ($item['image'] ?: 'placeholder.jpg'); ?>" 
                                          alt="<?php echo htmlspecialchars($item['name']); ?>" class="img-fluid rounded">
                                 </div>
                                 <div class="col-md-4">
@@ -118,7 +118,7 @@ try {
                             </div>
                             <hr>
                         <?php endforeach; ?>
-                        <a href="<?php echo asset_url('products.php'); ?>" class="btn btn-outline-primary">
+                        <a href="products.php" class="btn btn-outline-primary">
                             <i class="fas fa-arrow-left me-2"></i> Continue Shopping
                         </a>
                     </div>
@@ -164,7 +164,7 @@ try {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="checkout-form" method="POST" action="<?php echo asset_url('api/place_order.php'); ?>">
+                <form id="checkout-form" method="POST" action="api/place_order.php">
                     <div class="mb-3">
                         <label for="delivery_address" class="form-label">Delivery Address *</label>
                         <textarea id="delivery_address" name="delivery_address" class="form-control" rows="3" required placeholder="Enter your full street address, area, and any nearby landmarks."></textarea>

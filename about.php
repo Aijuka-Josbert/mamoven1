@@ -11,7 +11,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <div class="row align-items-center g-5">
         <div class="col-lg-6">
-            <img src="<?php echo asset_url('assets/images/about-us.jpg'); ?>" alt="The team at Mama's Oven" class="img-fluid rounded shadow">
+            <img src="assets/image2/about-us.jpeg" alt="The team at Mama's Oven" class="img-fluid rounded shadow">
         </div>
         <div class="col-lg-6">
             <h2 class="display-6">From Our Kitchen to Your Heart</h2>
@@ -21,7 +21,7 @@ require_once __DIR__ . '/includes/header.php';
             <p class="text-muted">
                 Our secret isn't just in our recipes—it's in the love and care we pour into every single item we create. We believe in the power of good food to bring people together, to celebrate life's moments, and to create lasting memories.
             </p>
-            <a href="<?php echo asset_url('contact.php'); ?>" class="btn btn-primary mt-3">Get in Touch</a>
+            <a href="contact.php" class="btn btn-primary mt-3">Get in Touch</a>
         </div>
     </div>
 </div>

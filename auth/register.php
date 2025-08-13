@@ -4,7 +4,7 @@ include_once __DIR__ . '/../includes/header.php';
 
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
-    header('Location: ' . asset_url('index.php'));
+    header('Location: ' . '../index.php');
     exit;
 }
 
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['email'] = $inputs['email'];
             
             // Redirect to a welcome page or homepage
-            header('Location: ' . asset_url('index.php?registered=1'));
+            header('Location: ' . '../index.php?registered=1');
             exit;
             
         } catch (PDOException $e) {
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card shadow">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <img src="<?php echo asset_url('assets/images/logo.png'); ?>" alt="Logo" style="height: 60px;" class="mb-3">
+                        <img src="assets/images/logo.png" alt="Logo" style="height: 60px;" class="mb-3">
                         <h2 class="card-title h3">Create Your Account</h2>
                         <p class="text-muted">Join us to start ordering delicious treats!</p>
                     </div>
@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="text-center mt-4">
                         <p class="mb-0 text-muted">Already have an account? 
-                            <a href="<?php echo asset_url('auth/login.php'); ?>">Sign in</a>
+                            <a href="auth/login.php">Sign in</a>
                         </p>
                     </div>
                 </div>

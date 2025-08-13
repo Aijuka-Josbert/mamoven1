@@ -15,9 +15,9 @@
                 <div class="col-lg-2 col-md-4">
                     <h5 class="footer-title">Company</h5>
                     <ul class="footer-links">
-                        <li><a href="<?php echo asset_url('about.php'); ?>">About Us</a></li>
-                        <li><a href="<?php echo asset_url('products.php'); ?>">Our Products</a></li>
-                        <li><a href="<?php echo asset_url('contact.php'); ?>">Contact</a></li>
+                        <li><a href="about.php">About Us</a></li>
+                        <li><a href="products.php">Our Products</a></li>
+                        <li><a href="contact.php">Contact</a></li>
                     </ul>
                 </div>
                 
@@ -54,6 +54,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- Custom Application JS -->
-    <script src="<?php echo asset_url('assets/js/main.js'); ?>"></script>
+    <script src="assets/js/main.js"></script>
 </body>
 </html>

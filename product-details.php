@@ -3,7 +3,7 @@ require_once __DIR__ . '/includes/header.php';
 
 // Validate product ID
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    header("Location: " . asset_url('products.php'));
+    header("Location: " . 'products.php');
     exit;
 }
 $product_id = (int)$_GET['id'];
@@ -21,7 +21,7 @@ try {
 
     if (!$product) {
         // If product doesn't exist or is inactive, redirect.
-        header("Location: " . asset_url('products.php?status=notfound'));
+        header("Location: " . 'products.php?status=notfound');
         exit;
     }
 
@@ -38,7 +38,7 @@ try {
 
 } catch (PDOException $e) {
     // Redirect on database error
-    header("Location: " . asset_url('products.php?status=error'));
+    header("Location: " . 'products.php?status=error');
     exit;
 }
 
@@ -51,7 +51,8 @@ $page_title = htmlspecialchars($product['name']);
         <div class="col-lg-6 mb-4">
             <div class="product-card">
                  <div class="product-image-wrapper" style="height: 450px;">
-                    <img src="<?php echo asset_url($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                    <!-- Main Product Image -->
+                    <img src="<?php echo htmlspecialchars($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
                          alt="<?php echo htmlspecialchars($product['name']); ?>" 
                          class="product-image">
                 </div>
@@ -62,9 +63,8 @@ $page_title = htmlspecialchars($product['name']);
         <div class="col-lg-6 ps-lg-5">
             <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="<?php echo asset_url('index.php'); ?>">Home</a></li>
-                    <li class="breadcrumb-item"><a href="<?php echo asset_url('products.php'); ?>">Products</a></li>
-                    <li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($product['name']); ?></li>
+                    <li class="breadcrumb-item"><a href="'index.php'">Home</a></li>
+                    <li class="breadcrumb-item"><a href="'products.php'">Products</a></li>
                 </ol>
             </nav>
 
@@ -102,14 +102,15 @@ $page_title = htmlspecialchars($product['name']);
                 <?php foreach ($related_products as $related): ?>
                     <div class="col-lg-3 col-md-6">
                          <div class="product-card">
-                            <a href="<?php echo asset_url('product-details.php?id=' . $related['id']); ?>" class="product-image-wrapper">
-                                <img src="<?php echo asset_url($related['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                            <a href="'product-details.php?id=' . $related['id']);" class="product-image-wrapper">
+                                <!-- Related Product Images -->
+                                <img src="<?php echo htmlspecialchars($related['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
                                      alt="<?php echo htmlspecialchars($related['name']); ?>" class="product-image">
                             </a>
                             <div class="product-info">
                                 <div>
                                     <h5 class="product-name">
-                                        <a href="<?php echo asset_url('product-details.php?id=' . $related['id']); ?>" class="text-decoration-none">
+                                        <a href="product-details.php?id=' . $related['id']);" class="text-decoration-none">
                                             <?php echo htmlspecialchars($related['name']); ?>
                                         </a>
                                     </h5>

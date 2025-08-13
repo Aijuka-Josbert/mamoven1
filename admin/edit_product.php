@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/header.php';
 
 // Validate product ID from URL
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    header("Location: " . admin_url('products.php'));
+    header("Location: " . 'products.php');
     exit;
 }
 $product_id = (int)$_GET['id'];
@@ -17,7 +17,7 @@ try {
 
     if (!$product) {
         // If product not found, redirect with an error message
-        header("Location: " . admin_url('products.php?status=notfound'));
+        header("Location: " . 'products.php?status=notfound');
         exit;
     }
 } catch (PDOException $e) {
@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$name, $description, $price, $category_id, $stock_quantity, $status, $featured, $image_path, $product_id]);
             
             // Redirect with success message
-            header("Location: " . admin_url('products.php?status=updated'));
+            header("Location: " . 'products.php?status=updated');
             exit;
         } catch (PDOException $e) {
             $errors[] = "Database update failed: " . $e->getMessage();
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3">Edit Product</h1>
-    <a href="<?php echo admin_url('products.php'); ?>" class="btn btn-secondary">Back to Products</a>
+    <a href="products.php" class="btn btn-secondary">Back to Products</a>
 </div>
 
 
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary">Update Product</button>
-                <a href="<?php echo admin_url('products.php'); ?>" class="btn btn-secondary">Cancel</a>
+                <a href="products.php" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
     </div>

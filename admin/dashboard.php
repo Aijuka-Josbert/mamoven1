@@ -99,9 +99,9 @@ try {
             <div class="card shadow">
                 <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6></div>
                 <div class="card-body">
-                    <a href="<?php echo admin_url('add_product.php'); ?>" class="btn btn-primary mb-2 d-block">Add New Product</a>
-                    <a href="<?php echo admin_url('orders.php'); ?>" class="btn btn-info mb-2 d-block">View All Orders</a>
-                    <a href="<?php echo admin_url('categories.php'); ?>" class="btn btn-secondary mb-2 d-block">Manage Categories</a>
+                    <a href="add_product.php" class="btn btn-primary mb-2 d-block">Add New Product</a>
+                    <a href="orders.php" class="btn btn-info mb-2 d-block">View All Orders</a>
+                    <a href="categories.php" class="btn btn-secondary mb-2 d-block">Manage Categories</a>
                 </div>
             </div>
         </div>
@@ -130,7 +130,7 @@ try {
                                         <td><?php echo htmlspecialchars($order['full_name']); ?></td>
                                         <td>UGX <?php echo number_format($order['total_amount']); ?></td>
                                         <td><span class="badge bg-info text-dark"><?php echo ucfirst(htmlspecialchars($order['status'])); ?></span></td>
-                                        <td><a href="<?php echo admin_url('order-details.php?id=' . $order['id']); ?>" class="btn btn-sm btn-outline-primary">View</a></td>
+                                        <td><a href="order-details.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-outline-primary">View</a></td>
                                     </tr>
                                     <?php endforeach; ?>
                                 <?php endif; ?>

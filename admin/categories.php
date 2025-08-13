@@ -108,7 +108,7 @@ try {
                                     <td><strong><?php echo htmlspecialchars($category['name']); ?></strong></td>
                                     <td><?php echo htmlspecialchars($category['description']); ?></td>
                                     <td class="text-end">
-                                        <a href="javascript:void(0);" onclick="confirmDelete('<?php echo admin_url('categories.php?action=delete&id=' . $category['id']); ?>')" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <a href="javascript:void(0);" onclick="confirmDelete('categories.php?action=delete&id=<?php echo $category['id']; ?>')" class="btn btn-sm btn-outline-danger" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </a>
                                     </td>

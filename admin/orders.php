@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
             $stmt->execute([$new_status, $order_id]);
             // Redirect to avoid form resubmission on refresh
-            header("Location: " . admin_url('orders.php?status=updated'));
+            header("Location: " . 'orders.php?status=updated');
             exit;
         } catch (PDOException $e) {
             $error_message = "Failed to update order status: " . $e->getMessage();
@@ -112,7 +112,7 @@ try {
                                     </form>
                                 </td>
                                 <td class="text-end">
-                                    <a href="<?php echo admin_url('order_details.php?id=' . $order['id']); ?>" class="btn btn-sm btn-primary">
+                                    <a href="order_details.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye"></i> View
                                     </a>
                                 </td>

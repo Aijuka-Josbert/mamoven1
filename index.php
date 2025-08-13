@@ -31,12 +31,12 @@ try {
                         Discover the taste of authentic, homemade goodness. From celebratory cakes to daily delights, every bite is a piece of heaven.
                     </p>
                     <div class="hero-buttons">
-                        <a href="<?php echo asset_url('products.php'); ?>" class="btn btn-primary btn-lg">Explore Our Menu</a>
-                        <a href="<?php echo asset_url('about.php'); ?>" class="btn btn-outline-primary btn-lg ms-2">Our Story</a>
+                        <a href="products.php" class="btn btn-primary btn-lg">Explore Our Menu</a>
+                        <a href="about.php" class="btn btn-outline-primary btn-lg ms-2">Our Story</a>
                     </div>
                 </div>
                 <div class="col-lg-6 d-none d-lg-block">
-                    <img src="<?php echo asset_url('assets/images/hero-image.png'); ?>" alt="A collection of delicious cakes and pastries" class="img-fluid hero-image">
+                    <img src="assets/images/Untitled.jpeg" alt="A collection of delicious cakes and pastries" class="img-fluid hero-image">
                 </div>
             </div>
         </div>
@@ -58,14 +58,14 @@ try {
                     <?php foreach ($featured_products as $product): ?>
                         <div class="col-lg-4 col-md-6">
                             <div class="product-card">
-                                <a href="<?php echo asset_url('product-details.php?id=' . $product['id']); ?>" class="product-image-wrapper">
-                                    <img src="<?php echo asset_url($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                                <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper">
+                                    <img src="<?php echo htmlspecialchars($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
                                          alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image">
                                 </a>
                                 <div class="product-info">
                                     <div>
                                         <h5 class="product-name">
-                                            <a href="<?php echo asset_url('product-details.php?id=' . $product['id']); ?>" class="text-decoration-none">
+                                            <a href="product-details.php?id=' . $product['id']; " class="text-decoration-none">
                                                 <?php echo htmlspecialchars($product['name']); ?>
                                             </a>
                                         </h5>
@@ -83,7 +83,7 @@ try {
                 <?php endif; ?>
             </div>
             <div class="text-center mt-5">
-                <a href="<?php echo asset_url('products.php'); ?>" class="btn btn-lg btn-outline-primary">View All Products</a>
+                <a href="products.php" class="btn btn-lg btn-outline-primary">View All Products</a>
             </div>
         </div>
     </section>

@@ -21,6 +21,6 @@ if (ini_get("session.use_cookies")) {
 session_destroy();
 
 // Redirect to the homepage with a logout message
-header('Location: ' . BASE_URL . '/index.php?logout=1');
+header('Location: ../index.php?logout=1');
 exit;
 ?>

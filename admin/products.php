@@ -31,7 +31,7 @@ try {
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3">Manage Products</h1>
-    <a href="<?php echo admin_url('add_product.php'); ?>" class="btn btn-primary">
+    <a href="add_product.php" class="btn btn-primary">
         <i class="fas fa-plus"></i> Add New Product
     </a>
 </div>
@@ -79,10 +79,10 @@ try {
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="<?php echo admin_url('edit_product.php?id=' . $product['id']); ?>" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <a href="edit_product.php?id=<?php echo $product['id']; ?>" class="btn btn-sm btn-outline-primary" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="javascript:void(0);" onclick="confirmDelete('<?php echo admin_url('products.php?action=delete&id=' . $product['id']); ?>')" class="btn btn-sm btn-outline-danger" title="Deactivate">
+                                    <a href="javascript:void(0);" onclick="confirmDelete('products.php?action=delete&id=<?php echo $product['id']; ?>')" class="btn btn-sm btn-outline-danger" title="Deactivate">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </td>
@@ -171,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$name, $description, $price, $category_id, $stock_quantity, $status, $featured, $image_path]);
             
             // Redirect with success message
-            header("Location: " . admin_url('products.php?status=added'));
+            header("Location: " . 'products.php?status=added');
             exit;
         } catch (PDOException $e) {
             $errors[] = "Database error: " . $e->getMessage();
@@ -244,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary">Add Product</button>
-                <a href="<?php echo admin_url('products.php'); ?>" class="btn btn-secondary">Cancel</a>
+                <a href="products.php" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
     </div>

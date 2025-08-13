@@ -98,21 +98,21 @@ try {
                     <h4 class="alert-heading">No Products Found</h4>
                     <p>We couldn't find any products matching your criteria. Try adjusting your filters or search term.</p>
                     <hr>
-                    <a href="<?php echo asset_url('products.php'); ?>" class="btn btn-outline-primary">Clear Filters</a>
+                    <a href="products.php" class="btn btn-outline-primary">Clear Filters</a>
                 </div>
             </div>
         <?php else: ?>
             <?php foreach ($products as $product): ?>
                 <div class="col-lg-4 col-md-6">
                     <div class="product-card">
-                        <a href="<?php echo asset_url('product-details.php?id=' . $product['id']); ?>" class="product-image-wrapper">
-                            <img src="<?php echo asset_url($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                        <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper">
+                            <img src="<?php echo $product['image'] ?: 'assets/images/placeholder.jpg'; ?>" 
                                  alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image">
                         </a>
                         <div class="product-info">
                             <div>
                                 <h5 class="product-name">
-                                    <a href="<?php echo asset_url('product-details.php?id=' . $product['id']); ?>" class="text-decoration-none">
+                                    <a href="product-details.php?id=<?php echo $product['id']; ?>" class="text-decoration-none">
                                         <?php echo htmlspecialchars($product['name']); ?>
                                     </a>
                                 </h5>

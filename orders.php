@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/header.php';
 
 // User must be logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ' . asset_url('auth/login.php?redirect=' . urlencode(asset_url('orders.php'))));
+    header('Location: ' . 'auth/login.php?redirect=' . urlencode('orders.php'));
     exit;
 }
 
@@ -37,7 +37,7 @@ try {
             <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
             <h4 class="mb-3">You haven't placed any orders yet.</h4>
             <p class="text-muted">All your past orders will appear here once you've made a purchase.</p>
-            <a href="<?php echo asset_url('products.php'); ?>" class="btn btn-primary mt-3">Browse Our Products</a>
+            <a href="products.php" class="btn btn-primary mt-3">Browse Our Products</a>
         </div>
     <?php else: ?>
         <div class="accordion" id="ordersAccordion">
@@ -59,7 +59,7 @@ try {
                                 <p><strong>Special Instructions:</strong> <?php echo htmlspecialchars($order['special_instructions']); ?></p>
                             <?php endif; ?>
                             <hr>
-                            <a href="<?php echo asset_url('print_receipt.php?id=' . $order['id']); ?>" class="btn btn-sm btn-outline-primary" target="_blank">
+                            <a href="print_receipt.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-outline-primary" target="_blank">
                                 <i class="fas fa-print me-2"></i> Print Receipt
                             </a>
                         </div>

@@ -7,9 +7,9 @@ include_once __DIR__ . '/../includes/header.php';
 // If user is already logged in, redirect them away from the login page.
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'admin') {
-        header('Location: ' . asset_url('admin/dashboard.php'));
+        header('Location: ' . '../admin/dashboard.php');
     } else {
-        header('Location: ' . asset_url('index.php'));
+        header('Location: ' . '../index.php');
     }
     exit;
 }
@@ -28,6 +28,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role FROM users WHERE username = :username OR email = :email");
             $stmt->execute(['username' => $username, 'email' => $username]);
             $user = $stmt->fetch();
+
+            // // Safer debugging - only attempt to access array elements if $user is an array
+            // var_dump($user);
+            // var_dump($password);
+            // if ($user) {
+            //     var_dump(password_verify($password, $user['password']));
+            // } else {
+            //     echo "No user found with username/email: " . htmlspecialchars($username);
+            // }
+            
+            // // Then comment out before going to production
             
             // Verify user exists and password is correct
             if ($user && password_verify($password, $user['password'])) {
@@ -43,10 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Redirect based on role
                 if ($user['role'] === 'admin') {
-                    header('Location: ' . asset_url('admin/dashboard.php'));
+                    // FIX: Add '../' prefix
+                    header('Location: ' . '../admin/dashboard.php');
                 } else {
-                    // Redirect to the page they were trying to access, or homepage
-                    $redirect_url = $_GET['redirect'] ?? asset_url('index.php');
+                    // FIX: Add '../' prefix for index.php
+                    $redirect_url = $_GET['redirect'] ?? '../index.php';
                     header('Location: ' . $redirect_url);
                 }
                 exit;
@@ -67,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card shadow">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <img src="<?php echo asset_url('assets/images/logo.png'); ?>" alt="Logo" style="height: 60px;" class="mb-3">
+                        <img src="../assets/images/logo.jpeg" alt="Logo" style="height: 60px;" class="mb-3">
                         <h2 class="card-title h3">Welcome Back!</h2>
                         <p class="text-muted">Sign in to continue to Mama's Oven.</p>
                     </div>
@@ -86,7 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <div class="mb-4">
                             <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
+                                    <i class="fas fa-eye"></i>
+                                </span>
+                            </div>
                         </div>
 
                         <div class="d-grid">
@@ -98,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="text-center mt-4">
                         <p class="mb-0 text-muted">Don't have an account? 
-                            <a href="<?php echo asset_url('auth/register.php'); ?>">Sign up here</a>
+                            <a href="register.php">Sign up here</a>
                         </p>
                     </div>
 
@@ -109,6 +126,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <strong>Admin:</strong> admin / admin123
                         </small>
                     </div>
+                    
+                    <!-- Password visibility toggle script -->
+                    <script>
+                        document.getElementById('togglePassword').addEventListener('click', function() {
+                            const passwordInput = document.getElementById('password');
+                            const icon = this.querySelector('i');
+                            
+                            if (passwordInput.type === 'password') {
+                                passwordInput.type = 'text';
+                                icon.classList.remove('fa-eye');
+                                icon.classList.add('fa-eye-slash');
+                            } else {
+                                passwordInput.type = 'password';
+                                icon.classList.remove('fa-eye-slash');
+                                icon.classList.add('fa-eye');
+                            }
+                        });
+                    </script>
                 </div>
             </div>
         </div>

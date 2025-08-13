@@ -24,9 +24,10 @@ CREATE TABLE `users` (
 
 --
 -- Dumping data for table `users`
---
+--login Username: admin (not the email)
+--Password: Mama2023!
 INSERT INTO `users` (`username`, `email`, `password`, `full_name`, `role`) VALUES
-('admin', 'admin@mamasovenug.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator', 'admin');
+('admin', 'admin@mamasovenug.com', '$2y$10$kUY/zK2N46tELCQqq.1ekeVArJebnxv1xMy17RfpZ06NDnrlFW/H6', 'Administrator', 'admin');
 
 --
 -- Table structure for table `categories`
@@ -78,11 +79,11 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 INSERT INTO `products` (`name`, `description`, `price`, `category_id`, `image`, `flavours`, `ingredients`, `featured`, `stock_quantity`) VALUES
-('Chocolate Birthday Cake', 'Rich chocolate cake perfect for birthdays. Moist, decadent, and topped with a creamy chocolate ganache.', '45000.00', 1, 'assets/images/products/chocolate_cake.jpg', 'Chocolate, Vanilla, Strawberry', 'Flour, Sugar, Eggs, Cocoa, Butter', 1, 10),
-('Vanilla Cupcakes', 'A dozen soft vanilla cupcakes with a light and fluffy buttercream frosting. Perfect for any celebration.', '30000.00', 1, 'assets/images/products/vanilla_cupcakes.jpg', 'Vanilla, Chocolate, Red Velvet', 'Flour, Sugar, Eggs, Vanilla, Butter', 1, 24),
-('Savory Meat Pies', 'A pack of 6 savory meat pies with a perfectly seasoned beef filling in a flaky pastry crust.', '30000.00', 2, 'assets/images/products/meat_pies.jpg', 'Beef, Chicken, Vegetable', 'Pastry, Beef, Onions, Spices', 1, 20),
-('Classic Samosas', 'A set of 10 crispy samosas with a delicious spiced filling. A perfect snack for any time of day.', '20000.00', 3, 'assets/images/products/samosas.jpg', 'Beef, Chicken, Vegetable', 'Pastry, Meat, Vegetables, Spices', 0, 30),
-('Fresh White Bread', 'A fresh, soft loaf of classic white bread, perfect for sandwiches or toast.', '8000.00', 4, 'assets/images/products/white_bread.jpg', 'White, Brown, Whole Wheat', 'Flour, Yeast, Salt, Sugar', 0, 15);
+('Chocolate Birthday Cake', 'Rich chocolate cake perfect for birthdays. Moist, decadent, and topped with a creamy chocolate ganache.', '45000.00', 1, 'assets/images/Untitled.jpeg', 'Chocolate, Vanilla, Strawberry', 'Flour, Sugar, Eggs, Cocoa, Butter', 1, 10),
+('Vanilla Cupcakes', 'A dozen soft vanilla cupcakes with a light and fluffy buttercream frosting. Perfect for any celebration.', '30000.00', 1, 'assets/images/caketwo.jpeg', 'Vanilla, Chocolate, Red Velvet', 'Flour, Sugar, Eggs, Vanilla, Butter', 1, 24),
+('Savory Meat Pies', 'A pack of 6 savory meat pies with a perfectly seasoned beef filling in a flaky pastry crust.', '30000.00', 2, 'assets/images/meatp.jpeg', 'Beef, Chicken, Vegetable', 'Pastry, Beef, Onions, Spices', 1, 20),
+('Classic Samosas', 'A set of 10 crispy samosas with a delicious spiced filling. A perfect snack for any time of day.', '20000.00', 3, 'assets/images/samosa.jpeg', 'Beef, Chicken, Vegetable', 'Pastry, Meat, Vegetables, Spices', 0, 30),
+('Fresh White Bread', 'A fresh, soft loaf of classic white bread, perfect for sandwiches or toast.', '8000.00', 4, 'assets/images/products/bread1.jpeg', 'White, Brown, Whole Wheat', 'Flour, Yeast, Salt, Sugar', 0, 15);
 
 --
 -- Table structure for table `product_images`

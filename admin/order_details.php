@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/header.php';
 
 // Validate order ID from URL
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    header("Location: " . admin_url('orders.php'));
+    header("Location: " . 'orders.php');
     exit;
 }
 $order_id = (int)$_GET['id'];
@@ -21,7 +21,7 @@ try {
     $order = $order_stmt->fetch();
 
     if (!$order) {
-        header("Location: " . admin_url('orders.php?status=notfound'));
+        header("Location: " . 'orders.php?status=notfound');
         exit;
     }
 
@@ -42,7 +42,7 @@ try {
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3">Order #<?php echo htmlspecialchars($order['order_number']); ?></h1>
-    <a href="<?php echo admin_url('orders.php'); ?>" class="btn btn-secondary">Back to Orders</a>
+    <a href="orders.php" class="btn btn-secondary">Back to Orders</a>
 </div>
 
 <div class="row">

@@ -6,11 +6,11 @@ if (session_status() === PHP_SESSION_NONE) {
 // Including database.php will also define BASE_URL and SITE_NAME
 include_once __DIR__ . '/../config/database.php';
 
-// A simple helper to determine the correct path prefix
-function asset_url($path) {
-    // Remove leading slashes from the path to prevent issues
-    return BASE_URL . '/' . ltrim($path, '/');
-}
+// // A simple helper to determine the correct path prefix
+// function asset_url($path) {
+//     // Remove leading slashes from the path to prevent issues
+//     return BASE_URL . './' . ltrim($path, './');
+// }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,7 +22,7 @@ function asset_url($path) {
     <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="<?php echo asset_url('assets/css/style.css'); ?>">
+    <link rel="stylesheet" href="./assets/css/style.css">
     
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -37,8 +37,8 @@ function asset_url($path) {
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="<?php echo asset_url('index.php'); ?>">
-                <img src="<?php echo asset_url('assets/images/logo.png'); ?>" alt="<?php echo SITE_NAME; ?> Logo" class="logo">
+            <a class="navbar-brand" href="index.php">
+                <img src="assets/images/logo.jpeg" alt="<?php echo SITE_NAME; ?> Logo" class="logo">
                 <span class="brand-text"><?php echo SITE_NAME; ?></span>
             </a>
             
@@ -48,10 +48,10 @@ function asset_url($path) {
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link" href="<?php echo asset_url('index.php'); ?>">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?php echo asset_url('products.php'); ?>">Products</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?php echo asset_url('about.php'); ?>">About Us</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?php echo asset_url('contact.php'); ?>">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="products.php">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.php">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.php">Contact</a></li>
                 </ul>
                 
                 <ul class="navbar-nav">
@@ -61,24 +61,24 @@ function asset_url($path) {
                                 <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['full_name']); ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="<?php echo asset_url('orders.php'); ?>">My Orders</a></li>
+                                <li><a class="dropdown-item" href="orders.php">My Orders</a></li>
                                 <?php if($_SESSION['role'] === 'admin'): ?>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="<?php echo asset_url('admin/dashboard.php'); ?>">Admin Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="admin/dashboard.php">Admin Dashboard</a></li>
                                 <?php endif; ?>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?php echo asset_url('auth/logout.php'); ?>">Logout</a></li>
+                                <li><a class="dropdown-item" href="auth/logout.php">Logout</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link position-relative" href="<?php echo asset_url('cart.php'); ?>">
+                            <a class="nav-link position-relative" href="cart.php">
                                 <i class="fas fa-shopping-bag"></i>
                                 <span class="cart-count badge" id="cart-count" style="display: none;">0</span>
                             </a>
                         </li>
                     <?php else: ?>
-                        <li class="nav-item"><a class="nav-link" href="<?php echo asset_url('auth/login.php'); ?>">Login</a></li>
-                        <li class="nav-item"><a href="<?php echo asset_url('auth/register.php'); ?>" class="btn btn-primary ms-2">Sign Up</a></li>
+                        <li class="nav-item"><a class="nav-link" href="auth/login.php">Login</a></li>
+                        <li class="nav-item"><a href="auth/register.php" class="btn btn-primary ms-2">Sign Up</a></li>
                     <?php endif; ?>
                 </ul>
             </div>

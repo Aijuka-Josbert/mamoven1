@@ -29,11 +29,11 @@ try {
 // --- SITE CONSTANTS ---
 // Define a base URL to make links and paths consistent across the site.
 // If your site is in a subfolder (e.g., http://localhost/mamas-oven), change this.
-define('BASE_URL', 'http://localhost/mamaove'); 
+define('BASE_URL', 'http://127.0.0.1/mamaove1/'); 
 define('SITE_NAME', "Mama's Oven");
 define('ADMIN_EMAIL', 'admin@mamasovenug.com');
 
 // --- UPLOAD DIRECTORY ---
 // Define the path for image uploads to keep it consistent.
-define('UPLOAD_PATH', __DIR__ . '/../assets/images/products/');
+define('UPLOAD_PATH', __DIR__ . '/../assets/images/');
 ?>
