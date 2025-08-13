@@ -218,8 +218,8 @@ To enable product image uploads:
 ## Support
 
 For support and questions:
-- Email: info@mamasovenug.com
-- Phone: +256 700 123456
+- Email: josbertaijuka15@gmail.com
+- phone: +256759420168
 
 ## License
 
