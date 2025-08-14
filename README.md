@@ -67,7 +67,7 @@ A complete bakery e-commerce website built with PHP, MySQL, HTML, CSS, JavaScrip
    $host = 'localhost';
    $dbname = 'mamaove';
    $username = 'root';          // Your MySQL username
-   $password = '!Log19tan88';   // Your MySQL password
+   $password = '';   // Your MySQL password
    ```
 
 ### Step 4: Set Permissions (Linux/Mac)
@@ -110,7 +110,7 @@ mamoven1/
 │   │   └── style.css         # Custom styles
 │   ├── js/
 │   │   └── main.js           # JavaScript functions
-│   └── images/               # Website images
+│   └── images/               # Website images if umages has permissions set use image2
 ├── auth/                      # Authentication files
 │   ├── login.php             # User login
 │   ├── register.php          # User registration
@@ -221,10 +221,6 @@ For support and questions:
 - Email: josbertaijuka15@gmail.com
 - phone: +256759420168
 
-## License
 
-This project is open-source and available under the MIT License.
-
----
 
 Built with ❤️ for Mama's Oven Uganda
