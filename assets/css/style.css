@@ -10,15 +10,16 @@
 :root {
     --font-heading: 'Playfair Display', serif;
     --font-body: 'Lato', sans-serif;
-    
-    --color-primary: #A7D7C5; /* Pastel Mint Green */
-    --color-secondary: #F7D9E3; /* Soft Pink */
-    --color-background: #FCF8F3; /* Creamy Off-White */
-    --color-text: #5D5D5D; /* Dark Gray */
-    --color-text-light: #888;
-    --color-accent: #EFA7A7; /* Coral Pink Accent */
+
+    /* Updated to match logo colors (warm brown, peach, orange) */
+    --color-primary: #5A331F;    /* Deep warm brown (main buttons & headings) */
+    --color-secondary: #F5D1B1;  /* Soft peach (section accents) */
+    --color-background: #FBF2EA; /* Light cream background */
+    --color-text: #3A2B28;       /* Dark brown text */
+    --color-text-light: #867670; /* Muted brown for secondary text */
+    --color-accent: #F39C6A;     /* Orange accent (buttons hover, highlights) */
     --color-white: #FFFFFF;
-    --color-border: #EAEAEA;
+    --color-border: #EAD6C4;     /* soft border tone */
     --color-success: #5D9C59;
     --color-danger: #DF2E38;
 }
