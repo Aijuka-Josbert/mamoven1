@@ -2,6 +2,11 @@
 $page_title = 'Contact Us';
 require_once __DIR__ . '/includes/header.php';
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require __DIR__ . '/vendor/autoload.php';
+
 $success_message = '';
 $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
@@ -16,7 +21,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
             // Save message to the database
             $stmt = $pdo->prepare("INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)");
             $stmt->execute([$name, $email, $message]);
-            $success_message = 'Thank you, ' . htmlspecialchars($name) . '! Your message has been sent. We will get back to you soon.';
+
+            // Send email notification
+            $mail = new PHPMailer(true);
+
+            // --- ADDED: define subject/body and enable debug logging ---
+            $subject = "New contact message from " . $name;
+            $body = "Name: {$name}\nEmail: {$email}\n\nMessage:\n{$message}";
+
+            // Optional: enable SMTP debug during development (writes to error_log)
+            // Disable verbose debug in production; set to 2 while testing.
+            $mail->SMTPDebug = 0;
+            $mail->Debugoutput = function($str, $level) {
+                error_log("PHPMailer debug [level {$level}]: {$str}");
+            };
+            // --- END ADDED ---
+            try {
+                // SMTP configuration using constants from config/database.php
+                $mail->isSMTP();
+                $mail->Host = SMTP_HOST;
+                $mail->SMTPAuth = true;
+                $mail->Username = SMTP_USER;
+                $mail->Password = SMTP_PASS;
+                $mail->SMTPSecure = SMTP_SECURE;
+                $mail->Port = SMTP_PORT;
+
+                // Many SMTP providers require the From to match the authenticated user
+                $mail->setFrom(SMTP_USER, SITE_NAME);
+                $mail->addAddress(ADMIN_EMAIL);
+                $mail->addReplyTo($email, $name);
+
+                $mail->Subject = $subject;
+                $mail->Body    = $body;
+                $mail->isHTML(false);
+
+                $mail->send();
+                $success_message = 'Thank you, ' . htmlspecialchars($name) . '! Your message has been sent.';
+            } catch (Exception $e) {
+                // Log full PHPMailer error for troubleshooting
+                error_log('PHPMailer exception: ' . $e->getMessage() . ' | ErrorInfo: ' . $mail->ErrorInfo);
+                $error_message = 'Message saved but email delivery failed (SMTP). Please check server email logs or SMTP credentials.';
+            }
         } catch (PDOException $e) {
             $error_message = 'Sorry, there was an error sending your message. Please try again later.';
             // In a real app, you would log the error: error_log($e->getMessage());
@@ -91,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                 <div class="card-body p-2">
                     <div class="map-responsive">
                         <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127673.72898703057!2d32.51733695273995!3d0.3134372551461963!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x177dbc0f9836354b%3A0x4538903dd96b6f2b!2sKampala%2C%20Uganda!5e0!3m2!1sen!2sus!4v1699999999999!5m2!1sen!2sus" 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.7628742108036!2d32.55850780657654!3d0.30206277072840165!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x177dbcbe6b564e51%3A0x9318f49c4b969eff!2s13%20Nabunya%20Rd%2C%20Kampala!5e0!3m2!1sen!2sug!4v1755984427882!5m2!1sen!2sug"
                             width="100%" 
                             height="450" 
                             style="border:0; border-radius: 10px;" 

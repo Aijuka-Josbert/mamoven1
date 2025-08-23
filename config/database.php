@@ -31,7 +31,14 @@ try {
 // If your site is in a subfolder (e.g., http://localhost/mamas-oven), change this.
 define('BASE_URL', 'http://127.0.0.1/mamaove1'); 
 define('SITE_NAME', "Mama's Oven");
-define('ADMIN_EMAIL', 'admin@mamasovenug.com');
+define('ADMIN_EMAIL', 'joszialvin@gmail.com');
+
+// --- SMTP / Email Settings (fill with your provider credentials) ---
+define('SMTP_HOST', 'smtp.gmail.com');            // e.g. smtp.gmail.com
+define('SMTP_PORT', 587);                         // 587 for TLS, 465 for SSL
+define('SMTP_USER', 'joszialvin@gmail.com'); // SMTP username
+define('SMTP_PASS', 'iyjp qpwr kjns ejxa'); // SMTP password or app password
+define('SMTP_SECURE', 'tls');                     // 'tls' or 'ssl'
 
 // --- UPLOAD DIRECTORY ---
 // Define the path for image uploads to keep it consistent.

@@ -122,7 +122,7 @@ function updateCartCount(count = null) {
     }
 
     $.ajax({
-        url: '/api/get_cart_count.php',
+        url: 'api/get_cart_count.php',
         method: 'GET',
         dataType: 'json',
         success: function(response) {

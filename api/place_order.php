@@ -80,8 +80,9 @@ try {
     $stmt->execute([$user_id]);
 
     $pdo->commit();
-
-    echo json_encode([
+    header("Location: ../print_receipt.php?id=" . $order_id . '&placed=true' );
+    exit;
+        echo json_encode([
         'success' => true, 
         'message' => 'Order placed successfully',
         'order_number' => $order_number,
