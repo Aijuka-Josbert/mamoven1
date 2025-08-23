@@ -17,7 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $product_id = $_POST['product_id'] ?? 0;
 $quantity = $_POST['quantity'] ?? 1;
 $user_id = $_SESSION['user_id'];
-
 if (!$product_id || $quantity < 1) {
     echo json_encode(['success' => false, 'message' => 'Invalid product or quantity']);
     exit;

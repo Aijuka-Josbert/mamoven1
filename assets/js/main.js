@@ -38,8 +38,7 @@ function showLoginRequired() {
         confirmButtonText: 'Login Now',
     }).then((result) => {
         if (result.isConfirmed) {
-            // Assumes there's a global BASE_URL variable for consistent paths
-            window.location.href = `${BASE_URL}/auth/login.php`;
+            window.location.href = 'auth/login.php';
         }
     });
 }
@@ -86,8 +85,9 @@ function addToCart(productId, quantity = 1) {
     const button = $(`[onclick="addToCart(${productId}, ${quantity})"]`);
     const originalHtml = button.html();
 
+
     $.ajax({
-        url: `${BASE_URL}/api/add_to_cart.php`,
+        url: 'api/add_to_cart.php',
         method: 'POST',
         data: { product_id: productId, quantity: quantity },
         dataType: 'json',
@@ -122,7 +122,7 @@ function updateCartCount(count = null) {
     }
 
     $.ajax({
-        url: `${BASE_URL}/api/get_cart_count.php`,
+        url: '/api/get_cart_count.php',
         method: 'GET',
         dataType: 'json',
         success: function(response) {

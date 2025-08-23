@@ -6,11 +6,11 @@ if (session_status() === PHP_SESSION_NONE) {
 // Including database.php will also define BASE_URL and SITE_NAME
 include_once __DIR__ . '/../config/database.php';
 
-// // A simple helper to determine the correct path prefix
-// function asset_url($path) {
-//     // Remove leading slashes from the path to prevent issues
-//     return BASE_URL . './' . ltrim($path, './');
-// }
+// A simple helper to determine the correct path prefix
+function asset_url($path) {
+    // Remove leading slashes from the path to prevent issues
+    return BASE_URL . './' . ltrim($path, './');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -29,7 +29,7 @@ try {
 // --- SITE CONSTANTS ---
 // Define a base URL to make links and paths consistent across the site.
 // If your site is in a subfolder (e.g., http://localhost/mamas-oven), change this.
-define('BASE_URL', 'http://127.0.0.1/mamaove1/'); 
+define('BASE_URL', 'http://127.0.0.1/mamaove1'); 
 define('SITE_NAME', "Mama's Oven");
 define('ADMIN_EMAIL', 'admin@mamasovenug.com');
 

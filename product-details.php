@@ -63,8 +63,8 @@ $page_title = htmlspecialchars($product['name']);
         <div class="col-lg-6 ps-lg-5">
             <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="'index.php'">Home</a></li>
-                    <li class="breadcrumb-item"><a href="'products.php'">Products</a></li>
+                    <li class="breadcrumb-item"><a href='index.php'>Home</a></li>
+                    <li class="breadcrumb-item"><a href='products.php'>Products</a></li>
                 </ol>
             </nav>
 
