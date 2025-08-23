@@ -130,7 +130,7 @@ try {
                                         <td><?php echo htmlspecialchars($order['full_name']); ?></td>
                                         <td>UGX <?php echo number_format($order['total_amount']); ?></td>
                                         <td><span class="badge bg-info text-dark"><?php echo ucfirst(htmlspecialchars($order['status'])); ?></span></td>
-                                        <td><a href="order-details.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-outline-primary">View</a></td>
+                                        <td><a href="./order_details.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-outline-primary">View</a></td>
                                     </tr>
                                     <?php endforeach; ?>
                                 <?php endif; ?>

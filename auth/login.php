@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="mt-4 p-3 bg-light rounded border">
                         <h6 class="text-center mb-2 fw-bold">Demo Account</h6>
                         <small class="text-muted d-block text-center">
-                            <strong>Admin:</strong> admin / admin123
+                            <strong>Admin:</strong> admin / Mama2023!
                         </small>
                     </div>
                     
