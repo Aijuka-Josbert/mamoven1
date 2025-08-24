@@ -207,6 +207,113 @@ To enable product image uploads:
 - **CSS/JS Minification**: Consider minifying assets for production
 - **Caching**: Implement caching strategies for better performance
 
+## Protecting secrets & redeploying — Step-by-step
+
+Follow this exact sequence on your development machine (project root: /var/www/html/mamoven1).
+
+1) Immediately rotate exposed credentials
+- Log in to your mail provider and database host and change the SMTP and DB passwords (create new app passwords where possible).
+- Do NOT reuse the old secret.
+
+2) Ensure .env is ignored
+Create/update .gitignore (project root) to include:
+```
+.env
+vendor/
+node_modules/
+.DS_Store
+```
+Command:
+```
+cat > .gitignore <<'EOF'
+.env
+vendor/
+node_modules/
+.DS_Store
+EOF
+```
+
+3) Keep a safe template in the repo
+Create .env.example (committable) with placeholders:
+```
+DB_HOST=127.0.0.1
+DB_NAME=mamaove
+DB_USER=root
+DB_PASS=your_db_password_here
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=you@example.com
+SMTP_PASS=your_smtp_password_here
+SMTP_SECURE=tls
+```
+
+4) Load .env in PHP (already implemented)
+- Confirm config/database.php contains a small load_dotenv() that reads project .env (one level up from config/).
+- This ensures getenv('SMTP_PASS') and getenv('DB_PASS') return local values and you never commit .env.
+
+5) Commit only safe files
+Do NOT add .env to git. Example commit:
+```
+git add .gitignore .env.example config/database.php README.md
+git commit -m "Move secrets to env, add .env.example and README steps"
+git push origin main
+```
+
+6) Remove secrets from Git history (if they were committed)
+- Install git-filter-repo:
+```
+python3 -m pip install --user git-filter-repo
+```
+- Create a replace file (replace EXPOSED_SECRET with the exact leaked string — DO NOT paste it into shared places):
+```
+printf 'EXPOSED_SECRET==>***REDACTED***\n' > replace.txt
+```
+- Rewrite history (this is destructive; you must force-push):
+```
+git filter-repo --replace-text replace.txt
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+git push --force --all
+git push --force --tags
+```
+Alternative: use BFG Repo-Cleaner if preferred.
+
+7) After history rewrite
+- Tell all collaborators to re-clone the repo (do NOT pull).
+- Verify no secrets remain: search for common keys:
+```
+git grep -n "SMTP_PASS\|DB_PASS\|password" || true
+```
+
+8) Deploy safely / CI
+- Use environment variables on the server or GitHub Actions Secrets (Repository → Settings → Secrets).
+- Example in GitHub Actions:
+```
+- name: expose secrets to env
+  run: |
+    echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
+    echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> $GITHUB_ENV
+```
+
+9) Restart services after local .env changes
+```
+sudo systemctl restart apache2
+# or for php-fpm
+sudo systemctl restart php8.1-fpm
+```
+
+10) Quick checks
+- Confirm database connects locally:
+```
+php -r "require 'config/database.php'; echo 'DB OK';"
+```
+- Confirm web pages no longer show credentials or error stack traces in production (disable display_errors in production).
+
+Notes
+- Never paste real secrets into issue trackers, public chats or commits.
+- Keep .env only on development/production machines and in server secret stores.
+
 ## Contributing
 
 1. Fork the repository
