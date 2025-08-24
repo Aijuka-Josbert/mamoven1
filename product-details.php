@@ -73,10 +73,19 @@ $page_title = htmlspecialchars($product['name']);
 
             <p class="lead text-muted"><?php echo nl2br(htmlspecialchars($product['description'])); ?></p>
             
-            <?php if (!empty($product['ingredients'])): ?>
-                <p><strong>Ingredients:</strong> <?php echo htmlspecialchars($product['ingredients']); ?></p>
+            <?php if (!empty($product['flavours'])): ?>
+                <p><strong>Flavours:</strong>
+                    <?php
+                        // display flavours as comma-separated plain text or as badges
+                        echo htmlspecialchars($product['flavours']);
+                    ?>
+                </p>
             <?php endif; ?>
 
+            <?php if (!empty($product['ingredients'])): ?>
+                <p><strong>Ingredients:</strong> <?php echo nl2br(htmlspecialchars($product['ingredients'])); ?></p>
+            <?php endif; ?>
+            
             <!-- Add to Cart Section -->
             <div class="card bg-light border-0 p-3 mt-4">
                 <div class="row align-items-center">

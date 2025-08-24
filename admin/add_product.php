@@ -23,6 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize inputs
     $name = trim($_POST['name'] ?? '');
     $description = trim($_POST['description'] ?? '');
+    $flavours = trim($_POST['flavours'] ?? '');         // <-- added
+    $ingredients = trim($_POST['ingredients'] ?? '');   // <-- added
     $price = filter_var($_POST['price'] ?? 0, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
     $category_id = filter_var($_POST['category_id'] ?? null, FILTER_SANITIZE_NUMBER_INT);
     $stock_quantity = filter_var($_POST['stock_quantity'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
@@ -72,9 +74,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($errors)) {
         try {
-            $sql = "INSERT INTO products (name, description, price, category_id, stock_quantity, status, featured, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            // store flavours and ingredients in the products table
+            $sql = "INSERT INTO products (name, description, flavours, ingredients, price, category_id, stock_quantity, status, featured, image) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$name, $description, $price, $category_id, $stock_quantity, $status, $featured, $image_path]);
+            $stmt->execute([
+                $name, 
+                $description, 
+                $flavours ?: null,    // allow null if empty
+                $ingredients ?: null, // allow null if empty
+                $price, 
+                $category_id, 
+                $stock_quantity, 
+                $status, 
+                $featured, 
+                $image_path
+            ]);
             
             // Redirect with success message
             header("Location: products.php?status=added");
@@ -119,6 +134,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
                             <textarea class="form-control" id="description" name="description" rows="5"><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
+                        </div>
+
+                        <!-- New: Flavours and Ingredients -->
+                        <div class="mb-3">
+                            <label for="flavours" class="form-label">Flavours (comma separated)</label>
+                            <input type="text" class="form-control" id="flavours" name="flavours" 
+                                   value="<?php echo htmlspecialchars($_POST['flavours'] ?? ''); ?>" 
+                                   placeholder="e.g., Vanilla, Chocolate, Red Velvet">
+                            <div class="form-text">Enter multiple flavours separated by commas.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ingredients" class="form-label">Ingredients</label>
+                            <textarea class="form-control" id="ingredients" name="ingredients" rows="3" placeholder="List main ingredients"><?php echo htmlspecialchars($_POST['ingredients'] ?? ''); ?></textarea>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
