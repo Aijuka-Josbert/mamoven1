@@ -97,12 +97,6 @@ try {
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>```
 
----
-
-#### `admin/add_product.php`
-A fully functional form for adding new products with image uploads.
-
-```php
 <?php
 $page_title = 'Add New Product';
 require_once __DIR__ . '/includes/header.php';

@@ -36,7 +36,7 @@
                     <address class="mb-0" style="font-style: normal;">
                         Kampala, Uganda<br>
                         <strong>Email:</strong> <a href="mailto:<?php echo ADMIN_EMAIL; ?>"><?php echo ADMIN_EMAIL; ?></a><br>
-                        <strong>Phone:</strong> <a href="tel:+256700123456">+256 700 123456</a>
+                        <strong>Phone:</strong> <a href="tel:+256747686189">+256 747 686189</a>
                     </address>
                 </div>
             </div>
