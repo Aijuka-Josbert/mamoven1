@@ -1,0 +1,7 @@
+```
+.env
+# ignore common things
+vendor/
+node_modules/
+.DS_Store
+```
