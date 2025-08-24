@@ -73,7 +73,7 @@ function is_active($page_name) {
                 <a class="nav-link" href="../index.php" target="_blank">
                     <i class="fas fa-globe fa-fw"></i> View Public Site
                 </a>
-                <a class="nav-link" href="auth/logout.php">
+                <a class="nav-link" href="<?php echo BASE_URL . '/auth/logout.php'; ?>">
                     <i class="fas fa-sign-out-alt fa-fw"></i> Logout
                 </a>
             </li>

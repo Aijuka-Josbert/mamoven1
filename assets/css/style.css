@@ -368,3 +368,44 @@ a:hover {
     background-color: #F9FAFB;
     min-height: 100vh;
 }
+
+/* --- Login Card Styles --- */
+.login-card {
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Warm (default) */
+.login-variant-warm {
+    background: linear-gradient(180deg, #fffefc 0%, #fffaf6 100%);
+    border: 1px solid rgba(90,51,31,0.06);
+    box-shadow: 0 12px 35px rgba(90,51,31,0.06);
+}
+.login-variant-warm .card-body { padding: 2.5rem; }
+
+/* Minimal */
+.login-variant-minimal {
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    box-shadow: none;
+}
+.login-variant-minimal .card-body { padding: 1.5rem; }
+
+/* Dark */
+.login-variant-dark {
+    background: #2b2b2b;
+    color: #f3efe8;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+}
+.login-variant-dark .card-body { padding: 2rem; }
+.login-variant-dark .form-control {
+    background: rgba(255,255,255,0.04);
+    color: #f3efe8;
+    border-color: rgba(255,255,255,0.06);
+}
+.login-variant-dark a { color: #f5d1b1; }
+
+/* Hover effect */
+.login-card:hover { transform: translateY(-6px); }

@@ -7,9 +7,9 @@ include_once __DIR__ . '/../includes/header.php';
 // If user is already logged in, redirect them away from the login page.
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'admin') {
-        header('Location: ' . '../admin/dashboard.php');
+        header('Location: ' . BASE_URL . '/admin/dashboard.php');
     } else {
-        header('Location: ' . '../index.php');
+        header('Location: ' . BASE_URL . '../index.php');
     }
     exit;
 }
@@ -28,17 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role FROM users WHERE username = :username OR email = :email");
             $stmt->execute(['username' => $username, 'email' => $username]);
             $user = $stmt->fetch();
-
-            // // Safer debugging - only attempt to access array elements if $user is an array
-            // var_dump($user);
-            // var_dump($password);
-            // if ($user) {
-            //     var_dump(password_verify($password, $user['password']));
-            // } else {
-            //     echo "No user found with username/email: " . htmlspecialchars($username);
-            // }
-            
-            // // Then comment out before going to production
             
             // Verify user exists and password is correct
             if ($user && password_verify($password, $user['password'])) {
@@ -51,15 +40,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['full_name'] = $user['full_name'];
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['email'] = $user['email'];
-                
+
                 // Redirect based on role
                 if ($user['role'] === 'admin') {
-                    // FIX: Add '../' prefix
-                    header('Location: ' . '../admin/dashboard.php');
+                    header('Location: ' . BASE_URL . '/admin/dashboard.php');
                 } else {
-                    // FIX: Add '../' prefix for index.php
-                    $redirect_url = $_GET['redirect'] ?? '../index.php';
-                    header('Location: ' . $redirect_url);
+                    // Respect optional redirect param if provided (must be a safe local path)
+                    $redirect_param = $_GET['redirect'] ?? '';
+                    if (!empty($redirect_param) && strpos($redirect_param, 'http') !== 0) {
+                        // normalize leading slash
+                        $redirect_param = ltrim($redirect_param, '/');
+                        header('Location: ' . BASE_URL . '/' . $redirect_param);
+                    } else {
+                        header('Location: ../index.php');
+                    }
                 }
                 exit;
             } else {
@@ -76,12 +70,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
-            <div class="card shadow">
+            <div class="card shadow-sm border-0 login-card login-variant-warm">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <img src="../assets/images/logo.jpeg" alt="Logo" style="height: 60px;" class="mb-3">
+                        <img src="<?php echo htmlspecialchars(asset_url('assets/images/logo.jpeg')); ?>" alt="Logo" style="height: 80px;" class="mb-3">
                         <h2 class="card-title h3">Welcome Back!</h2>
-                        <p class="text-muted">Sign in to continue to Mama's Oven.</p>
+                        <p class="text-muted">Sign in to continue to <?php echo SITE_NAME; ?>.</p>
                     </div>
 
                     <?php if (!empty($error)): ?>
@@ -90,43 +84,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     <?php endif; ?>
 
-                    <form method="POST" action="">
+                    <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
                         <div class="mb-3">
                             <label for="username" class="form-label">Username or Email</label>
-                            <input type="text" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>" required autofocus>
+                            <input type="text" class="form-control form-control-lg" id="username" name="username" value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>" required autofocus>
                         </div>
 
                         <div class="mb-4">
                             <label for="password" class="form-label">Password</label>
                             <div class="input-group">
-                                <input type="password" class="form-control" id="password" name="password" required>
+                                <input type="password" class="form-control form-control-lg" id="password" name="password" required>
                                 <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
                                     <i class="fas fa-eye"></i>
                                 </span>
                             </div>
                         </div>
 
-                        <div class="d-grid">
+                        <div class="d-grid mb-3">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="fas fa-sign-in-alt me-2"></i> Sign In
                             </button>
                         </div>
+
+                        <div class="text-center">
+                            <p class="mb-0 text-muted">Don't have an account? 
+                                <a href="<?php echo BASE_URL; ?>/auth/register.php">Sign up here</a>
+                            </p>
+                        </div>
                     </form>
 
-                    <div class="text-center mt-4">
-                        <p class="mb-0 text-muted">Don't have an account? 
-                            <a href="register.php">Sign up here</a>
-                        </p>
-                    </div>
-
                     <!-- Demo Accounts Info -->
-                    <div class="mt-4 p-3 bg-light rounded border">
-                        <h6 class="text-center mb-2 fw-bold">Demo Account</h6>
-                        <small class="text-muted d-block text-center">
+                    <div class="mt-4 p-3 bg-light rounded border text-center">
+                        <h6 class="mb-2 fw-bold">Demo Account</h6>
+                        <small class="text-muted d-block">
                             <strong>Admin:</strong> admin / Mama2023!
                         </small>
                     </div>
-                    
+
                     <!-- Password visibility toggle script -->
                     <script>
                         document.getElementById('togglePassword').addEventListener('click', function() {

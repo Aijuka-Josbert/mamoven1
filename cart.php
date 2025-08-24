@@ -90,7 +90,39 @@ try {
                         <?php foreach ($cart_items as $item): ?>
                             <div class="row align-items-center mb-4">
                                 <div class="col-md-2">
-                                    <img src="<?php echo 'assets/images/' . ($item['image'] ?: 'placeholder.jpg'); ?>" 
+                                    <?php
+                                        // Robust image resolution:
+                                        // - allow full http(s) URLs
+                                        // - accept stored relative paths like "assets/images/..." or "/assets/..."
+                                        // - accept bare filenames (prepend "assets/images/")
+                                        $raw = trim((string)($item['image'] ?? ''));
+
+                                        if ($raw === '') {
+                                            $imgRelative = 'assets/images/placeholder.jpg';
+                                            $imgUrl = (defined('BASE_URL') ? rtrim(BASE_URL, '/') : '') . '/' . $imgRelative;
+                                        } elseif (preg_match('#^https?://#i', $raw)) {
+                                            // remote URL stored in DB
+                                            $imgUrl = $raw;
+                                        } else {
+                                            // normalize stored path
+                                            $clean = ltrim($raw, '/');
+                                            if (strpos($clean, 'assets/') === 0) {
+                                                $imgRelative = $clean;
+                                            } else {
+                                                $imgRelative = 'assets/images/' . $clean;
+                                                $imgRelative = 'assets/images/' . $clean;
+                                            }
+
+                                            // map to filesystem path from project root
+                                            $fsPath = __DIR__ . '/' . $imgRelative;
+                                            if (!file_exists($fsPath)) {
+                                                // fallback to placeholder if file missing
+                                                $imgRelative = 'assets/images/placeholder.jpg';
+                                            }
+                                            $imgUrl = (defined('BASE_URL') ? rtrim(BASE_URL, '/') : '') . '/' . $imgRelative;
+                                        }
+                                    ?>
+                                    <img src="<?php echo htmlspecialchars($imgUrl); ?>" 
                                          alt="<?php echo htmlspecialchars($item['name']); ?>" class="img-fluid rounded">
                                 </div>
                                 <div class="col-md-4">
