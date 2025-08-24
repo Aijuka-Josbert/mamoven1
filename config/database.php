@@ -3,12 +3,12 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// --- DATABASE CREDENTIALS ---
-$host = 'localhost';
-$dbname = 'mamaove';
-$username = 'root'; 
-$password = '!Log19tan88'; // Change this to your database password
-$charset = 'utf8mb4';
+// --- DATABASE CREDENTIALS (read from environment) ---
+$host    = getenv('DB_HOST') ?: 'localhost';
+$dbname  = getenv('DB_NAME') ?: 'mamaove';
+$username= getenv('DB_USER') ?: 'root';
+$password= getenv('DB_PASS') ?: ''; // keep empty locally if using separate auth
+$charset = getenv('DB_CHARSET') ?: 'utf8mb4';
 
 // --- PDO CONNECTION ---
 $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
@@ -33,14 +33,15 @@ define('BASE_URL', 'http://127.0.0.1/mamaove1');
 define('SITE_NAME', "Mama's Oven");
 define('ADMIN_EMAIL', 'joszialvin@gmail.com');
 
-// --- SMTP / Email Settings (fill with your provider credentials) ---
-define('SMTP_HOST', 'smtp.gmail.com');            // e.g. smtp.gmail.com
-define('SMTP_PORT', 587);                         // 587 for TLS, 465 for SSL
-define('SMTP_USER', 'joszialvin@gmail.com'); // SMTP username
-define('SMTP_PASS', 'iyjp qpwr kjns ejxa'); // SMTP password or app password
-define('SMTP_SECURE', 'tls');                     // 'tls' or 'ssl'
+// --- SMTP / Email Settings (read from environment) ---
+define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
+define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
+define('SMTP_USER', getenv('SMTP_USER') ?: '');
+define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
+define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'tls');
 
 // --- UPLOAD DIRECTORY ---
 // Define the path for image uploads to keep it consistent.
 define('UPLOAD_PATH', __DIR__ . '/../assets/images/');
+define('UPLOAD_URL', __DIR__ . '/assets/image2/');
 ?>
