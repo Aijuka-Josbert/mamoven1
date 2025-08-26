@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
                         <div style='text-align: center; margin-bottom: 30px;'>
                             <h1 style='color: #8B4513; margin-bottom: 10px;'>Welcome to Mama's Oven!</h1>
-                            <img src='" . BASE_URL . "/assets/images/logo.png' alt='Mama\\'s Oven Logo' style='height: 80px;'>
+                            <img src='" . BASE_URL . "/assets/images/logo.jpeg' alt='Mama\\'s Oven Logo' style='height: 80px;'>
                         </div>
                         
                         <p>Dear {$inputs['full_name']},</p>

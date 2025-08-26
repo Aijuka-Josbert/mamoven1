@@ -1,5 +1,4 @@
 <?php
-// No need to include database here, header.php does it.
 $page_title = 'Login';
 // The header file starts the session and includes necessary configs.
 include_once __DIR__ . '/../includes/header.php';
@@ -43,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Redirect based on role
                 if ($user['role'] === 'admin') {
-                    header('Location: ' . BASE_URL . '/admin/dashboard.php');
+                    header('Location: ' . '/admin/dashboard.php');
                 } else {
                     // Respect optional redirect param if provided (must be a safe local path)
                     $redirect_param = $_GET['redirect'] ?? '';
@@ -73,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card shadow-sm border-0 login-card login-variant-warm">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <img src="<?php echo htmlspecialchars(asset_url('assets/images/logo.jpeg')); ?>" alt="Logo" style="height: 80px;" class="mb-3">
+                        <img src="../assets/images/logo.jpeg" alt="Logo" style="height: 80px;" class="mb-3">
                         <h2 class="card-title h3">Welcome Back!</h2>
                         <p class="text-muted">Sign in to continue to <?php echo SITE_NAME; ?>.</p>
                     </div>

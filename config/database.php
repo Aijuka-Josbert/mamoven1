@@ -66,7 +66,7 @@ try {
 // --- SITE CONSTANTS ---
 define('BASE_URL', getenv('BASE_URL') ?: 'http://127.0.0.1/mamaove1'); 
 define('SITE_NAME', getenv('SITE_NAME') ?: "Mama's Oven");
-define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'joszialvin@gmail.com');
+define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'joszialvin@gmail.com'); //mamasovenug@gmail.com
 
 // --- SMTP / Email Settings (read from environment) ---
 define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
