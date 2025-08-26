@@ -13,6 +13,12 @@ $(document).ready(function() {
     if (typeof userLoggedIn !== 'undefined' && userLoggedIn) {
         updateCartCount();
     }
+
+    // Check for order success in URL and show message
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('order_success')) {
+        showOrderSuccess(urlParams.get('order_number'));
+    }
 });
 
 /**
@@ -30,15 +36,15 @@ function isLoggedIn() {
 function showLoginRequired() {
     Swal.fire({
         title: 'Login Required',
-        text: 'You need to be logged in to perform this action.',
+        text: 'Please log in to add items to your cart.',
         icon: 'info',
         showCancelButton: true,
-        confirmButtonColor: '#A7D7C5',
-        cancelButtonColor: '#EFA7A7',
-        confirmButtonText: 'Login Now',
+        confirmButtonText: 'Login',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#8B4513',
     }).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = 'auth/login.php';
+            window.location.href = 'auth/login.php?redirect=' + encodeURIComponent(window.location.pathname);
         }
     });
 }
@@ -72,6 +78,35 @@ function showError(message) {
 }
 
 /**
+ * Shows order success message with order details.
+ * @param {string} orderNumber - The order number to display.
+ */
+function showOrderSuccess(orderNumber) {
+    Swal.fire({
+        title: 'Order Placed Successfully!',
+        html: `
+            <div style="text-align: center;">
+                <i class="fas fa-check-circle" style="color: #28a745; font-size: 3em; margin-bottom: 15px;"></i>
+                <p><strong>Order Number:</strong> ${orderNumber}</p>
+                <p>Thank you for your order! A confirmation email has been sent to your email address.</p>
+                <p>You can track your order status in your order history.</p>
+            </div>
+        `,
+        icon: 'success',
+        confirmButtonText: 'View My Orders',
+        showCancelButton: true,
+        cancelButtonText: 'Continue Shopping',
+        confirmButtonColor: '#8B4513',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = 'orders.php';
+        } else {
+            window.location.href = 'products.php';
+        }
+    });
+}
+
+/**
  * Adds a product to the cart via AJAX.
  * @param {number} productId - The ID of the product to add.
  * @param {number} [quantity=1] - The quantity to add.
@@ -84,7 +119,6 @@ function addToCart(productId, quantity = 1) {
 
     const button = $(`[onclick="addToCart(${productId}, ${quantity})"]`);
     const originalHtml = button.html();
-
 
     $.ajax({
         url: 'api/add_to_cart.php',
@@ -117,25 +151,20 @@ function addToCart(productId, quantity = 1) {
  */
 function updateCartCount(count = null) {
     if (count !== null) {
-        $('#cart-count').text(count).show();
+        $('#cart-count').text(count);
         return;
     }
+
+    if (!isLoggedIn()) return;
 
     $.ajax({
         url: 'api/get_cart_count.php',
         method: 'GET',
         dataType: 'json',
         success: function(response) {
-            if (response && typeof response.count !== 'undefined') {
-                if(response.count > 0) {
-                   $('#cart-count').text(response.count).show();
-                } else {
-                   $('#cart-count').hide();
-                }
+            if (response.success) {
+                $('#cart-count').text(response.count);
             }
-        },
-        error: function() {
-            console.error("Could not fetch cart count.");
         }
     });
 }
@@ -146,12 +175,10 @@ function updateCartCount(count = null) {
  * @param {string} previewId - The ID of the img element to show the preview in.
  */
 function previewImage(input, previewId) {
-    const preview = document.getElementById(previewId);
     if (input.files && input.files[0]) {
         const reader = new FileReader();
-        reader.onload = function (e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
+        reader.onload = function(e) {
+            $('#' + previewId).attr('src', e.target.result).show();
         };
         reader.readAsDataURL(input.files[0]);
     }

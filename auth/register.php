@@ -2,6 +2,11 @@
 $page_title = 'Create Account';
 include_once __DIR__ . '/../includes/header.php';
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require __DIR__ . '/../vendor/autoload.php';
+
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
     header('Location: ' . '../index.php');
@@ -70,6 +75,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Get the new user's ID
             $user_id = $pdo->lastInsertId();
             
+            // Send welcome email
+            try {
+                $mail = new PHPMailer(true);
+                
+                // SMTP configuration
+                $mail->isSMTP();
+                $mail->Host = SMTP_HOST;
+                $mail->SMTPAuth = true;
+                $mail->Username = SMTP_USER;
+                $mail->Password = SMTP_PASS;
+                $mail->SMTPSecure = SMTP_SECURE;
+                $mail->Port = SMTP_PORT;
+
+                $mail->setFrom(SMTP_USER, SITE_NAME);
+                $mail->addAddress($inputs['email'], $inputs['full_name']);
+
+                $mail->isHTML(true);
+                $mail->Subject = "Welcome to " . SITE_NAME . "!";
+                
+                $mail->Body = "
+                <html>
+                <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                    <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                        <div style='text-align: center; margin-bottom: 30px;'>
+                            <h1 style='color: #8B4513; margin-bottom: 10px;'>Welcome to Mama's Oven!</h1>
+                            <img src='" . BASE_URL . "/assets/images/logo.png' alt='Mama\\'s Oven Logo' style='height: 80px;'>
+                        </div>
+                        
+                        <p>Dear {$inputs['full_name']},</p>
+                        
+                        <p>Welcome to the Mama's Oven family! We're thrilled to have you join our community of baking enthusiasts.</p>
+                        
+                        <div style='background: #f9f6f0; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #8B4513;'>
+                            <h3 style='margin-top: 0; color: #8B4513;'>Your Account Details</h3>
+                            <p><strong>Full Name:</strong> {$inputs['full_name']}</p>
+                            <p><strong>Username:</strong> {$inputs['username']}</p>
+                            <p><strong>Email:</strong> {$inputs['email']}</p>
+                        </div>
+
+                        <div style='background: #fff8e1; padding: 20px; border-radius: 8px; margin: 25px 0;'>
+                            <h3 style='margin-top: 0; color: #8B4513;'>What can you do now?</h3>
+                            <ul style='margin: 0; padding-left: 20px;'>
+                                <li style='margin-bottom: 8px;'>Browse our delicious range of <a href='" . BASE_URL . "/products.php' style='color: #8B4513;'>baked goods</a></li>
+                                <li style='margin-bottom: 8px;'>Add items to your cart and place orders</li>
+                                <li style='margin-bottom: 8px;'>Track your <a href='" . BASE_URL . "/orders.php' style='color: #8B4513;'>order history</a></li>
+                                <li style='margin-bottom: 8px;'>Enjoy convenient delivery to your doorstep</li>
+                                <li style='margin-bottom: 8px;'>Get updates on new products and special offers</li>
+                            </ul>
+                        </div>
+
+                        <div style='background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 25px 0;'>
+                            <h3 style='margin-top: 0; color: #2d5a2d;'>Why Choose Mama's Oven?</h3>
+                            <ul style='margin: 0; padding-left: 20px;'>
+                                <li style='margin-bottom: 8px;'><strong>Fresh Daily:</strong> All our products are baked fresh every day</li>
+                                <li style='margin-bottom: 8px;'><strong>Quality Ingredients:</strong> We use only the finest, locally-sourced ingredients</li>
+                                <li style='margin-bottom: 8px;'><strong>Fast Delivery:</strong> Quick and reliable delivery across Kampala</li>
+                                <li style='margin-bottom: 8px;'><strong>Cash on Delivery:</strong> Pay conveniently when your order arrives</li>
+                            </ul>
+                        </div>
+
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='" . BASE_URL . "/products.php' style='background: #8B4513; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;'>Start Shopping Now</a>
+                        </div>
+
+                        <p>If you have any questions or need assistance, don't hesitate to <a href='" . BASE_URL . "/contact.php' style='color: #8B4513;'>contact our friendly team</a>.</p>
+                        
+                        <p style='margin-top: 30px;'>
+                            Once again, welcome to Mama's Oven!<br>
+                            <strong>The Mama's Oven Team</strong>
+                        </p>
+                        
+                        <hr style='border: none; border-top: 1px solid #ddd; margin: 30px 0;'>
+                        <p style='font-size: 12px; color: #666; text-align: center;'>
+                            You're receiving this email because you created an account with Mama's Oven.<br>
+                            Visit us at <a href='" . BASE_URL . "' style='color: #8B4513;'>" . BASE_URL . "</a>
+                        </p>
+                    </div>
+                </body>
+                </html>";
+
+                $mail->send();
+            } catch (Exception $e) {
+                // Log email error but don't fail the registration
+                error_log('Welcome email failed: ' . $e->getMessage());
+            }
+            
             // Auto login after registration
             session_regenerate_id(true);
             $_SESSION['user_id'] = $user_id;
@@ -81,7 +172,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Redirect to a welcome page or homepage
             header('Location: ' . '../index.php?registered=1');
             exit;
-            
         } catch (PDOException $e) {
             $errors[] = 'Registration failed due to a server error. Please try again.';
         }
@@ -111,19 +201,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     <?php endif; ?>
 
-                    <form method="POST" action="">
-                        <div class="mb-3">
-                            <label for="full_name" class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="full_name" name="full_name" value="<?php echo htmlspecialchars($inputs['full_name'] ?? ''); ?>" required>
+                    <form method="POST" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="full_name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" 
+                                       value="<?php echo htmlspecialchars($inputs['full_name'] ?? ''); ?>" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" 
+                                       value="<?php echo htmlspecialchars($inputs['username'] ?? ''); ?>" required>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($inputs['username'] ?? ''); ?>" required>
-                        </div>
+
                         <div class="mb-3">
                             <label for="email" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($inputs['email'] ?? ''); ?>" required>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="<?php echo htmlspecialchars($inputs['email'] ?? ''); ?>" required>
                         </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="password" class="form-label">Password</label>

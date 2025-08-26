@@ -2,6 +2,11 @@
 session_start();
 include_once '../config/database.php';
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require __DIR__ . '/../vendor/autoload.php';
+
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
@@ -66,7 +71,6 @@ try {
     $order_id = $pdo->lastInsertId();
 
     // Reserve stock and create order items
-    // Match actual order_items columns: order_id, product_id, quantity, unit_price, total_price
     $insert_item_stmt = $pdo->prepare("
         INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price)
         VALUES (?, ?, ?, ?, ?)
@@ -116,10 +120,118 @@ try {
     $stmt = $pdo->prepare("DELETE FROM cart WHERE user_id = ?");
     $stmt->execute([$user_id]);
 
+    // Get user details for email
+    $stmt = $pdo->prepare("SELECT full_name, email FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch();
+
     $pdo->commit();
 
-    echo json_encode(['success' => true, 'message' => 'Order placed successfully', 'order_number' => $order_number, 'order_id' => $order_id]);
+    // Send order confirmation email
+    try {
+        $mail = new PHPMailer(true);
+        
+        // SMTP configuration
+        $mail->isSMTP();
+        $mail->Host = SMTP_HOST;
+        $mail->SMTPAuth = true;
+        $mail->Username = SMTP_USER;
+        $mail->Password = SMTP_PASS;
+        $mail->SMTPSecure = SMTP_SECURE;
+        $mail->Port = SMTP_PORT;
+
+        $mail->setFrom(SMTP_USER, SITE_NAME);
+        $mail->addAddress($user['email'], $user['full_name']);
+
+        $mail->isHTML(true);
+        $mail->Subject = "Order Confirmation - " . $order_number;
+        
+        // Create order items list for email
+        $items_html = '';
+        foreach ($cart_items as $item) {
+            $item_total = $item['price'] * $item['quantity'];
+            $items_html .= "<tr>
+                <td style='padding: 8px; border-bottom: 1px solid #ddd;'>{$item['name']}</td>
+                <td style='padding: 8px; border-bottom: 1px solid #ddd; text-align: center;'>{$item['quantity']}</td>
+                <td style='padding: 8px; border-bottom: 1px solid #ddd; text-align: right;'>UGX " . number_format($item['price']) . "</td>
+                <td style='padding: 8px; border-bottom: 1px solid #ddd; text-align: right;'>UGX " . number_format($item_total) . "</td>
+            </tr>";
+        }
+
+        $mail->Body = "
+        <html>
+        <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+            <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                <h2 style='color: #8B4513; text-align: center;'>Order Confirmation</h2>
+                
+                <p>Dear {$user['full_name']},</p>
+                
+                <p>Thank you for your order! We're excited to prepare your delicious treats.</p>
+                
+                <div style='background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                    <h3 style='margin-top: 0; color: #8B4513;'>Order Details</h3>
+                    <p><strong>Order Number:</strong> {$order_number}</p>
+                    <p><strong>Order Date:</strong> " . date('d M Y, H:i') . "</p>
+                    <p><strong>Delivery Address:</strong> " . nl2br(htmlspecialchars($delivery_address)) . "</p>
+                    <p><strong>Contact Phone:</strong> {$delivery_phone}</p>
+                    " . (!empty($special_instructions) ? "<p><strong>Special Instructions:</strong> " . htmlspecialchars($special_instructions) . "</p>" : "") . "
+                </div>
+
+                <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+                    <thead>
+                        <tr style='background: #8B4513; color: white;'>
+                            <th style='padding: 10px; text-align: left;'>Item</th>
+                            <th style='padding: 10px; text-align: center;'>Qty</th>
+                            <th style='padding: 10px; text-align: right;'>Price</th>
+                            <th style='padding: 10px; text-align: right;'>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {$items_html}
+                        <tr style='border-top: 2px solid #8B4513;'>
+                            <td colspan='3' style='padding: 10px; text-align: right; font-weight: bold;'>Subtotal:</td>
+                            <td style='padding: 10px; text-align: right; font-weight: bold;'>UGX " . number_format($subtotal) . "</td>
+                        </tr>
+                        <tr>
+                            <td colspan='3' style='padding: 5px; text-align: right;'>Delivery Fee:</td>
+                            <td style='padding: 5px; text-align: right;'>UGX " . number_format($delivery_fee) . "</td>
+                        </tr>
+                        <tr style='background: #f0f0f0;'>
+                            <td colspan='3' style='padding: 10px; text-align: right; font-weight: bold; font-size: 16px;'>Total Amount:</td>
+                            <td style='padding: 10px; text-align: right; font-weight: bold; font-size: 16px; color: #8B4513;'>UGX " . number_format($total_amount) . "</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style='background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                    <h4 style='margin-top: 0; color: #2d5a2d;'>What happens next?</h4>
+                    <ul style='margin: 0; padding-left: 20px;'>
+                        <li>We'll start preparing your order immediately</li>
+                        <li>You'll receive updates on your order status</li>
+                        <li>Our delivery team will contact you before delivery</li>
+                        <li>Payment is Cash on Delivery</li>
+                    </ul>
+                </div>
+
+                <p>You can track your order status by visiting your <a href='" . BASE_URL . "/orders.php' style='color: #8B4513;'>order history</a>.</p>
+                
+                <p>If you have any questions, feel free to <a href='" . BASE_URL . "/contact.php' style='color: #8B4513;'>contact us</a>.</p>
+                
+                <p style='margin-top: 30px;'>
+                    Thank you for choosing Mama's Oven!<br>
+                    <strong>The Mama's Oven Team</strong>
+                </p>
+            </div>
+        </body>
+        </html>";
+
+        $mail->send();
+    } catch (Exception $e) {
+        // Log email error but don't fail the order
+        error_log('Order confirmation email failed: ' . $e->getMessage());
+    }
     header('Location: ../print_receipt.php?id=' . $order_id);
+    echo json_encode(['success' => true, 'message' => 'Order placed successfully', 'order_number' => $order_number, 'order_id' => $order_id]);
     exit;
 
 } catch (Exception $e) {
