@@ -64,7 +64,7 @@ try {
 }
 
 // --- SITE CONSTANTS ---
-define('BASE_URL', getenv('BASE_URL') ?: 'http://127.0.0.1/mamaove1'); 
+define('BASE_URL', getenv('BASE_URL') ?: 'http://127.0.0.1/mamoven1'); 
 define('SITE_NAME', getenv('SITE_NAME') ?: "Mama's Oven");
 define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'joszialvin@gmail.com'); //mamasovenug@gmail.com
 

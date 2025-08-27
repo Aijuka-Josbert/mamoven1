@@ -194,7 +194,6 @@ document.getElementById('reset_code')?.addEventListener('input', function(e) {
     // Only allow numbers
     this.value = this.value.replace(/[^0-9]/g, '');
     
-    // Limit to 5 digits
     if (this.value.length > 5) {
         this.value = this.value.slice(0, 5);
     }

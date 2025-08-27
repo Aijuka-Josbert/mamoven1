@@ -34,8 +34,8 @@ function asset_url($path) {
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="index.php">
-                <img src="assets/images/logo.jpeg" alt="<?php echo SITE_NAME; ?> Logo" class="logo">
+            <a class="navbar-brand" href="<?php echo BASE_URL; ?>/index.php">
+                <img src="<?php echo BASE_URL; ?>/assets/images/logo.jpeg" alt="<?php echo SITE_NAME; ?> Logo" class="logo">
                 <span class="brand-text"><?php echo SITE_NAME; ?></span>
             </a>
             
@@ -45,10 +45,10 @@ function asset_url($path) {
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="products.php">Products</a></li>
-                    <li class="nav-item"><a class="nav-link" href="about.php">About Us</a></li>
-                    <li class="nav-item"><a class="nav-link" href="contact.php">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo BASE_URL; ?>/index.php">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo BASE_URL; ?>/products.php">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo BASE_URL; ?>/about.php">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?php echo BASE_URL; ?>/contact.php">Contact</a></li>
                 </ul>
                 
                 <ul class="navbar-nav">

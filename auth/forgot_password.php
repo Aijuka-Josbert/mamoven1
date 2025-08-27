@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
                             <div style='text-align: center; margin-bottom: 30px;'>
                                 <h1 style='color: #8B4513;'>Password Reset Request</h1>
-                                <img src='" . BASE_URL . "/assets/images/logo.jpeg' alt='Logo' style='height: 80px;'>
+                                <img src='" . BASE_URL . "assets/images/logo.jpeg' alt='Logo' style='height: 80px;'>
                             </div>
                             
                             <p>Hello {$user['full_name']},</p>

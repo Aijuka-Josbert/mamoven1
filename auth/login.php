@@ -8,7 +8,7 @@ if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'admin') {
         header('Location: '. BASE_URL . '/admin/dashboard.php');
     } else {
-        header('Location: ' . BASE_URL . '../index.php');
+        header('Location: ' . BASE_URL . '/index.php');
     }
     exit;
 }
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $redirect_param = ltrim($redirect_param, '/');
                         header('Location: ' . BASE_URL . '/' . $redirect_param);
                     } else {
-                        header('Location: ../index.php');
+                        header('Location: ' . BASE_URL . '/index.php');
                     }
                 }
                 exit;
