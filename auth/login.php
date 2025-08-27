@@ -6,7 +6,7 @@ include_once __DIR__ . '/../includes/header.php';
 // If user is already logged in, redirect them away from the login page.
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'admin') {
-        header('Location: ' . BASE_URL . '/admin/dashboard.php');
+        header('Location: '. BASE_URL . '/admin/dashboard.php');
     } else {
         header('Location: ' . BASE_URL . '../index.php');
     }
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Redirect based on role
                 if ($user['role'] === 'admin') {
-                    header('Location: ' . '/admin/dashboard.php');
+                    header('Location: ' . BASE_URL . '/admin/dashboard.php');
                 } else {
                     // Respect optional redirect param if provided (must be a safe local path)
                     $redirect_param = $_GET['redirect'] ?? '';
@@ -108,6 +108,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="text-center">
                             <p class="mb-0 text-muted">Don't have an account? 
                                 <a href="<?php echo BASE_URL; ?>/auth/register.php">Sign up here</a>
+                            </p>
+                            <p class="mb-0 text-muted mt-2">
+                                <a href="forgot_password.php">Forgot your password?</a>
                             </p>
                         </div>
                     </form>

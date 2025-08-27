@@ -17,39 +17,47 @@ $errors = [];
 $inputs = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Sanitize and store inputs
-    $inputs['full_name'] = trim($_POST['full_name'] ?? '');
-    $inputs['username'] = trim($_POST['username'] ?? '');
-    $inputs['email'] = trim($_POST['email'] ?? '');
+    $inputs['full_name'] = $_POST['full_name'] ?? '';
+    $inputs['username'] = $_POST['username'] ?? '';
+    $inputs['email'] = $_POST['email'] ?? '';
     $inputs['password'] = $_POST['password'] ?? '';
     $inputs['confirm_password'] = $_POST['confirm_password'] ?? '';
-    
+
+    $full_name = $inputs['full_name'];
+    $username = $inputs['username'];
+    $email = $inputs['email'];
+    $password = $inputs['password'];
+    $confirm_password = $inputs['confirm_password'];
+
     // --- Validation ---
-    if (empty($inputs['full_name'])) $errors[] = 'Full name is required.';
-    if (empty($inputs['username'])) $errors[] = 'Username is required.';
-    if (empty($inputs['email'])) {
+    if (empty($full_name)) $errors[] = 'Full name is required.';
+    if (empty($username)) $errors[] = 'Username is required.';
+    if (empty($email)) {
         $errors[] = 'Email is required.';
-    } elseif (!filter_var($inputs['email'], FILTER_VALIDATE_EMAIL)) {
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Invalid email format.';
     }
     
-    if (empty($inputs['password'])) {
+    if (empty($password)) {
         $errors[] = 'Password is required.';
-    } elseif (strlen($inputs['password']) < 6) {
-        $errors[] = 'Password must be at least 6 characters long.';
+    } elseif (strlen($password) < 8) {
+        $errors[] = 'Password must be at least 8 characters long.';
+    } elseif (!preg_match('/[A-Z]/', $password)) {
+        $errors[] = 'Password must contain at least one uppercase letter.';
+    } elseif (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
+        $errors[] = 'Password must contain at least one special character (!@#$%^&*(),.?":{}|<>).';
     }
-    
-    if ($inputs['password'] !== $inputs['confirm_password']) {
+    if ($password !== $confirm_password) {
         $errors[] = 'Passwords do not match.';
     }
     
     // --- Check for existing user if basic validation passes ---
     if (empty($errors)) {
         try {
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE username = :username OR email = :email");
-            $stmt->execute(['username' => $inputs['username'], 'email' => $inputs['email']]);
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE username = :username OR email = :email OR full_name = :full_name");
+            $stmt->execute(['username' => $inputs['username'], 'email' => $inputs['email'], 'full_name' => $inputs['full_name']]);
             if ($stmt->fetch()) {
-                $errors[] = 'An account with this username or email already exists.';
+                $errors[] = 'An account with this username/full_name or email already exists.';
             }
         } catch (PDOException $e) {
             $errors[] = 'A database error occurred. Please try again.';
@@ -185,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card shadow">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <img src="assets/images/logo.png" alt="Logo" style="height: 60px;" class="mb-3">
+                        <img src="../assets/images/logo.jpeg" alt="Logo" style="height: 60px;" class="mb-3">
                         <h2 class="card-title h3">Create Your Account</h2>
                         <p class="text-muted">Join us to start ordering delicious treats!</p>
                     </div>
@@ -225,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="col-md-6 mb-3">
                                 <label for="password" class="form-label">Password</label>
                                 <input type="password" class="form-control" id="password" name="password" required>
-                                <div class="form-text">Minimum 6 characters</div>
+                                <div class="form-text">Minimum 8 characters, 1 uppercase letter, 1 special character</div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="confirm_password" class="form-label">Confirm Password</label>
@@ -249,7 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="text-center mt-4">
                         <p class="mb-0 text-muted">Already have an account? 
-                            <a href="auth/login.php">Sign in</a>
+                            <a href="../auth/login.php">Sign in</a>
                         </p>
                     </div>
                 </div>

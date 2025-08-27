@@ -53,6 +53,22 @@ INSERT INTO `categories` (`name`, `description`) VALUES
 ('Cookies', 'Sweet and savory cookies'),
 ('Custom Orders', 'Special custom-made items');
 
+
+--
+--- forgot password --
+--
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    reset_code VARCHAR(5) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_email (email),
+    INDEX idx_code_email (reset_code, email),
+    INDEX idx_expires (expires_at)
+);
 --
 -- Table structure for table `products`
 --
