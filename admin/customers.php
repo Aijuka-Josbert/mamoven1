@@ -33,3 +33,9 @@ $stmt = $pdo->query("SELECT id, full_name, email, created_at FROM users WHERE ro
     </table>
 </body>
 </html>
+<!-- 
+@workspace give it a nice user intefabce design 
+showing name, username,email,username,phone,address,role,created atm and can deleted client edit client etc  select * from users;
++----+----------+-------------------------------+--------------------------------------------------------------+-------------------+-------------------+------------------+-------+---------+----------+---------------------+---------------------+
+| id | username | email                         | password                                                     | verification_code | email_verified_at | full_name        | phone | address | role     | created_at          | updated_at          |
++----+----------+-------------------------------+--------------------------------------------------------------+-------------------+-------------------+------------------+-------+---------+----------+---------------------+---------------------+ -->

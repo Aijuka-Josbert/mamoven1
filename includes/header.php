@@ -58,24 +58,24 @@ function asset_url($path) {
                                 <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['full_name']); ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="orders.php">My Orders</a></li>
+                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>/orders.php">My Orders</a></li>
                                 <?php if($_SESSION['role'] === 'admin'): ?>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="admin/dashboard.php">Admin Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>/admin/dashboard.php">Admin Dashboard</a></li>
                                 <?php endif; ?>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="auth/logout.php">Logout</a></li>
+                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>/auth/logout.php">Logout</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link position-relative" href="cart.php">
+                            <a class="nav-link position-relative" href="<?php echo BASE_URL; ?>/cart.php">
                                 <i class="fas fa-shopping-bag"></i>
                                 <span class="cart-count badge" id="cart-count" style="display: none;">0</span>
                             </a>
                         </li>
                     <?php else: ?>
-                        <li class="nav-item"><a class="nav-link" href="auth/login.php">Login</a></li>
-                        <li class="nav-item"><a href="auth/register.php" class="btn btn-primary ms-2">Sign Up</a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?php echo BASE_URL; ?>/auth/login.php">Login</a></li>
+                        <li class="nav-item"><a href="<?php echo BASE_URL; ?>/auth/register.php" class="btn btn-primary ms-2">Sign Up</a></li>
                     <?php endif; ?>
                 </ul>
             </div>
