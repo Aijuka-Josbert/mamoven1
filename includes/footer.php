@@ -27,7 +27,7 @@
                         <li><a href="#">FAQ</a></li>
                         <li><a href="#">Shipping & Returns</a></li>
                         <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="termsandconditions.php">Terms of Service</a></li>
                     </ul>
                 </div>
                 

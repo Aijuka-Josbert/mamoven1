@@ -125,3 +125,5 @@ try {
 </div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
+<!-- @workspace fix the images to be stored in a string format not like how they are currently and provide locations to add it to  -->
