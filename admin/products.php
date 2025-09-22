@@ -73,9 +73,15 @@ try {
                         <?php foreach ($products as $product): ?>
                             <tr>
                                 <td>
-                                    <img src="<?php echo BASE_URL . '/' . ($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
-                                         alt="<?php echo htmlspecialchars($product['name']); ?>" 
-                                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                    <?php if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0): ?>
+                                        <img src="<?php echo htmlspecialchars($product['image']); ?>" 
+                                             alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                    <?php else: ?>
+                                        <img src="<?php echo BASE_URL; ?>/assets/images/placeholder.jpg" 
+                                             alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                    <?php endif; ?>
                                 </td>
                                 <td><strong><?php echo htmlspecialchars($product['name']); ?></strong></td>
                                 <td><?php echo htmlspecialchars($product['category_name'] ?? 'N/A'); ?></td>

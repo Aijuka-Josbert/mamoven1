@@ -38,36 +38,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($price <= 0) $errors[] = "Price must be a positive number.";
     if (empty($category_id)) $errors[] = "Please select a category.";
 
-    // --- Improved Image Upload Logic ---
-    $image_path = null;
+    // --- Image Upload & Base64 Conversion ---
+    $image_base64 = null;
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['image'];
         
         // Check file type
         $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!in_array($file['type'], $allowed_types)) {
-            $errors[] = "Invalid file type. Only JPG, PNG, GIF, JPEG, and WEBP are allowed.";
+            $errors[] = "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.";
         } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
             $errors[] = "Image file is too large. Maximum size is 2MB.";
         } else {
-            // Create directory if it doesn't exist
-            $upload_dir = '../assets/images/';
-            if (!is_dir($upload_dir)) {
-                if (!mkdir($upload_dir, 0775, true)) {
-                    $errors[] = "Failed to create upload directory. Please contact administrator.";
-                }
-            }
-            
-            // Check if directory is writable
-            if (!is_writable($upload_dir)) {
-                $errors[] = "Upload directory is not writable. Please check permissions.";
+            // Read the image file content
+            $image_data = file_get_contents($file['tmp_name']);
+            if ($image_data !== false) {
+                // Convert to base64
+                $image_base64 = 'data:' . $file['type'] . ';base64,' . base64_encode($image_data);
             } else {
-                $image_path = 'assets/images/' . basename($file['name']);
-                
-                if (!move_uploaded_file($file['tmp_name'], '../' . $image_path)) {
-                    $errors[] = "Failed to upload the image: " . error_get_last()['message'];
-                    $image_path = null;
-                }
+                $errors[] = "Failed to read the image file.";
             }
         }
     } else {
@@ -76,21 +65,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($errors)) {
         try {
-            // store flavours and ingredients in the products table
+            // Store all data including base64 image in the products table
             $sql = "INSERT INTO products (name, description, flavours, ingredients, price, category_id, stock_quantity, status, featured, image) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 $name, 
                 $description, 
-                $flavours ?: null,    // allow null if empty
-                $ingredients ?: null, // allow null if empty
+                $flavours ?: null,
+                $ingredients ?: null,
                 $price, 
                 $category_id, 
                 $stock_quantity, 
                 $status, 
                 $featured, 
-                $image_path
+                $image_base64
             ]);
             
             // Redirect with success message

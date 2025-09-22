@@ -52,16 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($category_id)) $errors[] = "Please select a category.";
 
     // --- Image Upload Logic ---
-    $image_path = $product['image']; // Keep the old image path by default
+    $image_base64 = $product['image']; // Keep existing base64 image by default
+
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['image'];
-        $upload_dir = UPLOAD_PATH;
         
-        // Generate a unique filename
-        $filename = uniqid('prod_', true) . '_' . preg_replace('/\s+/', '_', basename($file['name']));
-        $target_path = $upload_dir . $filename;
-        $relative_path = 'assets/images/products/' . $filename;
-
         // Validate file type and size
         $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!in_array($file['type'], $allowed_types)) {
@@ -69,14 +64,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
             $errors[] = "Image file is too large. Maximum size is 2MB.";
         } else {
-            if (move_uploaded_file($file['tmp_name'], $target_path)) {
-                // If new image is uploaded successfully, remove the old one from the server
-                if ($product['image'] && file_exists(UPLOAD_PATH . basename($product['image']))) {
-                    @unlink(UPLOAD_PATH . basename($product['image']));
-                }
-                $image_path = $relative_path; // Set the new image path for the database
+            // Read the image file content
+            $image_data = file_get_contents($file['tmp_name']);
+            if ($image_data !== false) {
+                // Convert to base64
+                $image_base64 = 'data:' . $file['type'] . ';base64,' . base64_encode($image_data);
             } else {
-                $errors[] = "Failed to upload the new image.";
+                $errors[] = "Failed to read the image file.";
             }
         }
     }
@@ -85,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $sql = "UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, stock_quantity = ?, status = ?, featured = ?, image = ? WHERE id = ?";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$name, $description, $price, $category_id, $stock_quantity, $status, $featured, $image_path, $product_id]);
+            $stmt->execute([$name, $description, $price, $category_id, $stock_quantity, $status, $featured, $image_base64, $product_id]);
             
             // Redirect with success message
             header("Location: " . 'products.php?status=updated');

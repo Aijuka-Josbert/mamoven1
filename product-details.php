@@ -43,6 +43,13 @@ try {
 }
 
 $page_title = htmlspecialchars($product['name']);
+
+// Handle base64 or fallback to placeholder
+if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0) {
+    $image_url = $product['image'];
+} else {
+    $image_url = BASE_URL . '/assets/images/placeholder.jpg';
+}
 ?>
 
 <div class="container my-5">
@@ -52,7 +59,7 @@ $page_title = htmlspecialchars($product['name']);
             <div class="product-card">
                  <div class="product-image-wrapper" style="height: 450px;">
                     <!-- Main Product Image -->
-                    <img src="<?php echo htmlspecialchars($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                    <img src="<?php echo htmlspecialchars($image_url); ?>" 
                          alt="<?php echo htmlspecialchars($product['name']); ?>" 
                          class="product-image">
                 </div>
@@ -62,7 +69,7 @@ $page_title = htmlspecialchars($product['name']);
         <!-- Product Details -->
         <div class="col-lg-6 ps-lg-5">
             <nav aria-label="breadcrumb" class="mb-3">
-                <ol class="breadcrumb">
+                <ol class="breadcrumb"></ol>
                     <li class="breadcrumb-item"><a href='index.php'>Home</a></li>
                     <li class="breadcrumb-item"><a href='products.php'>Products</a></li>
                 </ol>

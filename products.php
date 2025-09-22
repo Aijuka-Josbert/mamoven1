@@ -106,8 +106,10 @@ try {
                 <div class="col-lg-4 col-md-6">
                     <div class="product-card">
                         <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper">
-                            <img src="<?php echo $product['image'] ?: 'assets/images/placeholder.jpg'; ?>" 
-                                 alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image">
+                            <img src="<?php echo !empty($product['image']) && strpos($product['image'], 'data:image/') === 0 
+    ? htmlspecialchars($product['image']) 
+    : BASE_URL . '/assets/images/placeholder.jpg'; ?>" 
+     alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image">
                         </a>
                         <div class="product-info">
                             <div>
