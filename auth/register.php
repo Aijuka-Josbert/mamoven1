@@ -17,11 +17,11 @@ $errors = [];
 $inputs = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $inputs['full_name'] = $_POST['full_name'] ?? '';
-    $inputs['username'] = $_POST['username'] ?? '';
-    $inputs['email'] = $_POST['email'] ?? '';
-    $inputs['password'] = $_POST['password'] ?? '';
-    $inputs['confirm_password'] = $_POST['confirm_password'] ?? '';
+    $inputs['full_name'] = $_POST['full_name'];
+    $inputs['username'] = $_POST['username'];
+    $inputs['email'] = $_POST['email'];
+    $inputs['password'] = $_POST['password'];
+    $inputs['confirm_password'] = $_POST['confirm_password'];
 
     $full_name = $inputs['full_name'];
     $username = $inputs['username'];

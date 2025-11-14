@@ -7,7 +7,7 @@ try {
     $stmt = $pdo->query("
         SELECT id, name, price, image, description 
         FROM products 
-        WHERE status = 'active' AND featured = 1 
+        WHERE status = 'active'
         ORDER BY created_at DESC 
         LIMIT 6
     ");
