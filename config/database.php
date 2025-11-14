@@ -1,4 +1,6 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
 // Load simple .env file (if present) so getenv() works in PHP without external libs
 function load_dotenv($path)
 {

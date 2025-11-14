@@ -24,10 +24,10 @@
                 <div class="col-lg-3 col-md-4">
                     <h5 class="footer-title">Help</h5>
                     <ul class="footer-links">
-                        <li><a href="#">FAQ</a></li>
-                        <li><a href="#">Shipping & Returns</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="termsandconditions.php">Terms of Service</a></li>
+                        <li><a href="footer_pages/faq.php">FAQ</a></li>
+                        <li><a href="footer_pages/shipping_returns.php">Shipping & Returns</a></li>
+                        <li><a href="footer_pages/privacy_policy.php">Privacy Policy</a></li>
+                        <li><a href="footer_pages/termsandconditions.php">Terms of Service</a></li>
                     </ul>
                 </div>
                 
