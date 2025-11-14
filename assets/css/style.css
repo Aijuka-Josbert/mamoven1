@@ -409,3 +409,12 @@ a:hover {
 
 /* Hover effect */
 .login-card:hover { transform: translateY(-6px); }
+
+.img-fluid .about-hero-img{
+    width: 100%;
+    min-height: 350px;
+    max-height: 500px;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}

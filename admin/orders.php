@@ -12,6 +12,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         try {
             $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
             $stmt->execute([$new_status, $order_id]);
+
+            // Fetch user email and name for this order
+            $stmt = $pdo->prepare("SELECT u.email, u.full_name, o.order_number FROM orders o JOIN users u ON o.user_id = u.id WHERE o.id = ?");
+            $stmt->execute([$order_id]);
+            $orderUser = $stmt->fetch();
+
+            if ($orderUser) {
+                require_once __DIR__ . '/../vendor/autoload.php';
+                $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+                $mail->isSMTP();
+                $mail->Host = SMTP_HOST;
+                $mail->SMTPAuth = true;
+                $mail->Username = SMTP_USER;
+                $mail->Password = SMTP_PASS;
+                $mail->SMTPSecure = SMTP_SECURE;
+                $mail->Port = SMTP_PORT;
+                $mail->setFrom(SMTP_USER, SITE_NAME);
+                $mail->addAddress($orderUser['email'], $orderUser['full_name']);
+                $mail->isHTML(true);
+
+                $statusMsg = ucfirst($new_status);
+                $mail->Subject = "Order {$orderUser['order_number']} Status Update: {$statusMsg}";
+                $mail->Body = "
+                    <p>Dear {$orderUser['full_name']},</p>
+                    <p>Your order <strong>{$orderUser['order_number']}</strong> status has been updated to: <strong>{$statusMsg}</strong>.</p>
+                    <p>Thank you for shopping with " . SITE_NAME . ".</p>
+                ";
+                $mail->send();
+            }
+
             // Redirect to avoid form resubmission on refresh
             header("Location: " . 'orders.php?status=updated');
             exit;

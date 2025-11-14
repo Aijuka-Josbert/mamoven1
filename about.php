@@ -11,7 +11,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <div class="row align-items-center g-5">
         <div class="col-lg-6">
-            <img src="assets/image2/about-us.jpeg" alt="The team at Mama's Oven" class="img-fluid rounded shadow">
+            <img src="assets/image2/fresh-baked-sweet-delights-rustic-bakery-shelf-generated-by-ai.jpg" alt="The team at Mama's Oven" class="img-fluid rounded shadow about-hero-img">
         </div>
         <div class="col-lg-6">
             <h2 class="display-6">From Our Kitchen to Your Heart</h2>

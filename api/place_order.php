@@ -143,6 +143,9 @@ try {
         $mail->setFrom(SMTP_USER, SITE_NAME);
         $mail->addAddress($user['email'], $user['full_name']);
 
+        // ALSO send to admin
+        $mail->addAddress(ADMIN_EMAIL);
+
         $mail->isHTML(true);
         $mail->Subject = "Order Confirmation - " . $order_number;
         
@@ -226,6 +229,67 @@ try {
         </html>";
 
         $mail->send();
+
+        // --- Send personalized admin notification ---
+        $adminMail = new PHPMailer(true);
+        $adminMail->isSMTP();
+        $adminMail->Host = SMTP_HOST;
+        $adminMail->SMTPAuth = true;
+        $adminMail->Username = SMTP_USER;
+        $adminMail->Password = SMTP_PASS;
+        $adminMail->SMTPSecure = SMTP_SECURE;
+        $adminMail->Port = SMTP_PORT;
+
+        $adminMail->setFrom(SMTP_USER, SITE_NAME . ' Orders');
+        $adminMail->addAddress(ADMIN_EMAIL);
+
+        $adminMail->isHTML(true);
+        $adminMail->Subject = "New Order Placed - {$order_number}";
+
+        $adminMail->Body = "
+        <html>
+        <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+            <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                <h2 style='color: #8B4513;'>New Order Notification</h2>
+                <p>A new order has been placed by <strong>{$user['full_name']}</strong> (<a href='mailto:{$user['email']}'>{$user['email']}</a>).</p>
+                <p><strong>Order Number:</strong> {$order_number}</p>
+                <p><strong>Total Amount:</strong> UGX " . number_format($total_amount) . "</p>
+                <p><strong>Delivery Address:</strong> " . nl2br(htmlspecialchars($delivery_address)) . "</p>
+                <p><strong>Contact Phone:</strong> {$delivery_phone}</p>
+                " . (!empty($special_instructions) ? "<p><strong>Special Instructions:</strong> " . htmlspecialchars($special_instructions) . "</p>" : "") . "
+                <hr>
+                <h4>Ordered Items:</h4>
+                <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+                    <thead>
+                        <tr style='background: #8B4513; color: white;'>
+                            <th style='padding: 10px; text-align: left;'>Item</th>
+                            <th style='padding: 10px; text-align: center;'>Qty</th>
+                            <th style='padding: 10px; text-align: right;'>Price</th>
+                            <th style='padding: 10px; text-align: right;'>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {$items_html}
+                        <tr style='border-top: 2px solid #8B4513;'>
+                            <td colspan='3' style='padding: 10px; text-align: right; font-weight: bold;'>Subtotal:</td>
+                            <td style='padding: 10px; text-align: right; font-weight: bold;'>UGX " . number_format($subtotal) . "</td>
+                        </tr>
+                        <tr>
+                            <td colspan='3' style='padding: 5px; text-align: right;'>Delivery Fee:</td>
+                            <td style='padding: 5px; text-align: right;'>UGX " . number_format($delivery_fee) . "</td>
+                        </tr>
+                        <tr style='background: #f0f0f0;'>
+                            <td colspan='3' style='padding: 10px; text-align: right; font-weight: bold; font-size: 16px;'>Total Amount:</td>
+                            <td style='padding: 10px; text-align: right; font-weight: bold; font-size: 16px; color: #8B4513;'>UGX " . number_format($total_amount) . "</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>This order is awaiting your confirmation in the admin dashboard.</p>
+            </div>
+        </body>
+        </html>";
+
+        $adminMail->send();
     } catch (Exception $e) {
         // Log email error but don't fail the order
         error_log('Order confirmation email failed: ' . $e->getMessage());
