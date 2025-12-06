@@ -70,7 +70,7 @@ function asset_url($path) {
                         <li class="nav-item">
                             <a class="nav-link position-relative" href="<?php echo BASE_URL; ?>/cart.php">
                                 <i class="fas fa-shopping-bag"></i>
-                                <span class="cart-count badge" id="cart-count" style="display: none;">0</span>
+                                <span class="cart-count badge" id="cart-count">0</span>
                             </a>
                         </li>
                     <?php else: ?>

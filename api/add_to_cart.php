@@ -41,7 +41,7 @@ try {
     if ($existing_cart_item) {
         // Update existing cart item
         $new_quantity = $existing_cart_item['quantity'] + $quantity;
-        $stmt = $pdo->prepare("UPDATE cart SET quantity = ?, added_at = CURRENT_TIMESTAMP WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE cart SET quantity = ?, created_at = CURRENT_TIMESTAMP WHERE id = ?");
         $stmt->execute([$new_quantity, $existing_cart_item['id']]);
     } else {
         // Add new cart item

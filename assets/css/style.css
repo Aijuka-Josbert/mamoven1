@@ -106,7 +106,7 @@ a:hover {
     height: 18px;
     border-radius: 50%;
     background-color: var(--color-accent);
-    color: var(--color-white);
+    color: var(--color-danger);
     display: flex;
     align-items: center;
     justify-content: center;

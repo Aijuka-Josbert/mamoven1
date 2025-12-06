@@ -151,7 +151,13 @@ function addToCart(productId, quantity = 1) {
  */
 function updateCartCount(count = null) {
     if (count !== null) {
-        $('#cart-count').text(count);
+        const $cartBadge = $('#cart-count');
+        $cartBadge.text(count);
+        if (count > 0) {
+            $cartBadge.show();
+        } else {
+            $cartBadge.hide();
+        }
         return;
     }
 
@@ -162,8 +168,13 @@ function updateCartCount(count = null) {
         method: 'GET',
         dataType: 'json',
         success: function(response) {
-            if (response.success) {
-                $('#cart-count').text(response.count);
+            const cartCount = response.count || 0;
+            const $cartBadge = $('#cart-count');
+            $cartBadge.text(cartCount);
+            if (cartCount > 0) {
+                $cartBadge.show();
+            } else {
+                $cartBadge.hide();
             }
         }
     });
