@@ -1,333 +1,481 @@
-# Mama's Oven Uganda - Bakery Website
+# Mama's Oven Uganda - Bakery E-Commerce Platform
 
-A complete bakery e-commerce website built with PHP, MySQL, HTML, CSS, JavaScript, Bootstrap, and AJAX. This website allows customers to browse products, add items to cart, place orders, and provides admin functionality for managing products, orders, and customers.
+A full-featured bakery e-commerce website built with PHP, MySQL, HTML, CSS, JavaScript, Bootstrap, and AJAX. This platform enables customers to browse bakery products, manage shopping carts, place orders with cash-on-delivery, and track order history. Administrators can manage products, orders, customers, and categories through a dedicated admin panel.
 
-## Features
+## 🎯 Features
 
 ### Customer Features
-- **Browse Products**: View all bakery products with filtering by category and search
-- **Product Details**: Detailed product information including flavors, ingredients, and pricing
-- **User Registration & Login**: Secure user authentication system
-- **Shopping Cart**: Add products to cart, modify quantities, and remove items
-- **Order Placement**: Complete checkout process with delivery information
-- **Order History**: View past orders and order status
-- **Responsive Design**: Mobile-friendly interface using Bootstrap
+- **Product Browsing**: View all bakery products with category filtering and search functionality
+- **Product Details**: Comprehensive product pages with descriptions, flavors, ingredients, and pricing
+- **User Authentication**: Secure registration and login system with password recovery
+- **Shopping Cart**: Real-time cart management with AJAX (add, update quantities, remove items)
+- **Order Placement**: Streamlined checkout with delivery address and special instructions
+- **Order Tracking**: View complete order history with detailed receipts
+- **Printable Receipts**: Professional receipt generation for all orders
+- **Email Notifications**: Automated order confirmations and welcome emails
+- **Responsive Design**: Mobile-first design using Bootstrap 5
+- **Contact Form**: Direct messaging with admin via email
 
 ### Admin Features
-- **Admin Dashboard**: Overview of orders, products, customers, and revenue
-- **Product Management**: Add, edit, delete, and manage product inventory
-- **Order Management**: View orders, update order status, print receipts
+- **Dashboard Analytics**: Real-time statistics on products, customers, orders, and revenue
+- **Product Management**: Full CRUD operations for products with base64 image encoding
+- **Order Management**: View, update order status, and print receipts
 - **Customer Management**: View and manage customer accounts
 - **Category Management**: Organize products into categories
+- **Secure Access**: Role-based authentication (admin/customer)
 
-### Additional Features
-- **Contact Form**: Customer inquiries and feedback
-- **About Page**: Company information and team details
-- **Services Page**: Description of bakery services
-- **Email Notifications**: Order confirmations and updates
-- **Print-friendly Order Receipts**: Printable order details
+### Technical Features
+- **Base64 Image Storage**: Products images stored directly in database as base64 strings
+- **AJAX-Powered Cart**: Dynamic cart updates without page reloads
+- **PHPMailer Integration**: Professional email notifications using SMTP
+- **Session Management**: Secure session handling across the platform
+- **SQL Injection Protection**: All queries use prepared statements
+- **XSS Prevention**: Output escaping with `htmlspecialchars()`
+- **Password Security**: Bcrypt hashing for all passwords
+- **Environment Variables**: `.env` support for sensitive configuration
 
-## Technology Stack
+## 🛠️ Technology Stack
 
-- **Backend**: PHP 7.4+
-- **Database**: MySQL 5.7+
-- **Frontend**: HTML5, CSS3, JavaScript (ES6)
-- **CSS Framework**: Bootstrap 5.3
-- **JavaScript Libraries**: jQuery 3.6, SweetAlert2
-- **Icons**: Font Awesome 6
-- **AJAX**: For dynamic content loading and cart management
+| Layer | Technology |
+|-------|------------|
+| **Backend** | PHP 7.4+ |
+| **Database** | MySQL 5.7+ / MariaDB |
+| **Frontend** | HTML5, CSS3, JavaScript (ES6) |
+| **CSS Framework** | Bootstrap 5.3 |
+| **JavaScript Libraries** | jQuery 3.7, SweetAlert2 |
+| **Email Service** | PHPMailer 6.x |
+| **Icons** | Font Awesome 6.4 |
+| **Server** | Apache 2.4+ / Nginx |
 
-## Installation Instructions
+## 📦 Installation
 
 ### Prerequisites
-- Web server (Apache/Nginx)
-- PHP 7.4 or higher
-- MySQL 5.7 or higher
-- Web browser
+- PHP 7.4 or higher (with extensions: `pdo_mysql`, `mbstring`, `openssl`)
+- MySQL 5.7+ or MariaDB 10.3+
+- Apache/Nginx web server
+- Composer (optional, for PHPMailer)
 
-### Step 1: Clone/Download the Project
+### Step 1: Clone the Repository
 ```bash
-# Clone the repository or download the files to your web server directory
-# For XAMPP: C:\xampp\htdocs\
-# For LAMP: /var/www/html/
+# Clone to your web server directory
+# XAMPP: C:\xampp\htdocs\mamoven1
+# LAMP: /var/www/html/mamoven1
+cd /var/www/html
+git clone <repository-url> mamoven1
+cd mamoven1
 ```
 
-### Step 2: Database Setup
-1. Create a MySQL database named `mamaove`
-2. Import the database schema:
-   ```sql
-   mysql -u root -p mamaove < database/schema.sql
-   ```
-   Or manually run the SQL commands in `database/schema.sql`
-
-### Step 3: Configure Database Connection
-1. Open `config/database.php`
-2. Update the database credentials:
-   ```php
-   $host = 'localhost';
-   $dbname = 'mamaove';
-   $username = 'root';          // Your MySQL username
-   $password = '';   // Your MySQL password
-   ```
-
-### Step 4: Set Permissions (Linux/Mac)
+### Step 2: Install Dependencies
 ```bash
-chmod 755 -R /var/www/html/mamoven1/
-chmod 777 -R /var/www/html/mamoven1/uploads/  # If you create an uploads folder
+# Install PHPMailer via Composer
+composer install
 ```
 
-### Step 5: Access the Website
-- Open your web browser
-- Navigate to: `http://localhost/mamoven1/` or `http://your-domain.com/`
+### Step 3: Database Setup
+```bash
+# Create database
+mysql -u root -p -e "CREATE DATABASE mamaove CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-## Default Login Credentials
-
-### Admin Account
-- **Username**: admin
-- **Password**: admin123
-- **Access**: Full admin panel access
-
-### Customer Account
-- Register a new customer account through the registration page
-- Or create one manually in the database
-
-## File Structure
-
-```
-mamoven1/
-├── admin/                      # Admin panel files
-│   ├── dashboard.php          # Admin dashboard
-│   ├── products.php           # Product management
-│   ├── orders.php            # Order management
-│   └── customers.php         # Customer management
-├── api/                       # AJAX API endpoints
-│   ├── add_to_cart.php       # Add items to cart
-│   ├── get_products.php      # Fetch products
-│   ├── place_order.php       # Process orders
-│   └── ...                   # Other API endpoints
-├── assets/                    # Static assets
-│   ├── css/
-│   │   └── style.css         # Custom styles
-│   ├── js/
-│   │   └── main.js           # JavaScript functions
-│   └── images/               # Website images if umages has permissions set use image2
-├── auth/                      # Authentication files
-│   ├── login.php             # User login
-│   ├── register.php          # User registration
-│   └── logout.php            # User logout
-├── config/                    # Configuration files
-│   └── database.php          # Database connection
-├── database/                  # Database files
-│   └── schema.sql            # Database structure
-├── includes/                  # Reusable components
-│   ├── header.php            # Site header
-│   └── footer.php            # Site footer
-├── index.php                 # Homepage
-├── products.php              # Products listing
-├── cart.php                  # Shopping cart
-├── about.php                 # About page
-├── contact.php               # Contact page
-├── services.php              # Services page
-└── README.md                 # This file
+# Import schema
+mysql -u root -p mamaove < database/schema.sql
 ```
 
-## Configuration
+### Step 4: Environment Configuration
+```bash
+# Copy example environment file
+cp .env.example .env
 
-### Site Settings
-You can modify site settings in the `site_settings` table:
-- Site name
-- Contact information
-- Delivery fees
-- Minimum order amounts
-
-### Email Configuration
-To enable email notifications, configure SMTP settings in your PHP configuration or use a mail service.
-
-### Image Upload
-To enable product image uploads:
-1. Create an `uploads/` directory
-2. Set proper permissions
-3. Implement image upload functionality in admin panel
-
-## Security Features
-
-- **Password Hashing**: All passwords are hashed using PHP's `password_hash()`
-- **SQL Injection Prevention**: All database queries use prepared statements
-- **Session Management**: Secure session handling for user authentication
-- **Input Validation**: Server-side validation for all user inputs
-- **XSS Prevention**: Output escaping using `htmlspecialchars()`
-
-## Customization
-
-### Colors and Branding
-- Modify CSS variables in `assets/css/style.css`
-- Update logo and images in `assets/images/`
-- Change site name in `config/database.php`
-
-### Adding New Features
-- Create new API endpoints in the `api/` directory
-- Add new admin pages in the `admin/` directory
-- Extend the database schema as needed
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Error**
-   - Check MySQL credentials in `config/database.php`
-   - Ensure MySQL service is running
-   - Verify database exists
-
-2. **Permission Denied Errors**
-   - Check file permissions (755 for directories, 644 for files)
-   - Ensure web server has read access
-
-3. **AJAX Requests Failing**
-   - Check browser console for JavaScript errors
-   - Verify API endpoint URLs are correct
-   - Ensure user is logged in for protected endpoints
-
-4. **Session Issues**
-   - Check PHP session configuration
-   - Ensure cookies are enabled in browser
-   - Verify session directory permissions
-
-## Browser Support
-
-- Chrome 80+
-- Firefox 75+
-- Safari 13+
-- Edge 80+
-- Mobile browsers (iOS Safari, Chrome Mobile)
-
-## Performance Optimization
-
-- **Database Indexing**: Key columns are indexed for better performance
-- **Image Optimization**: Compress images before uploading
-- **CSS/JS Minification**: Consider minifying assets for production
-- **Caching**: Implement caching strategies for better performance
-
-## Protecting secrets & redeploying — Step-by-step
-
-Follow this exact sequence on your development machine (project root: /var/www/html/mamoven1).
-
-1) Immediately rotate exposed credentials
-- Log in to your mail provider and database host and change the SMTP and DB passwords (create new app passwords where possible).
-- Do NOT reuse the old secret.
-
-2) Ensure .env is ignored
-Create/update .gitignore (project root) to include:
-```
-.env
-vendor/
-node_modules/
-.DS_Store
-```
-Command:
-```
-cat > .gitignore <<'EOF'
-.env
-vendor/
-node_modules/
-.DS_Store
-EOF
+# Edit .env with your credentials
+nano .env
 ```
 
-3) Keep a safe template in the repo
-Create .env.example (committable) with placeholders:
-```
+Configure the following in `.env`:
+```env
+# Database Configuration
 DB_HOST=127.0.0.1
 DB_NAME=mamaove
 DB_USER=root
-DB_PASS=your_db_password_here
+DB_PASS=your_secure_password
+DB_CHARSET=utf8mb4
 
+# Application Settings
+BASE_URL=http://localhost/mamoven1
+SITE_NAME=Mama's Oven
+
+# SMTP Email Configuration
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=you@example.com
-SMTP_PASS=your_smtp_password_here
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_SECURE=tls
+ADMIN_EMAIL=admin@mamasoven.com
+```
+
+### Step 5: Set Permissions (Linux/macOS)
+```bash
+# Set directory permissions
+chmod 755 -R /var/www/html/mamoven1/
+chmod 644 /var/www/html/mamoven1/.env
+
+# Set ownership (if needed)
+sudo chown -R www-data:www-data /var/www/html/mamoven1/
+```
+
+### Step 6: Access the Application
+Navigate to:
+- **Frontend**: `http://localhost/mamoven1/`
+- **Admin Panel**: `http://localhost/mamoven1/admin/dashboard.php`
+
+## 🔐 Default Credentials
+
+### Admin Account
+- **Username**: `admin`
+- **Password**: `admin123`
+- **Access**: Full admin panel
+
+### Creating Customer Accounts
+Customers can register via: `http://localhost/mamoven1/auth/register.php`
+
+## 📁 Project Structure
+
+```
+mamoven1/
+├── admin/                          # Admin panel
+│   ├── dashboard.php              # Analytics dashboard
+│   ├── products.php               # Product management
+│   ├── add_product.php            # Add new products
+│   ├── edit_product.php           # Edit products
+│   ├── orders.php                 # Order management
+│   ├── order_details.php          # Order details view
+│   ├── customers.php              # Customer management
+│   ├── edit_customer.php          # Edit customers
+│   ├── categories.php             # Category management
+│   └── includes/
+│       ├── header.php             # Admin header
+│       └── footer.php             # Admin footer
+├── api/                           # AJAX API endpoints
+│   ├── add_to_cart.php           # Add items to cart
+│   ├── get_cart_count.php        # Get cart item count
+│   ├── get_cart_items.php        # Fetch cart contents
+│   ├── update_cart.php           # Update quantities
+│   ├── remove_from_cart.php      # Remove items
+│   ├── clear_cart.php            # Empty cart
+│   ├── place_order.php           # Process checkout
+│   └── get_products.php          # Fetch product list
+├── assets/                        # Static assets
+│   ├── css/
+│   │   └── style.css             # Custom styles
+│   ├── js/
+│   │   └── main.js               # JavaScript functions
+│   ├── images/                    # Logo, placeholders
+│   └── image2/                    # Additional images
+├── auth/                          # Authentication
+│   ├── login.php                 # User login
+│   ├── register.php              # Registration
+│   ├── logout.php                # Logout handler
+│   ├── forgot_password.php       # Password reset request
+│   └── reset_password.php        # Password reset form
+├── config/                        # Configuration
+│   └── database.php              # DB connection & constants
+├── database/                      # Database files
+│   └── schema.sql                # Database structure
+├── footer_pages/                  # Footer links
+│   ├── faq.php                   # FAQ page
+│   ├── privacy_policy.php        # Privacy policy
+│   ├── shipping_returns.php      # Shipping & returns
+│   └── terms_of_service.php      # Terms of service
+├── includes/                      # Reusable components
+│   ├── header.php                # Site header/nav
+│   └── footer.php                # Site footer
+├── vendor/                        # Composer dependencies
+├── .env                          # Environment variables (gitignored)
+├── .env.example                  # Environment template
+├── .gitignore                    # Git ignore rules
+├── index.php                     # Homepage
+├── products.php                  # Products listing
+├── product-details.php           # Single product page
+├── cart.php                      # Shopping cart page
+├── orders.php                    # Order history
+├── print_receipt.php             # Printable receipt
+├── about.php                     # About us page
+├── contact.php                   # Contact form
+├── services.php                  # Services page
+├── composer.json                 # Composer dependencies
+└── README.md                     # This file
+```
+
+## 🔧 Configuration
+
+### Site Settings
+Edit constants in [`config/database.php`](config/database.php):
+```php
+define('BASE_URL', 'http://localhost/mamoven1');
+define('SITE_NAME', "Mama's Oven");
+define('ADMIN_EMAIL', 'admin@mamasoven.com');
+```
+
+### SMTP Email Setup
+
+#### Gmail Configuration
+1. Enable 2-Factor Authentication
+2. Generate App Password: [Google Account Security](https://myaccount.google.com/security)
+3. Add to `.env`:
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-16-char-app-password
 SMTP_SECURE=tls
 ```
 
-4) Load .env in PHP (already implemented)
-- Confirm config/database.php contains a small load_dotenv() that reads project .env (one level up from config/).
-- This ensures getenv('SMTP_PASS') and getenv('DB_PASS') return local values and you never commit .env.
+### Image Storage
+Products use **base64 encoded images** stored directly in the database:
+- Automatic conversion during upload in [`admin/add_product.php`](admin/add_product.php)
+- Images limited to 2MB
+- Supported formats: JPG, PNG, GIF, WEBP
+- Fallback to [`assets/images/placeholder.jpg`](assets/images/placeholder.jpg)
 
-5) Commit only safe files
-Do NOT add .env to git. Example commit:
-```
-git add .gitignore .env.example config/database.php README.md
-git commit -m "Move secrets to env, add .env.example and README steps"
-git push origin main
+## 🔒 Security Features
+
+| Feature | Implementation |
+|---------|----------------|
+| **Password Hashing** | Bcrypt via `password_hash()` |
+| **SQL Injection Prevention** | PDO prepared statements |
+| **XSS Protection** | `htmlspecialchars()` on all output |
+| **CSRF Protection** | Session-based verification |
+| **Session Security** | `session_regenerate_id()` after login |
+| **Role-Based Access** | Admin/customer role checking |
+| **Input Validation** | Server-side validation on all forms |
+| **Environment Variables** | `.env` for sensitive data |
+
+## 🎨 Customization
+
+### Branding & Colors
+Edit CSS variables in [`assets/css/style.css`](assets/css/style.css):
+```css
+:root {
+    --color-primary: #5A331F;    /* Deep warm brown */
+    --color-secondary: #F5D1B1;  /* Soft peach */
+    --color-accent: #F39C6A;     /* Orange accent */
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Lato', sans-serif;
+}
 ```
 
-6) Remove secrets from Git history (if they were committed)
-- Install git-filter-repo:
+### Logo
+Replace [`assets/images/logo.jpeg`](assets/images/logo.jpeg) with your logo (recommended: 200x80px)
+
+### Adding Features
+1. **New Page**: Create PHP file, include [`includes/header.php`](includes/header.php) and [`includes/footer.php`](includes/footer.php)
+2. **API Endpoint**: Add to [`api/`](api/) directory with JSON response
+3. **Admin Page**: Add to [`admin/`](admin/) directory, include [`admin/includes/header.php`](admin/includes/header.php)
+
+## 🐛 Troubleshooting
+
+### Database Connection Error
+```bash
+# Check credentials in .env
+cat .env | grep DB_
+
+# Test connection
+php -r "require 'config/database.php'; echo 'DB OK';"
+
+# Verify MySQL is running
+sudo systemctl status mysql
 ```
-python3 -m pip install --user git-filter-repo
+
+### SMTP Email Failures
+```bash
+# Check SMTP credentials
+cat .env | grep SMTP_
+
+# Enable debug in contact.php temporarily
+$mail->SMTPDebug = 2;
+
+# Check error logs
+tail -f /var/log/apache2/error.log
 ```
-- Create a replace file (replace EXPOSED_SECRET with the exact leaked string — DO NOT paste it into shared places):
+
+### Cart Not Working
+1. Check browser console for JavaScript errors
+2. Verify [`assets/js/main.js`](assets/js/main.js) is loaded
+3. Ensure user is logged in
+4. Check session configuration in `php.ini`
+
+### Image Upload Issues
+```bash
+# Check file permissions
+ls -la admin/add_product.php
+
+# Verify image conversion
+# Images are base64 encoded, not uploaded to filesystem
+# Check database column type is LONGTEXT
 ```
-printf 'EXPOSED_SECRET==>***REDACTED***\n' > replace.txt
+
+### Session Issues
+```bash
+# Check session directory permissions
+ls -ld /var/lib/php/sessions
+
+# Set correct permissions
+sudo chmod 1733 /var/lib/php/sessions
+
+# Restart web server
+sudo systemctl restart apache2
 ```
-- Rewrite history (this is destructive; you must force-push):
+
+## 🚀 Deployment
+
+### Production Checklist
+- [ ] Change default admin password
+- [ ] Update `.env` with production credentials
+- [ ] Set `display_errors = Off` in `php.ini`
+- [ ] Enable HTTPS/SSL
+- [ ] Configure firewall rules
+- [ ] Set up database backups
+- [ ] Configure email service (SendGrid/Mailgun recommended)
+- [ ] Optimize images (use WebP format)
+- [ ] Enable PHP OPcache
+- [ ] Set up monitoring (logs, uptime)
+
+### Apache Configuration
+```apache
+<VirtualHost *:80>
+    ServerName mamasoven.com
+    DocumentRoot /var/www/html/mamoven1
+    
+    <Directory /var/www/html/mamoven1>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    ErrorLog ${APACHE_LOG_DIR}/mamasoven_error.log
+    CustomLog ${APACHE_LOG_DIR}/mamasoven_access.log combined
+</VirtualHost>
 ```
-git filter-repo --replace-text replace.txt
-git reflog expire --expire=now --all
-git gc --prune=now --aggressive
+
+### Nginx Configuration
+```nginx
+server {
+    listen 80;
+    server_name mamasoven.com;
+    root /var/www/html/mamoven1;
+    index index.php index.html;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~ /\.env {
+        deny all;
+    }
+}
+```
+
+## 🔐 Protecting Secrets
+
+### Never Commit These Files
+```gitignore
+.env
+vendor/
+node_modules/
+.DS_Store
+*.log
+```
+
+### If Secrets Were Exposed
+1. **Rotate credentials immediately**
+   - Database password
+   - SMTP app password
+   - Admin account password
+
+2. **Clean Git history**
+```bash
+# Install git-filter-repo
+pip install git-filter-repo
+
+# Remove sensitive data
+git filter-repo --path .env --invert-paths
+git filter-repo --replace-text <(echo 'EXPOSED_PASSWORD==>***REDACTED***')
+
+# Force push
 git push --force --all
 git push --force --tags
 ```
-Alternative: use BFG Repo-Cleaner if preferred.
 
-7) After history rewrite
-- Tell all collaborators to re-clone the repo (do NOT pull).
-- Verify no secrets remain: search for common keys:
-```
-git grep -n "SMTP_PASS\|DB_PASS\|password" || true
-```
+3. **Use environment variables in production**
+   - GitHub Actions: Repository Secrets
+   - Server: Export in `.bashrc` or use secret manager
 
-8) Deploy safely / CI
-- Use environment variables on the server or GitHub Actions Secrets (Repository → Settings → Secrets).
-- Example in GitHub Actions:
-```
-- name: expose secrets to env
-  run: |
-    echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
-    echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> $GITHUB_ENV
-```
+## 📊 Database Schema Highlights
 
-9) Restart services after local .env changes
-```
-sudo systemctl restart apache2
-# or for php-fpm
-sudo systemctl restart php8.1-fpm
-```
+### Products Table
+- `image` (LONGTEXT): Base64 encoded images
+- `flavours` (TEXT): Comma-separated flavor options
+- `ingredients` (TEXT): Product ingredients
+- `featured` (TINYINT): Featured product flag
 
-10) Quick checks
-- Confirm database connects locally:
-```
-php -r "require 'config/database.php'; echo 'DB OK';"
-```
-- Confirm web pages no longer show credentials or error stack traces in production (disable display_errors in production).
+### Orders Table
+- `order_number` (VARCHAR): Unique order identifier
+- `delivery_address` (TEXT): Customer delivery location
+- `delivery_phone` (VARCHAR): Contact number
+- `special_instructions` (TEXT): Customer notes
 
-Notes
-- Never paste real secrets into issue trackers, public chats or commits.
-- Keep .env only on development/production machines and in server secret stores.
+## 🌐 Browser Support
 
-## Contributing
+| Browser | Version |
+|---------|---------|
+| Chrome | 90+ |
+| Firefox | 88+ |
+| Safari | 14+ |
+| Edge | 90+ |
+| Mobile Safari | iOS 14+ |
+| Chrome Mobile | Latest |
+
+## 📈 Performance Tips
+
+- **Database Indexing**: Products, orders, and users tables have indexes
+- **Image Optimization**: Compress images before upload (max 2MB)
+- **Caching**: Enable browser caching for static assets
+- **CDN**: Use CDN for Bootstrap/jQuery in production
+- **Minification**: Minify CSS/JS before deployment
+- **PHP OPcache**: Enable for faster PHP execution
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## Support
+## 📄 License
 
-For support and questions:
-- Email: josbertaijuka15@gmail.com
-- phone: +256759420168
+This project is proprietary software developed for Mama's Oven Uganda.
 
+## 📞 Support
 
+For questions or issues:
+- **Email**: josbertaijuka15@gmail.com
+- **Phone**: +256 759 420168
+- **GitHub Issues**: [Create an issue](https://github.com/yourusername/mamoven1/issues)
 
-Built with ❤️ for Mama's Oven Uganda
+## 🙏 Acknowledgments
+
+- Bootstrap 5 for responsive framework
+- Font Awesome for icons
+- SweetAlert2 for beautiful alerts
+- PHPMailer for email functionality
+- jQuery for AJAX operations
+
+---
+
+**Built with ❤️ for Mama's Oven Uganda** | Serving freshly baked delights across Kampala
