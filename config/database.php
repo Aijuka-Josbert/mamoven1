@@ -1,6 +1,7 @@
 <?php
 error_reporting(0);
 ini_set('display_errors', 0);
+
 // Load simple .env file (if present) so getenv() works in PHP without external libs
 function load_dotenv($path)
 {
@@ -42,11 +43,24 @@ load_dotenv(__DIR__ . '/../.env');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// --- DATABASE CREDENTIALS (read from environment) ---
-$host    = getenv('DB_HOST') ?: 'localhost';
-$dbname  = getenv('DB_NAME') ?: 'mamaove';
-$username= getenv('DB_USER') ?: 'root';
-$password= getenv('DB_PASS') ?: ''; // now loaded from .env if present
+// --- ENVIRONMENT DETECTION ---
+// Detect if we're on localhost or production
+$isLocalhost = in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1', 'localhost:8000', '127.0.0.1:80']);
+
+// --- DATABASE CREDENTIALS ---
+if ($isLocalhost) {
+    // Local development
+    $host    = getenv('DB_HOST') ?: 'localhost';
+    $dbname  = getenv('DB_NAME') ?: 'mamaove';
+    $username= getenv('DB_USER') ?: 'root';
+    $password= getenv('DB_PASS') ?: '';
+} else {
+    // Production (InfinityFree)
+    $host    = getenv('DB_HOST') ?: 'sql303.infinityfree.com';
+    $dbname  = getenv('DB_NAME') ?: 'if0_40616210_mamaove';
+    $username= getenv('DB_USER') ?: 'if0_40616210';
+    $password= getenv('DB_PASS') ?: 'josbert003'; // Use .env for security
+}
 $charset = getenv('DB_CHARSET') ?: 'utf8mb4';
 
 // --- PDO CONNECTION ---
@@ -60,26 +74,38 @@ $options = [
 try {
     $pdo = new PDO($dsn, $username, $password, $options);
 } catch (\PDOException $e) {
-    // For a live site, you would log this error and show a generic message.
-    // For development, it's okay to show the detailed error.
     throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
 
-// --- SITE CONSTANTS ---
-define('BASE_URL', getenv('BASE_URL') ?: 'http://127.0.0.1/mamoven1'); 
-define('SITE_NAME', getenv('SITE_NAME') ?: "Mama's Oven");
-define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'joszialvin@gmail.com'); //mamasovenug@gmail.com
+// --- BASE URL WITH AUTOMATIC PROTOCOL DETECTION ---
+if (getenv('BASE_URL')) {
+    // Use .env if set
+    define('BASE_URL', getenv('BASE_URL'));
+} else {
+    // Auto-detect protocol and domain
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+    
+    if ($isLocalhost) {
+        define('BASE_URL', $protocol . '://' . $_SERVER['HTTP_HOST'] . '/mamoven1');
+    } else {
+        define('BASE_URL', $protocol . '://mamoven.infinityfreeapp.com/mamoven1');
+    }
+}
 
-// --- SMTP / Email Settings (read from environment) ---
+// --- SITE CONSTANTS ---
+define('SITE_NAME', getenv('SITE_NAME') ?: "Mama's Oven");
+define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'joszialvin@gmail.com');
+
+// --- SMTP / Email Settings ---
 define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
 define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
-define('SMTP_USER', getenv('SMTP_USER') ?: '');
-define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
+define('SMTP_USER', getenv('SMTP_USER') ?: 'joszialvin@gmail.com');
+define('SMTP_PASS', getenv('SMTP_PASS') ?: 'fsbc ktft yacu lhwe');
 define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'tls');
 
 // --- UPLOAD DIRECTORY ---
 define('UPLOAD_PATH', __DIR__ . '/../assets/images/');
-define('UPLOAD_URL', __DIR__ . '/assets/image2/');
+define('UPLOAD_URL', BASE_URL . '/assets/image2/');
 ?>
 
 
