@@ -115,13 +115,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </form>
 
-                    <!-- Demo Accounts Info -->
+                    <!-- Demo Accounts Info
                     <div class="mt-4 p-3 bg-light rounded border text-center">
                         <h6 class="mb-2 fw-bold">Demo Account</h6>
                         <small class="text-muted d-block">
                             <strong>Admin:</strong> admin / Mama2023!
                         </small>
-                    </div>
+                    </div> -->
 
                     <!-- Password visibility toggle script -->
                     <script>
