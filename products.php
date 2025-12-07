@@ -22,14 +22,18 @@ $params = [];
 
 // Add category filter to the query if selected
 if (!empty($category_filter)) {
-    $sql .= " AND c.name = :category";
-    $params[':category'] = $category_filter;
+    $sql .= " AND c.name = ?";
+    $params[] = $category_filter;
 }
 
 // Add search filter to the query if a search term is provided
 if (!empty($search_query)) {
-    $sql .= " AND (p.name LIKE :search OR p.description LIKE :search)";
-    $params[':search'] = '%' . $search_query . '%';
+    $sql .= " AND (p.name LIKE ? OR p.description LIKE ? OR p.flavours LIKE ? OR p.ingredients LIKE ?)";
+    $search_term = '%' . $search_query . '%';
+    $params[] = $search_term;
+    $params[] = $search_term;
+    $params[] = $search_term;
+    $params[] = $search_term;
 }
 
 $sql .= " ORDER BY p.featured DESC, p.created_at DESC";
