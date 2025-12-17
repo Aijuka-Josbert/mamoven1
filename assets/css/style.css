@@ -251,21 +251,59 @@ a:hover {
 .hero-section {
     background-color: #FDF4F7; /* Soft Pink Background */
     padding: 60px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+}
+
+.hero-section .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-section .row {
+    align-items: center;
+    width: 100%;
 }
 
 .hero-title {
     font-size: 3.5rem;
+    text-align: center;
 }
 
 .hero-description {
     font-size: 1.2rem;
     color: var(--color-text-light);
+    text-align: center;
+}
+
+.hero-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .hero-image {
     border-radius: 20px;
     max-width: 100%;
     height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-section {
+        min-height: auto;
+        padding: 40px 0;
+    }
 }
 
 /* --- Footer --- */
@@ -417,4 +455,40 @@ a:hover {
     object-fit: cover;
     object-position: center;
     display: block;
+}
+
+/* --- Order Status Badges --- */
+.badge.bg-success {
+    background-color: var(--color-success) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--color-danger) !important;
+}
+
+.badge.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: var(--color-text) !important;
+}
+
+/* --- Order Actions --- */
+.d-flex.gap-2 {
+    gap: 0.5rem;
+}
+
+.accordion-button {
+    background-color: var(--color-white);
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--color-secondary);
+    color: var(--color-text);
+}
+
+.accordion-body {
+    background-color: var(--color-white);
 }

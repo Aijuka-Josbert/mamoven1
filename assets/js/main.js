@@ -117,11 +117,21 @@ function addToCart(productId, quantity = 1) {
         return;
     }
 
-    const button = $(`[onclick="addToCart(${productId}, ${quantity})"]`);
+    // Improved selector to find the button that triggered this
+    // Handles cases where quantity is implicit (onclick="addToCart(1)") or explicit
+    let button = $(`[onclick="addToCart(${productId}, ${quantity})"]`);
+    if (button.length === 0) {
+        button = $(`[onclick="addToCart(${productId})"]`);
+    }
+    // Fallback for spacing differences
+    if (button.length === 0) {
+        button = $(`button[onclick*="addToCart(${productId}"]`);
+    }
+
     const originalHtml = button.html();
 
     $.ajax({
-        url: 'api/add_to_cart.php',
+        url: BASE_URL + '/api/add_to_cart.php',  // Use absolute URL
         method: 'POST',
         data: { product_id: productId, quantity: quantity },
         dataType: 'json',
@@ -136,7 +146,9 @@ function addToCart(productId, quantity = 1) {
                 showError(response.message || 'Could not add product to cart.');
             }
         },
-        error: function() {
+        error: function(xhr, status, error) {
+            console.error('Cart error:', status, error);
+            console.error('Response:', xhr.responseText);
             showError('An unexpected network error occurred. Please try again.');
         },
         complete: function() {
@@ -164,7 +176,7 @@ function updateCartCount(count = null) {
     if (!isLoggedIn()) return;
 
     $.ajax({
-        url: 'api/get_cart_count.php',
+        url: BASE_URL + '/api/get_cart_count.php',  // Use absolute URL
         method: 'GET',
         dataType: 'json',
         success: function(response) {
@@ -176,6 +188,9 @@ function updateCartCount(count = null) {
             } else {
                 $cartBadge.hide();
             }
+        },
+        error: function(xhr, status, error) {
+            console.error('Cart count error:', status, error);
         }
     });
 }

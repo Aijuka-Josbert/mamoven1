@@ -1,6 +1,16 @@
 <?php
-session_start();
-include_once '../config/database.php';
+// Start output buffering to prevent any unwanted output (warnings, notices, whitespace)
+ob_start();
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Use __DIR__ for robust path resolution
+require_once __DIR__ . '/../config/database.php';
+
+// Clear any buffered output before sending JSON headers
+ob_clean();
 
 header('Content-Type: application/json');
 
@@ -17,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $product_id = $_POST['product_id'] ?? 0;
 $quantity = $_POST['quantity'] ?? 1;
 $user_id = $_SESSION['user_id'];
+
 if (!$product_id || $quantity < 1) {
     echo json_encode(['success' => false, 'message' => 'Invalid product or quantity']);
     exit;
@@ -61,6 +72,8 @@ try {
     ]);
 
 } catch (Exception $e) {
+    // Log error for admin, show generic message to user
+    error_log("Cart Error: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
 ?>

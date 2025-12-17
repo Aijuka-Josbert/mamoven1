@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
         </div>
     </div>
 
-    <!-- Google Map Section -->
+    <!-- Google Map Section
     <div class="row mt-5">
         <div class="col-12">
             <div class="card shadow border-0">
@@ -149,6 +149,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

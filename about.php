@@ -11,7 +11,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <div class="row align-items-center g-5">
         <div class="col-lg-6">
-            <img src="assets/image2/fresh-baked-sweet-delights-rustic-bakery-shelf-generated-by-ai.jpg" alt="The team at Mama's Oven" class="img-fluid rounded shadow about-hero-img">
+            <img src="assets/image2/new.jpg" alt="The team at Mama's Oven" class="img-fluid rounded shadow about-hero-img" height="30px">
         </div>
         <div class="col-lg-6">
             <h2 class="display-6">From Our Kitchen to Your Heart</h2>
@@ -46,14 +46,15 @@ require_once __DIR__ . '/includes/header.php';
             <p class="text-muted">A small team of passionate bakers and pastry artists.</p>
         </div>
 
-        <div class="col-md-4 text-center">
-            <img src="assets/image2/hf.jpeg" alt="Head Baker" class="img-fluid rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;">
-            <h5 class="mb-0">Josie Taijuka</h5>
+        <!-- <div class="col-md-4 text-center"> -->
+        <div class="text-center">
+            <img src="assets/image2/sheba.jpeg" alt="Head Baker" class="img-fluid rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;">
+            <h5 class="mb-0">Nkinzi Sheba</h5>
             <small class="text-muted d-block mb-2">Head Baker & Founder</small>
             <p class="text-muted">Recipe guardian and flavor innovator.</p>
         </div>
 
-        <div class="col-md-4 text-center">
+        <!-- <div class="col-md-4 text-center">
             <img src="assets/image2/pipo.jpeg" alt="Pastry Chef" class="img-fluid rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;">
             <h5 class="mb-0">Esther</h5>
             <small class="text-muted d-block mb-2">Pastry Chef</small>
@@ -65,7 +66,7 @@ require_once __DIR__ . '/includes/header.php';
             <h5 class="mb-0">Samuel</h5>
             <small class="text-muted d-block mb-2">Delivery & Logistics</small>
             <p class="text-muted">Ensures fresh goods get to you on time.</p>
-        </div>
+        </div> -->
     </div>
 
     <!-- Sustainability / Local Sourcing -->

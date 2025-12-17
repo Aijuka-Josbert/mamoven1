@@ -5,10 +5,9 @@
                 <div class="col-lg-4 col-md-12">
                     <h5 class="footer-title"><?php echo SITE_NAME; ?></h5>
                     <p>Freshly baked delights delivered to your doorstep. Experience the taste of homemade goodness with our premium cakes, snacks, and pastries.</p>
-                    <div class="social-links mt-3">
-                        <a href="#" class="social-link" title="Facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-link" title="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-link" title="Twitter"><i class="fab fa-twitter"></i></a>
+                      <div class="social-links mt-3">
+                        <a href="https://www.instagram.com/mamas__oven?igsh=MTdhYzdoemJvZW03bA%3D%3D&utm_source=qr" class="social-link" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://api.whatsapp.com/send?phone=256747686189" target="blank" class="social-link" title="Twitter"><i class="fab fa-whatsapp"></i></a>
                     </div>
                 </div>
                 

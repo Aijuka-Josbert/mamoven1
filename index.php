@@ -22,21 +22,21 @@ try {
 
 <main>
     <!-- Hero Section -->
-    <section class="hero-section text-center text-lg-start">
+    <section class="hero-section text-center">
         <div class="container py-5">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
+            <div class="row align-items-center justify-content-center">
+                <div class="col-lg-6 mb-4 mb-lg-0">
                     <h1 class="hero-title">Baked with Love, Just for You</h1>
                     <p class="hero-description my-4">
                         Discover the taste of authentic, homemade goodness. From celebratory cakes to daily delights, every bite is a piece of heaven.
                     </p>
                     <div class="hero-buttons">
                         <a href="products.php" class="btn btn-primary btn-lg">Explore Our Menu</a>
-                        <a href="about.php" class="btn btn-outline-primary btn-lg ms-2">Our Story</a>
+                        <a href="about.php" class="btn btn-outline-primary btn-lg">Our Story</a>
                     </div>
                 </div>
                 <div class="col-lg-6 d-none d-lg-block">
-                    <img src="assets/images/Untitled.jpeg" alt="A collection of delicious cakes and pastries" class="img-fluid hero-image">
+                    <img src="assets/image2/tr.jpg" alt="A collection of delicious cakes and pastries" class="img-fluid hero-image">
                 </div>
             </div>
         </div>
