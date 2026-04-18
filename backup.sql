@@ -718,10 +718,12 @@ CREATE TABLE `users` (
   `address` varchar(255) DEFAULT NULL,
   `role` enum('admin','customer') NOT NULL DEFAULT 'customer',
   `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `verification_code` varchar(10) DEFAULT NULL,
+  `is_verified` tinyint(1) DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -732,11 +734,12 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
-(1,'admin','joszialvin@gmail.com','$2y$12$1zBGwYleUbSNalJDoEKrOuLqnbWkrUS8Jc7hSPBP7nRpkFujIdB..','Administrator','','','admin','2025-10-10 06:39:07'),
-(3,'samie','samanthak@gmail.com','$2y$12$F6h3EwU7YyuzQG.Kc.Tan.mZcOQqoepgC50NEkPFVVBUYpXy1D4BK','kawambe Samantha','0708173219','namugongo, near shrine','customer','2025-10-10 06:46:58'),
-(4,'Sheba','sheba@gmail.com','$2y$12$Hi1CibexaU3b1qzXEhe0Ce4yRh.HkuQ5PNF.hNARuFM.2WsNcNw8q','Sheba1','0000000000',NULL,'customer','2025-11-13 16:20:05'),
-(5,'0759420168','josbertaijuka15@gmail.com','$2y$12$TRvXQ3uDKvQowAoHwu7t4.qed5AO01IisfqRwPKj8l5yBqOoKJlMi','Aijuka Josbert','','','customer','2025-11-14 12:10:21'),
-(6,'Joanitah ','nabayegojoanitah70@gmail.com','$2y$12$D7L5L9oMAuJeqqnvZB8RJObAXiAtGbmuh4h.4XsyFehqn3ifrid5a','Nabayego ','0000000000',NULL,'customer','2025-11-14 15:43:42');
+(1,'admin','joszialvin@gmail.com','$2y$12$1zBGwYleUbSNalJDoEKrOuLqnbWkrUS8Jc7hSPBP7nRpkFujIdB..','Administrator','','','admin','2025-10-10 06:39:07',NULL,1),
+(3,'samie','samanthak@gmail.com','$2y$12$F6h3EwU7YyuzQG.Kc.Tan.mZcOQqoepgC50NEkPFVVBUYpXy1D4BK','kawambe Samantha','0708173219','namugongo, near shrine','customer','2025-10-10 06:46:58',NULL,1),
+(4,'Sheba','sheba@gmail.com','$2y$12$Hi1CibexaU3b1qzXEhe0Ce4yRh.HkuQ5PNF.hNARuFM.2WsNcNw8q','Sheba1','0000000000',NULL,'customer','2025-11-13 16:20:05',NULL,1),
+(5,'0759420168','josbertaijuka15@gmail.com','$2y$12$TRvXQ3uDKvQowAoHwu7t4.qed5AO01IisfqRwPKj8l5yBqOoKJlMi','Aijuka Josbert','','','customer','2025-11-14 12:10:21',NULL,1),
+(6,'Joanitah ','nabayegojoanitah70@gmail.com','$2y$12$D7L5L9oMAuJeqqnvZB8RJObAXiAtGbmuh4h.4XsyFehqn3ifrid5a','Nabayego ','0000000000',NULL,'customer','2025-11-14 15:43:42',NULL,1),
+(8,'aijuk','josbert.aijuka@stud.umu.ac.ug','$2y$12$yq/YoaouFEUWBb4QxpePv.I7gvtXmU3MMsXD8Tc50bwmY3dJxjHkG','aijuka','0759420168',NULL,'customer','2026-04-18 16:48:40',NULL,1);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -751,4 +754,4 @@ SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-04-18 19:10:50
+-- Dump completed on 2026-04-18 19:54:48
