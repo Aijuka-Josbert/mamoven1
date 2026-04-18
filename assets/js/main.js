@@ -176,21 +176,25 @@ function updateCartCount(count = null) {
     if (!isLoggedIn()) return;
 
     $.ajax({
-        url: BASE_URL + '/api/get_cart_count.php',  // Use absolute URL
+        url: BASE_URL + '/api/get_cart_count.php',
         method: 'GET',
         dataType: 'json',
+        cache: false,
+        timeout: 5000,
         success: function(response) {
-            const cartCount = response.count || 0;
-            const $cartBadge = $('#cart-count');
-            $cartBadge.text(cartCount);
-            if (cartCount > 0) {
-                $cartBadge.show();
-            } else {
-                $cartBadge.hide();
+            if (response && typeof response.count !== 'undefined') {
+                const cartCount = parseInt(response.count) || 0;
+                const $cartBadge = $('#cart-count');
+                $cartBadge.text(cartCount);
+                if (cartCount > 0) {
+                    $cartBadge.show();
+                } else {
+                    $cartBadge.hide();
+                }
             }
         },
         error: function(xhr, status, error) {
-            console.error('Cart count error:', status, error);
+            console.error('Cart count error:', status, error, 'Response:', xhr.responseText);
         }
     });
 }
@@ -208,4 +212,322 @@ function previewImage(input, previewId) {
         };
         reader.readAsDataURL(input.files[0]);
     }
+}
+
+// ===== NEW FEATURES =====
+
+/**
+ * Loads reviews for a product
+ */
+function loadProductReviews(productId) {
+    $.ajax({
+        url: BASE_URL + '/api/get_reviews.php',
+        method: 'GET',
+        data: { product_id: productId },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                displayReviews(response);
+            }
+        },
+        error: function() {
+            $('#reviews-container').html('<p class="text-muted">Could not load reviews.</p>');
+        }
+    });
+}
+
+/**
+ * Displays reviews in the reviews container
+ */
+function displayReviews(reviewData) {
+    let html = '';
+
+    if (reviewData.review_count === 0) {
+        html = '<p class="text-muted text-center">No reviews yet. Be the first to review this product!</p>';
+    } else {
+        reviewData.reviews.forEach(function(review) {
+            let deleteBtn = '';
+            if (reviewData.is_admin) {
+                deleteBtn = `<button class="btn btn-sm btn-danger float-end" onclick="deleteReview(${review.id})"><i class="fas fa-trash"></i></button>`;
+            }
+            let starsHtml = '';
+            for (let i = 0; i < review.rating; i++) starsHtml += '★';
+            for (let i = review.rating; i < 5; i++) starsHtml += '☆';
+            
+            html += `
+                <div class="review-card mb-3 p-3 border rounded">
+                    <div class="review-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="review-author fw-bold">${review.full_name}</div>
+                            <div class="review-date text-muted small">${new Date(review.created_at).toLocaleDateString()}</div>
+                        </div>
+                        ${deleteBtn}
+                    </div>
+                    <div class="stars mb-2" style="color: #FFD700;">${starsHtml}</div>
+                    <p class="mb-0">${review.comment || 'No comment provided.'}</p>
+                </div>
+            `;
+        });
+    }
+
+    $('#reviews-container').html(html);
+}
+
+/**
+ * Deletes a product review
+ */
+function deleteReview(reviewId) {
+    if (confirm('Are you sure you want to delete this review?')) {
+        $.ajax({
+            url: BASE_URL + '/api/delete_review.php',
+            method: 'POST',
+            data: { review_id: reviewId },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showSuccess('Review deleted.');
+                    const productId = new URLSearchParams(window.location.search).get('id');
+                    loadProductReviews(productId);
+                } else {
+                    showError(response.message || 'Could not delete review.');
+                }
+            }
+        });
+    }
+}
+
+/**
+ * Submits a product review
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Interactive Stars setup
+    const interactiveStars = document.querySelectorAll('.star-interactive');
+    const ratingInput = document.getElementById('rating-input');
+    
+    if(interactiveStars.length > 0) {
+        interactiveStars.forEach(star => {
+            star.style.cursor = 'pointer';
+            star.style.color = '#ccc';
+            star.style.fontSize = '2rem';
+            star.style.display = 'inline-block';
+            star.style.transition = 'color 0.2s';
+            
+            star.addEventListener('mouseover', function() {
+                let val = this.getAttribute('data-value');
+                highlightStars(val);
+            });
+            
+            star.addEventListener('mouseout', function() {
+                let val = ratingInput.value;
+                highlightStars(val);
+            });
+            
+            star.addEventListener('click', function() {
+                let val = this.getAttribute('data-value');
+                ratingInput.value = val;
+                highlightStars(val);
+            });
+        });
+    }
+
+    function highlightStars(val) {
+        interactiveStars.forEach(star => {
+            if (star.getAttribute('data-value') <= val) {
+                star.style.color = '#FFD700'; // Gold
+            } else {
+                star.style.color = '#ccc'; // Gray
+            }
+        });
+    }
+
+    const reviewForm = document.getElementById('review-form');
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const productId = new URLSearchParams(window.location.search).get('id');
+            const rating = ratingInput ? ratingInput.value : 0;
+            const comment = document.getElementById('comment')?.value;
+
+            if (!rating || rating == 0) {
+                showError('Please select a rating');
+                return;
+            }
+
+            $.ajax({
+                url: BASE_URL + '/api/submit_review.php',
+                method: 'POST',
+                data: { 
+                    product_id: productId, 
+                    rating: rating, 
+                    comment: comment 
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showSuccess(response.message);
+                        reviewForm.reset();
+                        // Reload reviews
+                        loadProductReviews(productId);
+                    } else {
+                        showError(response.message);
+                    }
+                },
+                error: function() {
+                    showError('Could not submit review');
+                }
+            });
+        });
+
+        // Load reviews on page load
+        const productId = new URLSearchParams(window.location.search).get('id');
+        if (productId) {
+            loadProductReviews(productId);
+        }
+    }
+});
+
+/**
+ * Applies a promo code to the order
+ */
+function applyPromoCode() {
+    const promoCode = document.getElementById('promo-code')?.value;
+    const subtotalText = document.getElementById('subtotal-amount')?.textContent || '0';
+    // Extract numeric value from "UGX 50,000" format
+    const subtotal = parseFloat(subtotalText.replace(/[^\d]/g, '')) || 0;
+
+    if (!promoCode) {
+        showError('Please enter a promo code');
+        return;
+    }
+
+    $.ajax({
+        url: BASE_URL + '/api/apply_promo.php',
+        method: 'POST',
+        data: { 
+            promo_code: promoCode,
+            subtotal: subtotal
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                showSuccess('Promo code applied!');
+                // Update hidden field for form submission
+                const hiddenPromoField = document.getElementById('promo-code-hidden');
+                if (hiddenPromoField) {
+                    hiddenPromoField.value = promoCode;
+                }
+                // Store the discount for use during checkout
+                sessionStorage.setItem('promo_discount', response.discount);
+                sessionStorage.setItem('promo_id', response.promo_id);
+                // Update the UI to show discount
+                updateOrderSummaryWithDiscount(response.discount);
+            } else {
+                showError(response.message);
+            }
+        },
+        error: function() {
+            showError('Could not apply promo code');
+        }
+    });
+}
+
+/**
+ * Cancels an order
+ */
+function cancelOrder(orderId) {
+    Swal.fire({
+        title: 'Cancel Order?',
+        text: 'Are you sure? This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Cancel It',
+        cancelButtonText: 'Keep Order',
+        confirmButtonColor: '#dc3545',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: BASE_URL + '/api/cancel_order.php',
+                method: 'POST',
+                data: { order_id: orderId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showSuccess(response.message);
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        showError(response.message);
+                    }
+                },
+                error: function() {
+                    showError('Could not cancel order');
+                }
+            });
+        }
+    });
+}
+
+/**
+ * Updates order summary with discount
+ */
+function updateOrderSummaryWithDiscount(discount) {
+    const subtotalText = document.getElementById('subtotal-amount')?.textContent || '0';
+    const deliveryFeeText = document.getElementById('delivery-fee')?.textContent || '0';
+    
+    const subtotal = parseFloat(subtotalText.replace(/[^\d]/g, '')) || 0;
+    const deliveryFee = parseFloat(deliveryFeeText.replace(/[^\d]/g, '')) || 0;
+    const newTotal = subtotal + deliveryFee - discount;
+
+    // Update UI if elements exist
+    const discountElement = document.getElementById('discount-amount');
+    const discountRow = document.getElementById('discount-row');
+    const totalElement = document.getElementById('total-amount');
+    
+    if (discountElement) {
+        discountElement.textContent = 'UGX ' + discount.toLocaleString();
+    }
+    if (discountRow) {
+        discountRow.style.display = 'flex';
+    }
+    if (totalElement) {
+        totalElement.textContent = 'UGX ' + newTotal.toLocaleString();
+    }
+}
+/**
+ * Confirm order receipt
+ */
+function confirmReceipt(orderId) {
+    Swal.fire({
+        title: 'Confirm Receipt?',
+        text: 'Are you sure you have received your order?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, I received it',
+        cancelButtonText: 'Not yet',
+        confirmButtonColor: '#28a745',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: BASE_URL + '/api/confirm_receipt.php',
+                method: 'POST',
+                data: { order_id: orderId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        showSuccess(response.message);
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showError(response.message);
+                    }
+                },
+                error: function() {
+                    showError('Could not confirm receipt');
+                }
+            });
+        }
+    });
 }

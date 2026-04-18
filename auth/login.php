@@ -24,12 +24,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             // Check for user by username OR email
-            $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role FROM users WHERE username = :username OR email = :email");
+            $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role, is_verified FROM users WHERE username = :username OR email = :email");
             $stmt->execute(['username' => $username, 'email' => $username]);
             $user = $stmt->fetch();
             
             // Verify user exists and password is correct
             if ($user && password_verify($password, $user['password'])) {
+                
+                // Block unverified users from logging in
+                if ($user['role'] === 'customer' && isset($user['is_verified']) && $user['is_verified'] == 0) {
+                    $_SESSION['verify_email'] = $user['email'];
+                    header('Location: ' . BASE_URL . '/auth/verify.php');
+                    exit;
+                }
+
                 // Regenerate session ID for security
                 session_regenerate_id(true);
 

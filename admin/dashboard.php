@@ -99,9 +99,10 @@ try {
             <div class="card shadow">
                 <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6></div>
                 <div class="card-body">
-                    <a href="add_product.php" class="btn btn-primary mb-2 d-block">Add New Product</a>
-                    <a href="orders.php" class="btn btn-info mb-2 d-block">View All Orders</a>
-                    <a href="categories.php" class="btn btn-secondary mb-2 d-block">Manage Categories</a>
+                    <a href="add_product.php" class="admin-actions-btn btn-primary mb-3 shadow-sm">Add New Product</a>
+                    <a href="orders.php" class="admin-actions-btn btn-info mb-3 shadow-sm">View All Orders</a>
+                    <a href="categories.php" class="admin-actions-btn btn-secondary mb-3 shadow-sm">Manage Categories</a>
+                    <a href="testimonials.php" class="admin-actions-btn btn-success mb-3 shadow-sm">Manage Testimonials</a>
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 <?php
 
 // Include database connection
-include_once __DIR__ . '/config/database.php';
+// include_once __DIR__ . '../../config/database.php';
 
 // Create a new strong password
 $new_password = 'Mama2023!';

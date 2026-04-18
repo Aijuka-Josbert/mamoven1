@@ -43,8 +43,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $subtotal = 0;
 $delivery_fee = 5000; // Default/fixed delivery fee
 $cart_items = [];
+$user_phone = '';
+$user_address = '';
 
 try {
+    // Fetch user's phone and address for checkout suggestions
+    $user_stmt = $pdo->prepare("SELECT phone, address FROM users WHERE id = ?");
+    $user_stmt->execute([$user_id]);
+    $user_data = $user_stmt->fetch();
+    $user_phone = $user_data['phone'] ?? '';
+    $user_address = $user_data['address'] ?? '';
+
     $stmt = $pdo->prepare("
         SELECT c.id, c.quantity, p.id as product_id, p.name, p.price, p.image 
         FROM cart c 
@@ -139,16 +148,20 @@ try {
                         <h4 class="mb-3">Order Summary</h4>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Subtotal:</span>
-                            <span>UGX <?php echo number_format($subtotal); ?></span>
+                            <span id="subtotal-amount">UGX <?php echo number_format($subtotal); ?></span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Delivery Fee:</span>
-                            <span>UGX <?php echo number_format($delivery_fee); ?></span>
+                            <span id="delivery-fee">UGX <?php echo number_format($delivery_fee); ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2" id="discount-row" style="display: none;">
+                            <span>Discount:</span>
+                            <span id="discount-amount" style="color: green;">UGX 0</span>
                         </div>
                         <hr>
                         <div class="d-flex justify-content-between h5 fw-bold">
                             <span>Total:</span>
-                            <span>UGX <?php echo number_format($total); ?></span>
+                            <span id="total-amount">UGX <?php echo number_format($total); ?></span>
                         </div>
                         <div class="d-grid mt-4">
                              <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#checkoutModal">
@@ -172,22 +185,36 @@ try {
             </div>
             <div class="modal-body">
                 <form id="checkout-form" method="POST" action="api/place_order.php">
+                    <input type="hidden" id="promo-code-hidden" name="promo_code" value="">
                     <div class="mb-3">
-                        <label for="delivery_address" class="form-label">Delivery Address *</label>
-                        <textarea id="delivery_address" name="delivery_address" class="form-control" rows="3" required placeholder="Enter your full street address, area, and any nearby landmarks."></textarea>
+                        <label for="delivery_address" class="form-label">Delivery Address <span class="text-danger">*</span></label>
+                        <textarea id="delivery_address" name="delivery_address" class="form-control" rows="3" required placeholder="Enter your full street address, area, and any nearby landmarks."><?php echo htmlspecialchars($user_address); ?></textarea>
+                        <div class="form-text">We need this to deliver your order accurately.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="delivery_phone" class="form-label">Contact Phone *</label>
-                        <input type="tel" id="delivery_phone" name="delivery_phone" class="form-control" required placeholder="+256 7...">
+                        <label for="delivery_phone" class="form-label">Contact Phone <span class="text-danger">*</span></label>
+                        <input type="tel" id="delivery_phone" name="delivery_phone" class="form-control" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               required placeholder="07XXXXXXXX" value="<?php echo htmlspecialchars($user_phone); ?>">
+                        <div class="form-text">We'll use this to confirm your delivery. You can change it if needed.</div>
                     </div>
                      <div class="mb-3">
-                        <label for="special_instructions" class="form-label">Special Instructions</label>
-                        <textarea id="special_instructions" name="special_instructions" class="form-control" rows="2" placeholder="e.g., 'Write Happy Birthday on the cake'"></textarea>
+                        <label for="special_instructions" class="form-label">Special Instructions <small class="text-muted">(Optional)</small></label>
+                        <textarea id="special_instructions" name="special_instructions" class="form-control" rows="2" placeholder="e.g., 'Write Happy Birthday on the cake' or 'Leave at gate'"></textarea>
+                    </div>
+                    
+                    <!-- Promo Code Section -->
+                    <div class="mb-3">
+                        <label for="promo-code" class="form-label">Promo Code <small class="text-muted">(Optional)</small></label>
+                        <div class="input-group">
+                            <input type="text" id="promo-code" class="form-control" placeholder="Enter promo code">
+                            <button type="button" class="btn btn-outline-secondary" onclick="applyPromoCode()">Apply</button>
+                        </div>
                     </div>
                      <hr>
                     <div class="text-center">
                         <p class="mb-1">Your total is <strong class="h5">UGX <?php echo number_format($total); ?></strong>.</p>
-                        <p class="text-muted small">Payment is Cash on Delivery.</p>
+                        <p class="text-muted small"><i class="fas fa-money-bill-wave"></i> Payment: Cash on Delivery</p>
                     </div>
                 </form>
             </div>

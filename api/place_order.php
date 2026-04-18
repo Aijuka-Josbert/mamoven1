@@ -23,6 +23,7 @@ $user_id = $_SESSION['user_id'];
 $delivery_address = trim($_POST['delivery_address'] ?? '');
 $delivery_phone = trim($_POST['delivery_phone'] ?? '');
 $special_instructions = trim($_POST['special_instructions'] ?? '');
+$promo_code = trim($_POST['promo_code'] ?? '');
 
 if (!$delivery_address || !$delivery_phone) {
     echo json_encode(['success' => false, 'message' => 'Delivery address and phone are required']);
@@ -57,18 +58,62 @@ try {
     $stmt->execute();
     $delivery_fee = (float)($stmt->fetchColumn() ?: 5000);
 
-    $total_amount = $subtotal + $delivery_fee;
+    // Handle promo code if provided
+    $promo_code_id = null;
+    $discount_amount = 0;
+    if (!empty($promo_code)) {
+        $promo_stmt = $pdo->prepare("
+            SELECT * FROM promo_codes 
+            WHERE code = ? AND status = 'active'
+            AND NOW() BETWEEN IFNULL(valid_from, NOW()) AND IFNULL(valid_until, NOW())
+        ");
+        $promo_stmt->execute([$promo_code]);
+        $promo = $promo_stmt->fetch();
+
+        if ($promo) {
+            // Check usage limits
+            $usage_stmt = $pdo->prepare("SELECT COUNT(*) FROM promo_usage WHERE promo_code_id = ?");
+            $usage_stmt->execute([$promo['id']]);
+            $usage_count = (int)$usage_stmt->fetchColumn();
+
+            if ($promo['max_uses'] && $usage_count >= $promo['max_uses']) {
+                throw new Exception('This promo code has reached its usage limit');
+            }
+
+            // Check minimum order
+            if ($subtotal < $promo['min_order_amount']) {
+                throw new Exception('Minimum order amount for this promo is UGX ' . number_format($promo['min_order_amount']));
+            }
+
+            // Calculate discount
+            if ($promo['discount_type'] === 'percentage') {
+                $discount_amount = ($subtotal * $promo['discount_value']) / 100;
+            } else {
+                $discount_amount = $promo['discount_value'];
+            }
+
+            $promo_code_id = $promo['id'];
+        }
+    }
+
+    $total_amount = $subtotal + $delivery_fee - $discount_amount;
 
     // Generate order number
     $order_number = 'MO' . date('Ymd') . sprintf('%04d', rand(1, 9999));
 
     // Create order
     $stmt = $pdo->prepare("
-        INSERT INTO orders (user_id, order_number, total_amount, delivery_address, delivery_phone, special_instructions) 
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (user_id, order_number, total_amount, delivery_address, delivery_phone, special_instructions, promo_code_id, discount_amount) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->execute([$user_id, $order_number, $total_amount, $delivery_address, $delivery_phone, $special_instructions]);
+    $stmt->execute([$user_id, $order_number, $total_amount, $delivery_address, $delivery_phone, $special_instructions, $promo_code_id, $discount_amount]);
     $order_id = $pdo->lastInsertId();
+
+    // Log promo usage if code was applied
+    if ($promo_code_id) {
+        $usage_insert = $pdo->prepare("INSERT INTO promo_usage (promo_code_id, user_id, order_id) VALUES (?, ?, ?)");
+        $usage_insert->execute([$promo_code_id, $user_id, $order_id]);
+    }
 
     // Reserve stock and create order items
     $insert_item_stmt = $pdo->prepare("
@@ -199,6 +244,12 @@ try {
                             <td colspan='3' style='padding: 5px; text-align: right;'>Delivery Fee:</td>
                             <td style='padding: 5px; text-align: right;'>UGX " . number_format($delivery_fee) . "</td>
                         </tr>
+                        " . ($discount_amount > 0 ? "
+                        <tr style='background: #e8f5e8;'>
+                            <td colspan='3' style='padding: 5px; text-align: right; color: green;'><strong>Discount:</strong></td>
+                            <td style='padding: 5px; text-align: right; color: green;'><strong>-UGX " . number_format($discount_amount) . "</strong></td>
+                        </tr>
+                        " : "") . "
                         <tr style='background: #f0f0f0;'>
                             <td colspan='3' style='padding: 10px; text-align: right; font-weight: bold; font-size: 16px;'>Total Amount:</td>
                             <td style='padding: 10px; text-align: right; font-weight: bold; font-size: 16px; color: #8B4513;'>UGX " . number_format($total_amount) . "</td>
@@ -278,6 +329,12 @@ try {
                             <td colspan='3' style='padding: 5px; text-align: right;'>Delivery Fee:</td>
                             <td style='padding: 5px; text-align: right;'>UGX " . number_format($delivery_fee) . "</td>
                         </tr>
+                        " . ($discount_amount > 0 ? "
+                        <tr style='background: #e8f5e8;'>
+                            <td colspan='3' style='padding: 5px; text-align: right; color: green;'><strong>Discount:</strong></td>
+                            <td style='padding: 5px; text-align: right; color: green;'><strong>-UGX " . number_format($discount_amount) . "</strong></td>
+                        </tr>
+                        " : "") . "
                         <tr style='background: #f0f0f0;'>
                             <td colspan='3' style='padding: 10px; text-align: right; font-weight: bold; font-size: 16px;'>Total Amount:</td>
                             <td style='padding: 10px; text-align: right; font-weight: bold; font-size: 16px; color: #8B4513;'>UGX " . number_format($total_amount) . "</td>

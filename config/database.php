@@ -92,6 +92,18 @@ if (getenv('BASE_URL')) {
     }
 }
 
+// --- ENVIRONMENT & EMAIL CONFIGURATION ---
+define('IS_PRODUCTION', false); // Change to true for live server
+
+if (IS_PRODUCTION) {
+    define('SMTP_USER', getenv('SMTP_USER') ?: 'mamasovenug@gmail.com');
+    // You might also need a production SMTP_PASS here
+    define('SMTP_PASS', getenv('SMTP_PASS') ?: 'YOUR_PRODUCTION_APP_PASSWORD');
+} else {
+    define('SMTP_USER', getenv('SMTP_USER') ?: 'joszialvin@gmail.com');
+    define('SMTP_PASS', getenv('SMTP_PASS') ?: 'fsbc ktft yacu lhwe');
+}
+
 // --- SITE CONSTANTS ---
 define('SITE_NAME', getenv('SITE_NAME') ?: "Mama's Oven");
 define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'joszialvin@gmail.com');
@@ -99,8 +111,6 @@ define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'joszialvin@gmail.com');
 // --- SMTP / Email Settings ---
 define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
 define('SMTP_PORT', getenv('SMTP_PORT') ?: 587);
-define('SMTP_USER', getenv('SMTP_USER') ?: 'joszialvin@gmail.com');
-define('SMTP_PASS', getenv('SMTP_PASS') ?: 'fsbc ktft yacu lhwe');
 define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'tls');
 
 // --- UPLOAD DIRECTORY ---

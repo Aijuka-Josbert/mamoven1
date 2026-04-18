@@ -1,6 +1,20 @@
 <?php
 $page_title = 'About Us';
 require_once __DIR__ . '/includes/header.php';
+
+// Fetch approved testimonials
+try {
+    $testimonials_stmt = $pdo->prepare("
+        SELECT * FROM testimonials 
+        WHERE status = 'approved' 
+        ORDER BY created_at DESC 
+        LIMIT 6
+    ");
+    $testimonials_stmt->execute();
+    $testimonials = $testimonials_stmt->fetchAll();
+} catch (PDOException $e) {
+    $testimonials = [];
+}
 ?>
 
 <div class="container my-5">
@@ -68,6 +82,40 @@ require_once __DIR__ . '/includes/header.php';
             <p class="text-muted">Ensures fresh goods get to you on time.</p>
         </div> -->
     </div>
+
+    <!-- Testimonials Section -->
+    <?php if (!empty($testimonials)): ?>
+    <div class="row mt-5">
+        <div class="col-12 text-center mb-4">
+            <h3 class="section-title">What Our Customers Say</h3>
+            <p class="text-muted">Hear from the people who love our baked goods.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <?php foreach ($testimonials as $testimonial): ?>
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="testimonial-card">
+                <div class="mb-3">
+                    <div class="stars">
+                        <?php for ($i = 0; $i < $testimonial['rating']; $i++): ?>
+                            ★
+                        <?php endfor; ?>
+                        <?php for ($i = $testimonial['rating']; $i < 5; $i++): ?>
+                            ☆
+                        <?php endfor; ?>
+                    </div>
+                </div>
+                <p class="testimonial-text"><?php echo htmlspecialchars($testimonial['message']); ?></p>
+                <p class="testimonial-author"><?php echo htmlspecialchars($testimonial['name']); ?></p>
+                <?php if (!empty($testimonial['email'])): ?>
+                    <p class="testimonial-role"><?php echo htmlspecialchars($testimonial['email']); ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
 
     <!-- Sustainability / Local Sourcing -->
     <div class="row mt-5">

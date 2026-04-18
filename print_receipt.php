@@ -29,9 +29,18 @@ try {
     }
     
     // Fetch customer details
-    $user_stmt = $pdo->prepare("SELECT full_name, email FROM users WHERE id = ?");
+    $user_stmt = $pdo->prepare("SELECT full_name, email, phone FROM users WHERE id = ?");
     $user_stmt->execute([$order['user_id']]);
     $user = $user_stmt->fetch();
+
+    // Fetch business settings
+    $settings_stmt = $pdo->prepare("SELECT setting_key, setting_value FROM site_settings WHERE setting_key IN ('business_address', 'business_phone', 'business_email')");
+    $settings_stmt->execute();
+    $settings_raw = $settings_stmt->fetchAll();
+    $settings = [];
+    foreach ($settings_raw as $setting) {
+        $settings[$setting['setting_key']] = $setting['setting_value'];
+    }
 
     // Fetch all items associated with this order
     $items_stmt = $pdo->prepare("
@@ -132,6 +141,10 @@ try {
         }
         /* Print-specific styles */
         @media print {
+            @page {
+                margin: 0;
+                size: auto;
+            }
             body {
                 background-color: #fff;
             }
@@ -153,21 +166,30 @@ try {
 
     <div class="receipt-container">
         <div class="receipt-header">
-            <img src="<?php echo BASE_URL . '/assets/images/logo.png'; ?>" alt="<?php echo SITE_NAME; ?> Logo">
-            <h1>Order Receipt</h1>
-            <p>Plot 123, Main Street, Kampala, Uganda</p>
-            <p>+256 700 123456</p>
+            <img src="<?php echo htmlspecialchars(BASE_URL); ?>/assets/images/logo.jpeg" alt="Business Logo" style="max-width: 150px; height: auto;">
+            <p><strong>Receipt</strong></p>
+            <p><?php echo htmlspecialchars($settings['business_address'] ?? 'Kampala, Uganda'); ?></p>
+            <p><?php echo htmlspecialchars($settings['business_phone'] ?? '+256 747686189'); ?></p>
+            <?php if (!empty($settings['business_email'])): ?>
+                <p><?php echo htmlspecialchars($settings['business_email']); ?></p>
+            <?php endif; ?>
         </div>
 
         <div class="receipt-details">
             <p><strong>Order #:</strong> <?php echo htmlspecialchars($order['order_number']); ?></p>
             <p><strong>Date:</strong> <?php echo date('d M Y, H:i', strtotime($order['created_at'])); ?></p>
+            
         </div>
 
         <div class="customer-details">
             <p><strong>Customer:</strong> <?php echo htmlspecialchars($user['full_name']); ?></p>
+            <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
+            <p><strong>Phone:</strong> <?php echo htmlspecialchars($user['phone'] ?? $order['delivery_phone']); ?></p>
             <p><strong>Delivery To:</strong> <?php echo htmlspecialchars($order['delivery_address']); ?></p>
             <p><strong>Contact:</strong> <?php echo htmlspecialchars($order['delivery_phone']); ?></p>
+            <?php if (!empty($order['special_instructions'])): ?>
+                <p><strong>Special Instructions:</strong> <?php echo htmlspecialchars($order['special_instructions']); ?></p>
+            <?php endif; ?>
         </div>
 
         <table>

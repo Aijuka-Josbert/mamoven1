@@ -58,6 +58,7 @@ function asset_url($path) {
                                 <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['full_name']); ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>/customer_profile.php">My Profile</a></li>
                                 <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>/orders.php">My Orders</a></li>
                                 <?php if($_SESSION['role'] === 'admin'): ?>
                                     <li><hr class="dropdown-divider"></li>

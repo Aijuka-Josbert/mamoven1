@@ -25,6 +25,15 @@ try {
         exit;
     }
 
+    // Get reviews and average rating
+    $reviews_stmt = $pdo->prepare("
+        SELECT AVG(rating) as avg_rating, COUNT(*) as review_count 
+        FROM reviews 
+        WHERE product_id = ?
+    ");
+    $reviews_stmt->execute([$product_id]);
+    $review_stats = $reviews_stmt->fetch();
+
     // Get related products from the same category
     $related_stmt = $pdo->prepare("
         SELECT id, name, price, image 
@@ -78,6 +87,30 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
             <h1 class="display-5 mb-2"><?php echo htmlspecialchars($product['name']); ?></h1>
             <p class="product-price h2 mb-4">UGX <?php echo number_format($product['price']); ?></p>
 
+            <!-- Rating Display -->
+            <?php if ($review_stats['review_count'] > 0): ?>
+            <div class="mb-3">
+                <div class="stars" style="color: #FFD700; font-size: 1.2rem;">
+                    <?php 
+                    $rating = round($review_stats['avg_rating']);
+                    for ($i = 0; $i < $rating; $i++): ?>★<?php endfor; ?>
+                    <?php for ($i = $rating; $i < 5; $i++): ?>☆<?php endfor; ?>
+                </div>
+                <small class="text-muted"><?php echo round($review_stats['avg_rating'], 1); ?> out of 5 stars (<?php echo $review_stats['review_count']; ?> reviews)</small>
+            </div>
+            <?php endif; ?>
+
+            <!-- Stock Status -->
+            <div class="mb-4">
+                <?php if ($product['stock_quantity'] > 10): ?>
+                    <span class="stock-badge in-stock"><i class="fas fa-check-circle me-1"></i> In Stock</span>
+                <?php elseif ($product['stock_quantity'] > 0): ?>
+                    <span class="stock-badge low-stock"><i class="fas fa-exclamation-circle me-1"></i> Only <?php echo $product['stock_quantity']; ?> left!</span>
+                <?php else: ?>
+                    <span class="stock-badge out-of-stock"><i class="fas fa-times-circle me-1"></i> Out of Stock</span>
+                <?php endif; ?>
+            </div>
+
             <p class="lead text-muted"><?php echo nl2br(htmlspecialchars($product['description'])); ?></p>
             
             <?php if (!empty($product['flavours'])): ?>
@@ -107,6 +140,51 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="row mt-5 pt-5 border-top">
+        <div class="col-lg-8">
+            <h3 class="section-title mb-4">Customer Reviews</h3>
+
+            <!-- Reviews List -->
+            <div id="reviews-container" class="mb-4">
+                <p class="text-muted text-center"><i class="fas fa-spinner fa-spin"></i> Loading reviews...</p>
+            </div>
+
+            <!-- Review Form -->
+            <?php if (isset($_SESSION['user_id'])): ?>
+            <div class="card mt-5">
+                <div class="card-header">
+                    <h5 class="mb-0">Leave a Review</h5>
+                </div>
+                <div class="card-body">
+                    <form id="review-form" class="mt-3">
+                        <div class="mb-3">
+                            <label class="form-label">Rating <span class="text-danger">*</span></label>
+                            <div class="rating-stars-input" id="interactive-stars">
+                                <input type="hidden" name="rating" id="rating-input" value="0" required>
+                                <span class="star-interactive" data-value="1">★</span>
+                                <span class="star-interactive" data-value="2">★</span>
+                                <span class="star-interactive" data-value="3">★</span>
+                                <span class="star-interactive" data-value="4">★</span>
+                                <span class="star-interactive" data-value="5">★</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Your Review</label>
+                            <textarea id="comment" name="comment" class="form-control" rows="3" placeholder="Share your experience with this product..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i> Submit Review
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <?php else: ?>
+            <p class="alert alert-info"><a href="auth/login.php">Login</a> to leave a review.</p>
+            <?php endif; ?>
         </div>
     </div>
 

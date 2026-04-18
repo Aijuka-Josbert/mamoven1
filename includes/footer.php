@@ -7,7 +7,7 @@
                     <p>Freshly baked delights delivered to your doorstep. Experience the taste of homemade goodness with our premium cakes, snacks, and pastries.</p>
                       <div class="social-links mt-3">
                         <a href="https://www.instagram.com/mamas__oven?igsh=MTdhYzdoemJvZW03bA%3D%3D&utm_source=qr" class="social-link" title="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="https://api.whatsapp.com/send?phone=256747686189" target="blank" class="social-link" title="Twitter"><i class="fab fa-whatsapp"></i></a>
+                        <a href="https://api.whatsapp.com/send?phone=256747686189" target="_blank" class="social-link" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                     </div>
                 </div>
                 
@@ -48,11 +48,17 @@
         </div>
     </footer>
 
+    <!-- WhatsApp Chat Button -->
+    <a href="https://api.whatsapp.com/send?phone=256747686189&text=Hi%20Mama%27s%20Oven%2C%20I%20have%20a%20question" 
+       class="whatsapp-btn" target="_blank" title="Chat with us on WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
     <!-- JavaScript Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- Custom Application JS -->
-    <script src="assets/js/main.js"></script>
+    <script src="<?php echo BASE_URL; ?>/assets/js/main.js"></script>
 </body>
 </html>

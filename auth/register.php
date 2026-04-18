@@ -1,5 +1,6 @@
 <?php
 $page_title = 'Create Account';
+ini_set('pcre.jit', '0'); // Fix for PHPMailer JIT memory allocation issue
 include_once __DIR__ . '/../includes/header.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -20,12 +21,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $inputs['full_name'] = $_POST['full_name'];
     $inputs['username'] = $_POST['username'];
     $inputs['email'] = $_POST['email'];
+    $inputs['phone'] = $_POST['phone'] ?? '';
     $inputs['password'] = $_POST['password'];
     $inputs['confirm_password'] = $_POST['confirm_password'];
 
     $full_name = $inputs['full_name'];
     $username = $inputs['username'];
     $email = $inputs['email'];
+    $phone = trim($inputs['phone']);
     $password = $inputs['password'];
     $confirm_password = $inputs['confirm_password'];
 
@@ -36,6 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Email is required.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Invalid email format.';
+    }
+    if (empty($phone)) {
+        $errors[] = 'Phone number is required.';
+    } elseif (!preg_match('/^[\+]?[0-9\s\(\)\-\.]+$/', $phone) || strlen(preg_replace('/\D/', '', $phone)) < 7) {
+        $errors[] = 'Invalid phone number format (minimum 7 digits required).';
     }
     
     if (empty($password)) {
@@ -68,22 +76,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
         try {
             $hashed_password = password_hash($inputs['password'], PASSWORD_DEFAULT);
+            $verification_code = sprintf("%06d", mt_rand(100000, 999999));
             
             $stmt = $pdo->prepare(
-                "INSERT INTO users (full_name, username, email, password, role) VALUES (:full_name, :username, :email, :password, 'customer')"
+                "INSERT INTO users (full_name, username, email, phone, password, role, verification_code, is_verified) VALUES (:full_name, :username, :email, :phone, :password, 'customer', :verification_code, 0)"
             );
             
             $stmt->execute([
                 'full_name' => $inputs['full_name'],
                 'username' => $inputs['username'],
                 'email' => $inputs['email'],
-                'password' => $hashed_password
+                'phone' => $phone,
+                'password' => $hashed_password,
+                'verification_code' => $verification_code
             ]);
             
             // Get the new user's ID
             $user_id = $pdo->lastInsertId();
             
-            // Send welcome email
+            // Send verification email
             try {
                 $mail = new PHPMailer(true);
                 
@@ -97,88 +108,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mail->Port = SMTP_PORT;
 
                 $mail->setFrom(SMTP_USER, SITE_NAME);
+                $mail->addReplyTo(SMTP_USER, SITE_NAME);
                 $mail->addAddress($inputs['email'], $inputs['full_name']);
 
+                // SPAM Prevention: Always provide a Plain Text version along with the HTML
                 $mail->isHTML(true);
-                $mail->Subject = "Welcome to " . SITE_NAME . "!";
+                $mail->Subject = "Your Account Verification Code - " . SITE_NAME;
                 
+                // Plain Text Version
+                $plainTextCode = "Welcome to " . SITE_NAME . "!\n\n";
+                $plainTextCode .= "Dear {$inputs['full_name']},\n\n";
+                $plainTextCode .= "Your 6-digit verification code is: {$verification_code}\n\n";
+                $plainTextCode .= "Please enter this code on the verification page to activate your account.\n\n";
+                $plainTextCode .= "Link: " . BASE_URL . "/auth/verify.php?email=" . urlencode($inputs['email']) . "\n\n";
+                $plainTextCode .= "If you did not request this, please ignore this email.\n\n";
+                $plainTextCode .= "Best regards,\nThe " . SITE_NAME . " Team";
+                
+                $mail->AltBody = $plainTextCode;
+
                 $mail->Body = "
                 <html>
                 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
                     <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
                         <div style='text-align: center; margin-bottom: 30px;'>
-                            <h1 style='color: #8B4513; margin-bottom: 10px;'>Welcome to Mama's Oven!</h1>
-                            <img src='" . BASE_URL . "/assets/images/logo.jpeg' alt='Mama\\'s Oven Logo' style='height: 80px;'>
+                            <h1 style='color: #8B4513; margin-bottom: 10px;'>Verify Your Account!</h1>
                         </div>
                         
                         <p>Dear {$inputs['full_name']},</p>
                         
-                        <p>Welcome to the Mama's Oven family! We're thrilled to have you join our community of baking enthusiasts.</p>
+                        <p>Your 6-digit verification code is: <strong style='font-size: 24px; color: #8B4513;'>{$verification_code}</strong></p>
                         
-                        <div style='background: #f9f6f0; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #8B4513;'>
-                            <h3 style='margin-top: 0; color: #8B4513;'>Your Account Details</h3>
-                            <p><strong>Full Name:</strong> {$inputs['full_name']}</p>
-                            <p><strong>Username:</strong> {$inputs['username']}</p>
-                            <p><strong>Email:</strong> {$inputs['email']}</p>
-                        </div>
-
-                        <div style='background: #fff8e1; padding: 20px; border-radius: 8px; margin: 25px 0;'>
-                            <h3 style='margin-top: 0; color: #8B4513;'>What can you do now?</h3>
-                            <ul style='margin: 0; padding-left: 20px;'>
-                                <li style='margin-bottom: 8px;'>Browse our delicious range of <a href='" . BASE_URL . "/products.php' style='color: #8B4513;'>baked goods</a></li>
-                                <li style='margin-bottom: 8px;'>Add items to your cart and place orders</li>
-                                <li style='margin-bottom: 8px;'>Track your <a href='" . BASE_URL . "/orders.php' style='color: #8B4513;'>order history</a></li>
-                                <li style='margin-bottom: 8px;'>Enjoy convenient delivery to your doorstep</li>
-                                <li style='margin-bottom: 8px;'>Get updates on new products and special offers</li>
-                            </ul>
-                        </div>
-
-                        <div style='background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 25px 0;'>
-                            <h3 style='margin-top: 0; color: #2d5a2d;'>Why Choose Mama's Oven?</h3>
-                            <ul style='margin: 0; padding-left: 20px;'>
-                                <li style='margin-bottom: 8px;'><strong>Fresh Daily:</strong> All our products are baked fresh every day</li>
-                                <li style='margin-bottom: 8px;'><strong>Quality Ingredients:</strong> We use only the finest, locally-sourced ingredients</li>
-                                <li style='margin-bottom: 8px;'><strong>Fast Delivery:</strong> Quick and reliable delivery across Kampala</li>
-                                <li style='margin-bottom: 8px;'><strong>Cash on Delivery:</strong> Pay conveniently when your order arrives</li>
-                            </ul>
-                        </div>
-
                         <div style='text-align: center; margin: 30px 0;'>
-                            <a href='" . BASE_URL . "/products.php' style='background: #8B4513; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;'>Start Shopping Now</a>
+                            <a href='" . BASE_URL . "/auth/verify.php?email=" . urlencode($inputs['email']) . "' style='background: #8B4513; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;'>Go to Verification Page</a>
                         </div>
 
-                        <p>If you have any questions or need assistance, don't hesitate to <a href='" . BASE_URL . "/contact.php' style='color: #8B4513;'>contact our friendly team</a>.</p>
+                        <p>If you didn't create an account, you can safely ignore this email.</p>
                         
                         <p style='margin-top: 30px;'>
-                            Once again, welcome to Mama's Oven!<br>
+                            Welcome to Mama's Oven!<br>
                             <strong>The Mama's Oven Team</strong>
-                        </p>
-                        
-                        <hr style='border: none; border-top: 1px solid #ddd; margin: 30px 0;'>
-                        <p style='font-size: 12px; color: #666; text-align: center;'>
-                            You're receiving this email because you created an account with Mama's Oven.<br>
-                            Visit us at <a href='" . BASE_URL . "' style='color: #8B4513;'>" . BASE_URL . "</a>
                         </p>
                     </div>
                 </body>
                 </html>";
 
-                $mail->send();
+                if(!$mail->send()) {
+                    error_log('Verification email failed! ErrorInfo: ' . $mail->ErrorInfo . ', User/Pass: ' . SMTP_USER . ' / ' . (empty(SMTP_PASS) ? 'Empty' : 'Set'));
+                }
             } catch (Exception $e) {
                 // Log email error but don't fail the registration
-                error_log('Welcome email failed: ' . $e->getMessage());
+                error_log('Verification email failed Exception: ' . $e->getMessage());
             }
             
-            // Auto login after registration
+            // Do NOT login immediately. They must verify.
             session_regenerate_id(true);
-            $_SESSION['user_id'] = $user_id;
-            $_SESSION['username'] = $inputs['username'];
-            $_SESSION['full_name'] = $inputs['full_name'];
-            $_SESSION['role'] = 'customer';
-            $_SESSION['email'] = $inputs['email'];
+            $_SESSION['verify_email'] = $inputs['email'];
             
-            // Redirect to a welcome page or homepage
-            header('Location: ' . '../index.php?registered=1');
+            // Redirect to verify page
+            header('Location: ' . BASE_URL . '/auth/verify.php');
             exit;
         } catch (PDOException $e) {
             $errors[] = 'Registration failed due to a server error. Please try again.';
@@ -229,15 +216,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    value="<?php echo htmlspecialchars($inputs['email'] ?? ''); ?>" required>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                   placeholder="07XXXXXXXX" 
+                                   value="<?php echo htmlspecialchars($inputs['phone'] ?? ''); ?>" required>
+                            <div class="form-text">Required for delivery. Format: 07XXXXXXXX</div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
+                                        <i class="fas fa-eye"></i>
+                                    </span>
+                                </div>
                                 <div class="form-text">Minimum 8 characters, 1 uppercase letter, 1 special character</div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="confirm_password" class="form-label">Confirm Password</label>
-                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                    <span class="input-group-text" id="toggleConfirmPassword" style="cursor: pointer;">
+                                        <i class="fas fa-eye"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -260,6 +266,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <a href="../auth/login.php">Sign in</a>
                         </p>
                     </div>
+                    
+                    <!-- Password visibility toggle script -->
+                    <script>
+                        document.getElementById('togglePassword').addEventListener('click', function() {
+                            const passwordInput = document.getElementById('password');
+                            const icon = this.querySelector('i');
+                            
+                            if (passwordInput.type === 'password') {
+                                passwordInput.type = 'text';
+                                icon.classList.remove('fa-eye');
+                                icon.classList.add('fa-eye-slash');
+                            } else {
+                                passwordInput.type = 'password';
+                                icon.classList.remove('fa-eye-slash');
+                                icon.classList.add('fa-eye');
+                            }
+                        });
+
+                        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+                            const passwordInput = document.getElementById('confirm_password');
+                            const icon = this.querySelector('i');
+                            
+                            if (passwordInput.type === 'password') {
+                                passwordInput.type = 'text';
+                                icon.classList.remove('fa-eye');
+                                icon.classList.add('fa-eye-slash');
+                            } else {
+                                passwordInput.type = 'password';
+                                icon.classList.remove('fa-eye-slash');
+                                icon.classList.add('fa-eye');
+                            }
+                        });
+                    </script>
                 </div>
             </div>
         </div>

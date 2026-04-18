@@ -119,8 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                     <p class="mb-3"><i class="fas fa-envelope fa-fw me-2 text-primary"></i><a href="mailto:<?php echo ADMIN_EMAIL; ?>"><?php echo ADMIN_EMAIL; ?></a></p>
                     <hr>
                     <h5 class="h6 mt-4">Business Hours</h5>
-                    <p class="text-muted mb-1">Monday - Saturday: 8:00 AM - 6:00 PM</p>
-                    <p class="text-muted">Sunday & Public Holidays: Closed</p>
+                    <p class="text-muted mb-1">Everyday: 8:00 AM - 9:00 PM</p>
                 </div>
              </div>
         </div>

@@ -14,7 +14,7 @@ try {
 }
 
 // Base SQL query
-$sql = "SELECT p.id, p.name, p.price, p.image, p.description 
+$sql = "SELECT p.id, p.name, p.price, p.image, p.description, p.stock_quantity
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.id
         WHERE p.status = 'active'";
@@ -113,7 +113,7 @@ try {
                             <img src="<?php echo !empty($product['image']) && strpos($product['image'], 'data:image/') === 0 
     ? htmlspecialchars($product['image']) 
     : BASE_URL . '/assets/images/placeholder.jpg'; ?>" 
-     alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image">
+     alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image organic-blob">
                         </a>
                         <div class="product-info">
                             <div>
@@ -123,9 +123,18 @@ try {
                                     </a>
                                 </h5>
                                 <p class="product-price">UGX <?php echo number_format($product['price']); ?></p>
+                                <div class="mb-2">
+                                    <?php if ($product['stock_quantity'] > 10): ?>
+                                        <span class="stock-badge in-stock"><i class="fas fa-check-circle me-1"></i> In Stock</span>
+                                    <?php elseif ($product['stock_quantity'] > 0): ?>
+                                        <span class="stock-badge low-stock"><i class="fas fa-exclamation-circle me-1"></i> Only <?php echo $product['stock_quantity']; ?> left!</span>
+                                    <?php else: ?>
+                                        <span class="stock-badge out-of-stock"><i class="fas fa-times-circle me-1"></i> Out of Stock</span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             <div class="mt-3">
-                                <button class="btn btn-primary" onclick="addToCart(<?php echo $product['id']; ?>)">
+                                <button class="btn btn-primary w-100" onclick="addToCart(<?php echo $product['id']; ?>)" <?php echo $product['stock_quantity'] <= 0 ? 'disabled' : ''; ?>>
                                     <i class="fas fa-shopping-bag me-2"></i> Add to Cart
                                 </button>
                             </div>
