@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch cart items and calculate totals
 $subtotal = 0;
-$delivery_fee = 5000; // Default/fixed delivery fee
+$delivery_fee = 0; // Default to 0 until they select a location!
 $cart_items = [];
 $user_phone = '';
 $user_address = '';
@@ -53,6 +53,11 @@ try {
     $user_data = $user_stmt->fetch();
     $user_phone = $user_data['phone'] ?? '';
     $user_address = $user_data['address'] ?? '';
+
+    // Fetch dynamic delivery fee from settings
+    $locations_stmt = $pdo->query("SELECT * FROM delivery_locations WHERE is_active = 1 ORDER BY name ASC");
+    $delivery_locations = $locations_stmt->fetchAll();
+    $delivery_fee = 0; // Default to 0 until they select a location!
 
     $stmt = $pdo->prepare("
         SELECT c.id, c.quantity, p.id as product_id, p.name, p.price, p.image 
@@ -66,7 +71,7 @@ try {
     foreach ($cart_items as $item) {
         $subtotal += $item['price'] * $item['quantity'];
     }
-    $total = $subtotal + $delivery_fee;
+    $total = $subtotal; // Total is just subtotal initially
 } catch (PDOException $e) {
     $error_message = "Could not fetch cart items. Please try again.";
 }
@@ -187,9 +192,20 @@ try {
                 <form id="checkout-form" method="POST" action="api/place_order.php">
                     <input type="hidden" id="promo-code-hidden" name="promo_code" value="">
                     <div class="mb-3">
-                        <label for="delivery_address" class="form-label">Delivery Address <span class="text-danger">*</span></label>
-                        <textarea id="delivery_address" name="delivery_address" class="form-control" rows="3" required placeholder="Enter your full street address, area, and any nearby landmarks."><?php echo htmlspecialchars($user_address); ?></textarea>
-                        <div class="form-text">We need this to deliver your order accurately.</div>
+                        <label for="delivery_location" class="form-label">Select Delivery Area <span class="text-danger">*</span></label>
+                        <select id="delivery_location" name="location_id" class="form-select" required onchange="updateDeliveryFee()">
+                            <option value="">-- Select Area --</option>
+                            <?php foreach ($delivery_locations as $loc): ?>
+                                <option value="<?php echo $loc['id']; ?>" data-fee="<?php echo $loc['fee']; ?>">
+                                    <?php echo htmlspecialchars($loc['name']); ?> (+UGX <?php echo number_format($loc['fee']); ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="delivery_address" class="form-label">Specific Delivery Address <span class="text-danger">*</span></label>
+                        <textarea id="delivery_address" name="delivery_address" class="form-control" rows="2" required placeholder="Enter your full street address, area, and any nearby landmarks."><?php echo htmlspecialchars($user_address); ?></textarea>
+                        <div class="form-text">We need this to deliver your order accurately within the area.</div>
                     </div>
                     <div class="mb-3">
                         <label for="delivery_phone" class="form-label">Contact Phone <span class="text-danger">*</span></label>
@@ -213,7 +229,7 @@ try {
                     </div>
                      <hr>
                     <div class="text-center">
-                        <p class="mb-1">Your total is <strong class="h5">UGX <?php echo number_format($total); ?></strong>.</p>
+                        <p class="mb-1">Your total is <strong class="h5" id="modal-total-amount">UGX <?php echo number_format($total); ?></strong>.</p>
                         <p class="text-muted small"><i class="fas fa-money-bill-wave"></i> Payment: Cash on Delivery</p>
                     </div>
                 </form>
@@ -225,5 +241,26 @@ try {
         </div>
     </div>
 </div>
+
+<script>
+let currentSubtotal = <?php echo $subtotal; ?>;
+let currentDiscount = 0;
+
+function updateDeliveryFee() {
+    const select = document.getElementById("delivery_location");
+    const option = select.options[select.selectedIndex];
+    const fee = option.value ? parseFloat(option.getAttribute("data-fee")) : 0;
+    
+    // Format helper
+    const formatUGX = (num) => new Intl.NumberFormat().format(num);
+
+    // Update displays
+    document.getElementById("delivery-fee").innerText = "UGX " + formatUGX(fee);
+    
+    const newTotal = currentSubtotal + fee - currentDiscount;
+    document.getElementById("total-amount").innerText = "UGX " + formatUGX(newTotal);
+    document.getElementById("modal-total-amount").innerText = "UGX " + formatUGX(newTotal);
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

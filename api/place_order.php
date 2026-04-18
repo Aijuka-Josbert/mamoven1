@@ -20,13 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $user_id = $_SESSION['user_id'];
+$location_id = (int)($_POST['location_id'] ?? 0);
 $delivery_address = trim($_POST['delivery_address'] ?? '');
 $delivery_phone = trim($_POST['delivery_phone'] ?? '');
 $special_instructions = trim($_POST['special_instructions'] ?? '');
 $promo_code = trim($_POST['promo_code'] ?? '');
 
-if (!$delivery_address || !$delivery_phone) {
-    echo json_encode(['success' => false, 'message' => 'Delivery address and phone are required']);
+if (!$location_id || !$delivery_address || !$delivery_phone) {
+    echo json_encode(['success' => false, 'message' => 'Delivery location, address, and phone are required']);
     exit;
 }
 
@@ -53,10 +54,17 @@ try {
         $subtotal += $item['price'] * $item['quantity'];
     }
 
-    // Get delivery fee
-    $stmt = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = 'delivery_fee'");
-    $stmt->execute();
-    $delivery_fee = (float)($stmt->fetchColumn() ?: 5000);
+    // Get delivery fee by location
+    $stmt = $pdo->prepare("SELECT name, fee FROM delivery_locations WHERE id = ? AND is_active = 1");
+    $stmt->execute([$location_id]);
+    $locData = $stmt->fetch();
+    
+    if (!$locData) {
+        throw new Exception('Invalid delivery location selected');
+    }
+    
+    $delivery_fee = (float)$locData['fee'];
+    $full_delivery_address = $locData['name'] . ' - ' . $delivery_address;
 
     // Handle promo code if provided
     $promo_code_id = null;
@@ -106,7 +114,7 @@ try {
         INSERT INTO orders (user_id, order_number, total_amount, delivery_address, delivery_phone, special_instructions, promo_code_id, discount_amount) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->execute([$user_id, $order_number, $total_amount, $delivery_address, $delivery_phone, $special_instructions, $promo_code_id, $discount_amount]);
+    $stmt->execute([$user_id, $order_number, $total_amount, $full_delivery_address, $delivery_phone, $special_instructions, $promo_code_id, $discount_amount]);
     $order_id = $pdo->lastInsertId();
 
     // Log promo usage if code was applied

@@ -169,10 +169,8 @@ try {
             <img src="<?php echo htmlspecialchars(BASE_URL); ?>/assets/images/logo.jpeg" alt="Business Logo" style="max-width: 150px; height: auto;">
             <p><strong>Receipt</strong></p>
             <p><?php echo htmlspecialchars($settings['business_address'] ?? 'Kampala, Uganda'); ?></p>
-            <p><?php echo htmlspecialchars($settings['business_phone'] ?? '+256 747686189'); ?></p>
-            <?php if (!empty($settings['business_email'])): ?>
-                <p><?php echo htmlspecialchars($settings['business_email']); ?></p>
-            <?php endif; ?>
+            <p>+256 747 686189</p>
+            <p>mamasovenug@gmail.com</p>
         </div>
 
         <div class="receipt-details">

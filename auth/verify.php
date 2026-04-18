@@ -1,8 +1,11 @@
 <?php
 $page_title = 'Verify Your Account';
 require_once __DIR__ . '/../config/database.php';
-// Remove session_start() because it's started in header.php
 require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 if (!isset($_SESSION['verify_email'])) {
     header('Location: ' . BASE_URL . '/auth/login.php');
@@ -14,6 +17,9 @@ $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // ---------------------------------------------------------
+    // 1. HANDLE VERIFY CODE
+    // ---------------------------------------------------------
     if (isset($_POST['verify_code'])) {
         $code = trim($_POST['code']);
         
@@ -45,6 +51,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Invalid verification code. Please try again.';
         }
     }
+    
+    // ---------------------------------------------------------
+    // 2. HANDLE RESEND CODE
+    // ---------------------------------------------------------
+    if (isset($_POST['resend_code'])) {
+        $new_code = sprintf("%06d", mt_rand(100000, 999999));
+        
+        // Update user with new code
+        $stmt = $pdo->prepare("UPDATE users SET verification_code = ? WHERE email = ?");
+        $stmt->execute([$new_code, $email]);
+        
+        // Fetch user full name
+        $stmt = $pdo->prepare("SELECT full_name FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user_full_name = $stmt->fetchColumn();
+
+        // Send Email
+        try {
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = SMTP_HOST;
+            $mail->SMTPAuth = true;
+            $mail->Username = SMTP_USER;
+            $mail->Password = SMTP_PASS;
+            $mail->SMTPSecure = SMTP_SECURE;
+            $mail->Port = SMTP_PORT;
+
+            $mail->setFrom(SMTP_USER, SITE_NAME);
+            $mail->addAddress($email, $user_full_name);
+
+            $mail->isHTML(true);
+            $mail->Subject = 'New Verification Code - ' . SITE_NAME;
+            $mail->Body = "<h2>Email Verification</h2>
+                           <p>Your new 6-digit verification code is:</p>
+                           <h1 style='color: #4CAF50; letter-spacing: 5px; font-size: 32px;'>$new_code</h1>
+                           <p>Please enter this code on the verification page.</p>";
+            $mail->AltBody = "Your new verification code is: $new_code";
+
+            $mail->send();
+            $success = "A new verification code has been sent to your email.";
+        } catch (Exception $e) {
+            $error = "Failed to send the code. Please try again later.";
+        }
+    }
 }
 ?>
 
@@ -65,6 +115,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div><?php echo htmlspecialchars($error); ?></div>
                         </div>
                     <?php endif; ?>
+                    
+                    <?php if ($success): ?>
+                        <div class="alert alert-success d-flex align-items-center" role="alert">
+                            <i class="fas fa-check-circle flex-shrink-0 me-2"></i>
+                            <div><?php echo htmlspecialchars($success); ?></div>
+                        </div>
+                    <?php endif; ?>
 
                     <form method="POST" action="">
                         <div class="mb-4">
@@ -75,10 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                         </div>
 
-                        <div class="d-grid mb-3">
-                            <button type="submit" name="verify_code" class="btn btn-primary btn-lg">
-                                Verify Account
-                            </button>
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" name="verify_code" class="btn btn-primary btn-lg w-100">Verify Email</button>
+                            <!-- Note the formnovalidate attribute below! -->
+                            <button type="submit" name="resend_code" id="resendBtn" class="btn btn-outline-secondary w-100" formnovalidate>Resend Code</button>
                         </div>
                     </form>
                 </div>
@@ -86,5 +143,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </div>
+
+<script>
+// Timer script to prevent spamming the Resend button
+document.addEventListener("DOMContentLoaded", function() {
+    let resendBtn = document.getElementById("resendBtn");
+    
+    // Only engage the timer if the page loads after a resend button click, 
+    // or you can enable it every time the page loads. 
+    <?php if (isset($_POST['resend_code'])): ?>
+    let timeLeft = 60; // 60 seconds countdown
+    resendBtn.disabled = true;
+    let originalText = "Resend Code";
+    
+    let timer = setInterval(function() {
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = originalText;
+        } else {
+            resendBtn.innerHTML = "Resend Code (" + timeLeft + "s)";
+            timeLeft--;
+        }
+    }, 1000);
+    <?php endif; ?>
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

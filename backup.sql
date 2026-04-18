@@ -159,6 +159,40 @@ COMMIT;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 
 --
+-- Table structure for table `delivery_locations`
+--
+
+DROP TABLE IF EXISTS `delivery_locations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `delivery_locations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `fee` decimal(10,2) NOT NULL DEFAULT 5000.00,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `delivery_locations`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `delivery_locations` WRITE;
+/*!40000 ALTER TABLE `delivery_locations` DISABLE KEYS */;
+INSERT INTO `delivery_locations` VALUES
+(1,'Kampala Central',3000.00,1),
+(2,'Ntinda / Kiwatule',5000.00,1),
+(3,'Entebbe',15000.00,1),
+(4,'Mukono',10000.00,1),
+(5,'Bweyogerere',8000.00,1);
+/*!40000 ALTER TABLE `delivery_locations` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
 -- Table structure for table `email_logs`
 --
 
@@ -723,7 +757,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -739,7 +773,7 @@ INSERT INTO `users` VALUES
 (4,'Sheba','sheba@gmail.com','$2y$12$Hi1CibexaU3b1qzXEhe0Ce4yRh.HkuQ5PNF.hNARuFM.2WsNcNw8q','Sheba1','0000000000',NULL,'customer','2025-11-13 16:20:05',NULL,1),
 (5,'0759420168','josbertaijuka15@gmail.com','$2y$12$TRvXQ3uDKvQowAoHwu7t4.qed5AO01IisfqRwPKj8l5yBqOoKJlMi','Aijuka Josbert','','','customer','2025-11-14 12:10:21',NULL,1),
 (6,'Joanitah ','nabayegojoanitah70@gmail.com','$2y$12$D7L5L9oMAuJeqqnvZB8RJObAXiAtGbmuh4h.4XsyFehqn3ifrid5a','Nabayego ','0000000000',NULL,'customer','2025-11-14 15:43:42',NULL,1),
-(8,'aijuk','josbert.aijuka@stud.umu.ac.ug','$2y$12$yq/YoaouFEUWBb4QxpePv.I7gvtXmU3MMsXD8Tc50bwmY3dJxjHkG','aijuka','0759420168',NULL,'customer','2026-04-18 16:48:40',NULL,1);
+(9,'Aijuka','josbert.aijuka@stud.umu.ac.ug','$2y$12$8vvNIT8QOXbldIgJxem.suNgKrMU3mkVYFlPQeHmFKF1TlGDGeDxS','aijuka','0759420168',NULL,'customer','2026-04-18 17:35:34','503422',0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -754,4 +788,4 @@ SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-04-18 19:54:48
+-- Dump completed on 2026-04-18 21:38:42

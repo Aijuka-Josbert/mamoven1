@@ -68,11 +68,6 @@ function is_active($page_name) {
                     <i class="fas fa-users fa-fw"></i> Manage Customers
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link <?php echo is_active('testimonials.php'); ?>" href="testimonials.php">
-                    <i class="fas fa-star fa-fw"></i> Testimonials
-                </a>
-            </li>
             <li class="nav-item mt-auto">
                 <hr>
                 <a class="nav-link" href="../index.php" target="_blank">
@@ -80,6 +75,11 @@ function is_active($page_name) {
                 </a>
                 <a class="nav-link" href="<?php echo BASE_URL . '/auth/logout.php'; ?>">
                     <i class="fas fa-sign-out-alt fa-fw"></i> Logout
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], 'delivery_locations.php') !== false ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/admin/delivery_locations.php">
+                    <i class="fas fa-truck fa-fw"></i> Delivery Zones
                 </a>
             </li>
         </ul>

@@ -113,8 +113,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // SPAM Prevention: Always provide a Plain Text version along with the HTML
                 $mail->isHTML(true);
-                $mail->Subject = "Your Account Verification Code - " . SITE_NAME;
-                
+                $mail->Subject = 'Verify Your Email Address - Mama\'s Oven';
+
                 // Plain Text Version
                 $plainTextCode = "Welcome to " . SITE_NAME . "!\n\n";
                 $plainTextCode .= "Dear {$inputs['full_name']},\n\n";
