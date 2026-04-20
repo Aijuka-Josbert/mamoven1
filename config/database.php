@@ -26,15 +26,33 @@ function load_dotenv($path)
             $value = substr($value, 1, -1);
         }
 
-        if (getenv($name) === false) {
-            putenv($name . '=' . $value);
-            $_ENV[$name] = $value;
-            $_SERVER[$name] = $value;
+        if (function_exists('putenv')) {
+            @putenv($name . '=' . $value);
         }
+        $_ENV[$name] = $value;
+        $_SERVER[$name] = $value;
     }
 }
 
 load_dotenv(__DIR__ . '/../.env');
+
+function env_value($key, $default = '')
+{
+    $value = getenv($key);
+    if ($value !== false) {
+        return $value;
+    }
+
+    if (array_key_exists($key, $_ENV)) {
+        return $_ENV[$key];
+    }
+
+    if (array_key_exists($key, $_SERVER)) {
+        return $_SERVER[$key];
+    }
+
+    return $default;
+}
 
 $httpHost = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $isLocalhost = in_array($httpHost, ['localhost', '127.0.0.1', 'localhost:8000', '127.0.0.1:80'], true);
@@ -43,7 +61,7 @@ $isInfinityHosting =
     stripos($httpHost, '.epizy.com') !== false ||
     stripos($httpHost, '.rf.gd') !== false;
 
-$appEnv = strtolower((string)(getenv('APP_ENV') ?: ($isLocalhost ? 'development' : 'production')));
+$appEnv = strtolower((string)env_value('APP_ENV', $isLocalhost ? 'development' : 'production'));
 $isProduction = $appEnv === 'production';
 
 // Prevent PCRE JIT warnings on restricted hosts (common on shared hosting).
@@ -53,11 +71,11 @@ error_reporting(E_ALL);
 ini_set('display_errors', $isProduction ? '0' : '1');
 ini_set('log_errors', '1');
 
-$host = getenv('DB_HOST') ?: ($isLocalhost ? 'localhost' : 'sql303.infinityfree.com');
-$dbname = getenv('DB_NAME') ?: ($isLocalhost ? 'mamaove' : 'if0_40616210_mamaove');
-$username = getenv('DB_USER') ?: ($isLocalhost ? 'root' : 'if0_40616210');
-$password = getenv('DB_PASS') ?: '';
-$charset = getenv('DB_CHARSET') ?: 'utf8mb4';
+$host = (string)env_value('DB_HOST', $isLocalhost ? 'localhost' : 'sql303.infinityfree.com');
+$dbname = (string)env_value('DB_NAME', $isLocalhost ? 'mamaove' : 'if0_40616210_mamaove');
+$username = (string)env_value('DB_USER', $isLocalhost ? 'root' : 'if0_40616210');
+$password = (string)env_value('DB_PASS', '');
+$charset = (string)env_value('DB_CHARSET', 'utf8mb4');
 
 $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
 $options = [
@@ -69,11 +87,60 @@ $options = [
 try {
     $pdo = new PDO($dsn, $username, $password, $options);
 } catch (PDOException $e) {
-    throw new PDOException($e->getMessage(), (int)$e->getCode());
+    error_log('Database bootstrap failed: ' . $e->getMessage());
+
+    $errorText = strtolower($e->getMessage());
+    $driverCode = 'unknown';
+    if (preg_match('/\[(\d{3,5})\]/', $e->getMessage(), $matches)) {
+        $driverCode = $matches[1];
+    }
+
+    $likelyCause = 'Connection failed for an unknown reason.';
+    if (strpos($errorText, 'access denied') !== false || $driverCode === '1045') {
+        $likelyCause = 'Access denied. DB_USER or DB_PASS is incorrect.';
+    } elseif (strpos($errorText, 'unknown database') !== false || $driverCode === '1049') {
+        $likelyCause = 'Database name not found. DB_NAME is incorrect or database was not created.';
+    } elseif (strpos($errorText, 'php_network_getaddresses') !== false || strpos($errorText, 'getaddrinfo') !== false || strpos($errorText, 'name or service not known') !== false) {
+        $likelyCause = 'Database host cannot be resolved. DB_HOST is incorrect.';
+    } elseif (strpos($errorText, "can't connect") !== false || strpos($errorText, 'connection refused') !== false || strpos($errorText, 'timed out') !== false || $driverCode === '2002') {
+        $likelyCause = 'Database server is unreachable. Check DB_HOST or temporary host availability.';
+    }
+
+    $envPath = __DIR__ . '/../.env';
+    $envReadable = is_readable($envPath) ? 'yes' : 'no';
+
+    if (!$isProduction) {
+        throw new PDOException($e->getMessage(), (int)$e->getCode());
+    }
+
+    http_response_code(500);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!doctype html><html><head><meta charset="utf-8"><title>Configuration Issue</title>';
+    echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
+    echo '<style>body{font-family:Arial,sans-serif;background:#fff7f2;color:#4a2a1d;padding:32px;line-height:1.5}';
+    echo '.box{max-width:760px;margin:40px auto;background:#fff;border:1px solid #efd9cb;border-radius:10px;padding:24px}';
+    echo 'h1{margin-top:0}code{background:#f8eee8;padding:2px 6px;border-radius:4px}</style></head><body>';
+    echo '<div class="box"><h1>Configuration Error</h1>';
+    echo '<p>The application cannot connect to the database right now.</p>';
+    echo '<p><strong>Detected issue:</strong> ' . htmlspecialchars($likelyCause, ENT_QUOTES, 'UTF-8') . '</p>';
+    echo '<p><strong>Driver code:</strong> <code>' . htmlspecialchars($driverCode, ENT_QUOTES, 'UTF-8') . '</code></p>';
+    echo '<p><strong>Runtime values:</strong></p>';
+    echo '<ul>';
+    echo '<li>DB_HOST: <code>' . htmlspecialchars((string)$host, ENT_QUOTES, 'UTF-8') . '</code></li>';
+    echo '<li>DB_NAME: <code>' . htmlspecialchars((string)$dbname, ENT_QUOTES, 'UTF-8') . '</code></li>';
+    echo '<li>DB_USER: <code>' . htmlspecialchars((string)$username, ENT_QUOTES, 'UTF-8') . '</code></li>';
+    echo '<li>DB_PASS length: <code>' . strlen((string)$password) . '</code></li>';
+    echo '<li>.env readable by PHP: <code>' . htmlspecialchars($envReadable, ENT_QUOTES, 'UTF-8') . '</code></li>';
+    echo '</ul>';
+    echo '<p>Check these values in <code>.env</code> on your hosting account:</p>';
+    echo '<ul><li>DB_HOST</li><li>DB_NAME</li><li>DB_USER</li><li>DB_PASS</li></ul>';
+    echo '<p>Also ensure the <code>.env</code> file exists in your project root (same level as <code>index.php</code>).</p>';
+    echo '<p>If this just happened after deployment, re-upload <code>.env</code> and try again.</p></div></body></html>';
+    exit;
 }
 
-if (getenv('BASE_URL')) {
-    define('BASE_URL', rtrim((string)getenv('BASE_URL'), '/'));
+if (env_value('BASE_URL', '') !== '') {
+    define('BASE_URL', rtrim((string)env_value('BASE_URL', ''), '/'));
 } else {
     $https = $_SERVER['HTTPS'] ?? '';
     $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
@@ -98,22 +165,22 @@ if (getenv('BASE_URL')) {
 
 define('IS_PRODUCTION', $isProduction);
 define('IS_INFINITY_HOSTING', $isInfinityHosting);
-define('SITE_NAME', getenv('SITE_NAME') ?: "Mama's Oven");
-define('EMAIL_TRANSPORT', strtolower((string)(getenv('EMAIL_TRANSPORT') ?: 'auto')));
+define('SITE_NAME', (string)env_value('SITE_NAME', "Mama's Oven"));
+define('EMAIL_TRANSPORT', strtolower((string)env_value('EMAIL_TRANSPORT', 'auto')));
 
-define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
-define('SMTP_PORT', (int)(getenv('SMTP_PORT') ?: 587));
-define('SMTP_USER', getenv('SMTP_USER') ?: '');
-define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
-define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'tls');
+define('SMTP_HOST', (string)env_value('SMTP_HOST', 'smtp.gmail.com'));
+define('SMTP_PORT', (int)env_value('SMTP_PORT', 587));
+define('SMTP_USER', (string)env_value('SMTP_USER', ''));
+define('SMTP_PASS', (string)env_value('SMTP_PASS', ''));
+define('SMTP_SECURE', (string)env_value('SMTP_SECURE', 'tls'));
 
 define('ADMIN_EMAIL', 'mamasovenug@gmail.com');
 
 $defaultMailFrom = 'mamasovenug@gmail.com';
-define('MAIL_FROM', getenv('MAIL_FROM') ?: $defaultMailFrom);
+define('MAIL_FROM', (string)env_value('MAIL_FROM', $defaultMailFrom));
 define('PASSWORD_RESET_EXPIRY', 7200); // 2 hours in seconds
-define('SESSION_INACTIVITY_TIMEOUT', (int)(getenv('SESSION_INACTIVITY_TIMEOUT') ?: 900));
-define('REMEMBER_ME_LIFETIME', (int)(getenv('REMEMBER_ME_LIFETIME') ?: 2592000));
+define('SESSION_INACTIVITY_TIMEOUT', (int)env_value('SESSION_INACTIVITY_TIMEOUT', 900));
+define('REMEMBER_ME_LIFETIME', (int)env_value('REMEMBER_ME_LIFETIME', 2592000));
 define('REMEMBER_ME_COOKIE', 'mamoven_remember');
 
 define('UPLOAD_PATH', __DIR__ . '/../assets/images/');
@@ -644,6 +711,20 @@ function default_mail_from_address()
 
 function send_mail_with_fallback($mail)
 {
+    if (trim((string)MAIL_FROM) !== '') {
+        try {
+            $hasReplyTo = method_exists($mail, 'getReplyToAddresses')
+                ? !empty($mail->getReplyToAddresses())
+                : false;
+
+            if (!$hasReplyTo) {
+                $mail->addReplyTo(MAIL_FROM, SITE_NAME);
+            }
+        } catch (Throwable $replyToError) {
+            error_log('Could not set default reply-to: ' . $replyToError->getMessage());
+        }
+    }
+
     try {
         configure_mailer_transport($mail);
         return $mail->send();
