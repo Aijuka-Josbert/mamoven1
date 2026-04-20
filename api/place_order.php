@@ -106,8 +106,22 @@ try {
 
     $total_amount = $subtotal + $delivery_fee - $discount_amount;
 
-    // Generate order number
-    $order_number = 'MO' . date('Ymd') . sprintf('%04d', rand(1, 9999));
+    // Generate a unique order number using cryptographically secure randomness.
+    $check_order_stmt = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE order_number = ?");
+    $order_number = '';
+    $is_unique_order_number = false;
+    for ($i = 0; $i < 5; $i++) {
+        $order_number = 'MO' . date('Ymd') . strtoupper(bin2hex(random_bytes(3)));
+        $check_order_stmt->execute([$order_number]);
+        if ((int)$check_order_stmt->fetchColumn() === 0) {
+            $is_unique_order_number = true;
+            break;
+        }
+    }
+
+    if (!$is_unique_order_number) {
+        throw new Exception('Unable to generate order number. Please try again.');
+    }
 
     // Create order
     $stmt = $pdo->prepare("
@@ -183,17 +197,9 @@ try {
     // Send order confirmation email
     try {
         $mail = new PHPMailer(true);
-        
-        // SMTP configuration
-        $mail->isSMTP();
-        $mail->Host = SMTP_HOST;
-        $mail->SMTPAuth = true;
-        $mail->Username = SMTP_USER;
-        $mail->Password = SMTP_PASS;
-        $mail->SMTPSecure = SMTP_SECURE;
-        $mail->Port = SMTP_PORT;
 
-        $mail->setFrom(SMTP_USER, SITE_NAME);
+        configure_mailer_transport($mail);
+        $mail->setFrom(default_mail_from_address(), SITE_NAME);
         $mail->addAddress($user['email'], $user['full_name']);
 
         // ALSO send to admin
@@ -218,6 +224,9 @@ try {
         <html>
         <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
             <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                <div style='text-align: center; margin-bottom: 30px;'>
+                    " . email_logo_html($mail, 80) . "
+                </div>
                 <h2 style='color: #8B4513; text-align: center;'>Order Confirmation</h2>
                 
                 <p>Dear {$user['full_name']},</p>
@@ -287,19 +296,12 @@ try {
         </body>
         </html>";
 
-        $mail->send();
+        send_mail_with_fallback($mail);
 
         // --- Send personalized admin notification ---
         $adminMail = new PHPMailer(true);
-        $adminMail->isSMTP();
-        $adminMail->Host = SMTP_HOST;
-        $adminMail->SMTPAuth = true;
-        $adminMail->Username = SMTP_USER;
-        $adminMail->Password = SMTP_PASS;
-        $adminMail->SMTPSecure = SMTP_SECURE;
-        $adminMail->Port = SMTP_PORT;
-
-        $adminMail->setFrom(SMTP_USER, SITE_NAME . ' Orders');
+        configure_mailer_transport($adminMail);
+        $adminMail->setFrom(default_mail_from_address(), SITE_NAME . ' Orders');
         $adminMail->addAddress(ADMIN_EMAIL);
 
         $adminMail->isHTML(true);
@@ -309,6 +311,9 @@ try {
         <html>
         <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
             <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                <div style='text-align: center; margin-bottom: 30px;'>
+                    " . email_logo_html($adminMail, 80) . "
+                </div>
                 <h2 style='color: #8B4513;'>New Order Notification</h2>
                 <p>A new order has been placed by <strong>{$user['full_name']}</strong> (<a href='mailto:{$user['email']}'>{$user['email']}</a>).</p>
                 <p><strong>Order Number:</strong> {$order_number}</p>
@@ -354,13 +359,12 @@ try {
         </body>
         </html>";
 
-        $adminMail->send();
+        send_mail_with_fallback($adminMail);
     } catch (Exception $e) {
         // Log email error but don't fail the order
         error_log('Order confirmation email failed: ' . $e->getMessage());
     }
     header('Location: ../print_receipt.php?id=' . $order_id);
-    echo json_encode(['success' => true, 'message' => 'Order placed successfully', 'order_number' => $order_number, 'order_id' => $order_id]);
     exit;
 
 } catch (Exception $e) {

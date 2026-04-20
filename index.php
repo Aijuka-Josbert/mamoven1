@@ -19,11 +19,10 @@ try {
 // Fetch top 7 best reviews globally
 try {
     $stmt_rev = $pdo->query("
-        SELECT r.rating, r.review, u.full_name, p.name as product_name
-        FROM product_reviews r
+                SELECT r.rating, COALESCE(r.comment, '') as review, u.full_name, p.name as product_name
+                FROM reviews r
         JOIN users u ON r.user_id = u.id
         JOIN products p ON r.product_id = p.id
-        WHERE r.status = 'approved' OR r.status IS NULL
         ORDER BY r.rating DESC, r.created_at DESC
         LIMIT 7
     ");
@@ -134,30 +133,32 @@ try {
                 <p class="lead text-muted">See what our happy customers say about Mama's Oven</p>
             </div>
             
-            <?php if (!empty($top_reviews)): ?>
-            <div class="reviews-marquee-container" style="background: rgba(243, 156, 106, 0.1); padding: 20px 0; border-radius: 12px; overflow: hidden; white-space: nowrap;">
-                <marquee direction="left" scrollamount="6" onmouseover="this.stop();" onmouseout="this.start();">
-                    <div style="display: flex; gap: 30px; align-items: stretch; padding: 10px;">
-                        <?php foreach ($top_reviews as $r): ?>
-                            <div class="card shadow-sm border-0" style="min-width: 300px; max-width: 350px; display: inline-block; white-space: normal; vertical-align: top;">
-                                <div class="card-body h-100">
-                                    <div class="text-warning mb-2">
-                                        <?php for($i=1; $i<=5; $i++) {
-                                            echo $i <= $r['rating'] ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
-                                        } ?>
+            <div id="customer-reviews-carousel">
+                <?php if (!empty($top_reviews)): ?>
+                <div class="reviews-marquee-container" style="background: rgba(243, 156, 106, 0.1); padding: 20px 0; border-radius: 12px; overflow: hidden; white-space: nowrap;">
+                    <marquee direction="left" scrollamount="6" onmouseover="this.stop();" onmouseout="this.start();">
+                        <div style="display: flex; gap: 30px; align-items: stretch; padding: 10px;">
+                            <?php foreach ($top_reviews as $r): ?>
+                                <div class="card shadow-sm border-0" style="min-width: 300px; max-width: 350px; display: inline-block; white-space: normal; vertical-align: top;">
+                                    <div class="card-body h-100">
+                                        <div class="text-warning mb-2">
+                                            <?php for($i=1; $i<=5; $i++) {
+                                                echo $i <= $r['rating'] ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+                                            } ?>
+                                        </div>
+                                        <h5 class="card-title fw-bold">"<?php echo htmlspecialchars($r['review']); ?>"</h5>
+                                        <p class="text-muted mb-0 small">- <?php echo htmlspecialchars($r['full_name']); ?> 
+                                        <br><span class="text-primary" style="font-size: 0.8rem;">on <?php echo htmlspecialchars($r['product_name']); ?></span></p>
                                     </div>
-                                    <h5 class="card-title fw-bold">"<?php echo htmlspecialchars($r['review']); ?>"</h5>
-                                    <p class="text-muted mb-0 small">- <?php echo htmlspecialchars($r['full_name']); ?> 
-                                    <br><span class="text-primary" style="font-size: 0.8rem;">on <?php echo htmlspecialchars($r['product_name']); ?></span></p>
                                 </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </marquee>
+                            <?php endforeach; ?>
+                        </div>
+                    </marquee>
+                </div>
+                <?php else: ?>
+                    <div class="text-center text-muted"><p>No reviews available yet. Be the first to leave one!</p></div>
+                <?php endif; ?>
             </div>
-            <?php else: ?>
-                <div class="text-center text-muted"><p>No reviews available yet. Be the first to leave one!</p></div>
-            <?php endif; ?>
         </div>
     </section>
 </main>

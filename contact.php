@@ -8,6 +8,7 @@ use PHPMailer\PHPMailer\Exception;
 require __DIR__ . '/vendor/autoload.php';
 
 $success_message = '';
+$warning_message = '';
 $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
     $name = trim($_POST['name'] ?? '');
@@ -22,49 +23,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
             $stmt = $pdo->prepare("INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)");
             $stmt->execute([$name, $email, $message]);
 
-            // Send email notification
-            $mail = new PHPMailer(true);
-
-            // --- ADDED: define subject/body and enable debug logging ---
-            $subject = "New contact message from " . $name;
+            // Notify admin, but never fail the user-facing success if notification fails.
+            $subject = 'New contact message from ' . $name;
             $body = "Name: {$name}\nEmail: {$email}\n\nMessage:\n{$message}";
+            $email_sent = false;
 
-            // Optional: enable SMTP debug during development (writes to error_log)
-            // Disable verbose debug in production; set to 2 while testing.
-            $mail->SMTPDebug = 0;
-            $mail->Debugoutput = function($str, $level) {
-                error_log("PHPMailer debug [level {$level}]: {$str}");
-            };
-            // --- END ADDED ---
             try {
-                // SMTP configuration using constants from config/database.php
-                $mail->isSMTP();
-                $mail->Host = SMTP_HOST;
-                $mail->SMTPAuth = true;
-                $mail->Username = SMTP_USER;
-                $mail->Password = SMTP_PASS;
-                $mail->SMTPSecure = SMTP_SECURE;
-                $mail->Port = SMTP_PORT;
+                $mail = new PHPMailer(true);
+                configure_mailer_transport($mail);
 
-                // Many SMTP providers require the From to match the authenticated user
-                $mail->setFrom(SMTP_USER, SITE_NAME);
+                $mail->setFrom(default_mail_from_address(), SITE_NAME);
                 $mail->addAddress(ADMIN_EMAIL);
                 $mail->addReplyTo($email, $name);
-
                 $mail->Subject = $subject;
-                $mail->Body    = $body;
-                $mail->isHTML(false);
+                $mail->isHTML(true);
+                $mail->Body = "
+                <html>
+                <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                    <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                        <div style='text-align: center; margin-bottom: 30px;'>
+                            " . email_logo_html($mail, 70) . "
+                        </div>
+                        <h2 style='color: #8B4513;'>New Contact Message</h2>
+                        <p><strong>Name:</strong> " . htmlspecialchars($name) . "</p>
+                        <p><strong>Email:</strong> <a href='mailto:" . htmlspecialchars($email) . "'>" . htmlspecialchars($email) . "</a></p>
+                        <div style='background: #f9f6f0; padding: 16px; border-radius: 8px; margin-top: 20px;'>
+                            <p style='margin: 0; white-space: pre-wrap;'>" . nl2br(htmlspecialchars($message)) . "</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                ";
+                $mail->AltBody = $body;
 
-                $mail->send();
-                $success_message = 'Thank you, ' . htmlspecialchars($name) . '! Your message has been sent.';
+                $email_sent = send_mail_with_fallback($mail);
             } catch (Exception $e) {
-                // Log full PHPMailer error for troubleshooting
-                error_log('PHPMailer exception: ' . $e->getMessage() . ' | ErrorInfo: ' . $mail->ErrorInfo);
-                $error_message = 'Message saved but email delivery failed (SMTP). Please check server email logs or SMTP credentials.';
+                error_log('Contact notification failed: ' . $e->getMessage());
+            }
+
+            $success_message = 'Thank you, ' . htmlspecialchars($name) . '! Your message has been saved. We will reply within 24 hours.';
+            if (!$email_sent) {
+                $warning_message = 'Your message is safely saved in our system. We may respond with a slight delay.';
             }
         } catch (PDOException $e) {
             $error_message = 'Sorry, there was an error sending your message. Please try again later.';
-            // In a real app, you would log the error: error_log($e->getMessage());
+            error_log('Contact message save failed: ' . $e->getMessage());
         }
     }
 }
@@ -87,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                     <?php endif; ?>
                     <?php if ($error_message): ?>
                         <div class="alert alert-danger"><?php echo $error_message; ?></div>
+                    <?php endif; ?>
+                    <?php if ($warning_message): ?>
+                        <div class="alert alert-warning"><?php echo $warning_message; ?></div>
                     <?php endif; ?>
                     
                     <?php if (!$success_message): // Hide form on success ?>

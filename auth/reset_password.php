@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Check if code is valid and not expired
                 $stmt = $pdo->prepare("SELECT pr.user_id, u.full_name FROM password_resets pr 
                                      JOIN users u ON pr.user_id = u.id 
-                                     WHERE pr.email = ? AND pr.reset_code = ? AND pr.expires_at > NOW()");
+                                     WHERE pr.email = ? AND pr.reset_code = ? AND pr.expires_at >= NOW()");
                 $stmt->execute([$email, $reset_code]);
                 $reset_data = $stmt->fetch();
                 
@@ -151,16 +151,27 @@ if (isset($_SESSION['reset_user_id']) && isset($_SESSION['reset_email']) && !$sh
                             </form>
                         <?php else: ?>
                             <!-- Step 2: Set new password -->
-                            <form method="POST">
+                            <form method="POST" id="reset-password-form">
                                 <div class="mb-3">
                                     <label for="new_password" class="form-label">New Password</label>
-                                    <input type="password" class="form-control form-control-lg" id="new_password" name="new_password" required>
+                                    <div class="input-group input-group-lg">
+                                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('new_password', this)" aria-label="Show or hide new password">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
                                     <div class="form-text">Minimum 8 characters, 1 uppercase letter, 1 special character</div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="confirm_password" class="form-label">Confirm New Password</label>
-                                    <input type="password" class="form-control form-control-lg" id="confirm_password" name="confirm_password" required>
+                                    <div class="input-group input-group-lg">
+                                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('confirm_password', this)" aria-label="Show or hide confirm password">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div id="password-match-indicator" class="form-text"></div>
                                 </div>
 
                                 <div class="d-grid mb-3">
@@ -196,6 +207,76 @@ document.getElementById('reset_code')?.addEventListener('input', function(e) {
     
     if (this.value.length > 5) {
         this.value = this.value.slice(0, 5);
+    }
+});
+
+function togglePasswordVisibility(fieldId, button) {
+    const input = document.getElementById(fieldId);
+    if (!input) {
+        return;
+    }
+
+    const icon = button.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        }
+    } else {
+        input.type = 'password';
+        if (icon) {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+}
+
+function updatePasswordMatchStatus() {
+    const newPasswordInput = document.getElementById('new_password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const matchIndicator = document.getElementById('password-match-indicator');
+
+    if (!newPasswordInput || !confirmPasswordInput || !matchIndicator) {
+        return;
+    }
+
+    const newPassword = newPasswordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+
+    matchIndicator.classList.remove('text-success', 'text-danger', 'text-muted');
+
+    if (newPassword === '' && confirmPassword === '') {
+        matchIndicator.textContent = '';
+        return;
+    }
+
+    if (confirmPassword === '') {
+        matchIndicator.textContent = 'Re-enter password to confirm.';
+        matchIndicator.classList.add('text-muted');
+        return;
+    }
+
+    if (newPassword === confirmPassword) {
+        matchIndicator.textContent = 'Passwords match.';
+        matchIndicator.classList.add('text-success');
+    } else {
+        matchIndicator.textContent = 'Passwords do not match.';
+        matchIndicator.classList.add('text-danger');
+    }
+}
+
+const newPasswordInput = document.getElementById('new_password');
+const confirmPasswordInput = document.getElementById('confirm_password');
+const resetPasswordForm = document.getElementById('reset-password-form');
+
+newPasswordInput?.addEventListener('input', updatePasswordMatchStatus);
+confirmPasswordInput?.addEventListener('input', updatePasswordMatchStatus);
+
+resetPasswordForm?.addEventListener('submit', function(event) {
+    if (newPasswordInput && confirmPasswordInput && newPasswordInput.value !== confirmPasswordInput.value) {
+        event.preventDefault();
+        updatePasswordMatchStatus();
     }
 });
 </script>

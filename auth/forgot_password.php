@@ -31,26 +31,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($user) {
                 // Generate 5-digit code
                 $reset_code = sprintf('%05d', mt_rand(10000, 99999));
-                $expires_at = date('Y-m-d H:i:s', time() + 3600); // 1 hour expiry
+                $expirySeconds = (int) PASSWORD_RESET_EXPIRY;
                 
-                // Store reset code in database
-                $stmt = $pdo->prepare("INSERT INTO password_resets (user_id, email, reset_code, expires_at) VALUES (?, ?, ?, ?) 
-                                     ON DUPLICATE KEY UPDATE reset_code = ?, expires_at = ?");
-                $stmt->execute([$user['id'], $email, $reset_code, $expires_at, $reset_code, $expires_at]);
+                // Store reset code using database time to avoid PHP/DB timezone mismatch.
+                $stmt = $pdo->prepare("INSERT INTO password_resets (user_id, email, reset_code, expires_at, created_at)
+                                     VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL {$expirySeconds} SECOND), CURRENT_TIMESTAMP)
+                                     ON DUPLICATE KEY UPDATE reset_code = VALUES(reset_code),
+                                     expires_at = DATE_ADD(NOW(), INTERVAL {$expirySeconds} SECOND),
+                                     created_at = CURRENT_TIMESTAMP");
+                $stmt->execute([$user['id'], $email, $reset_code]);
                 
                 // Send email with reset code
                 try {
                     $mail = new PHPMailer(true);
-                    
-                    $mail->isSMTP();
-                    $mail->Host = SMTP_HOST;
-                    $mail->SMTPAuth = true;
-                    $mail->Username = SMTP_USER;
-                    $mail->Password = SMTP_PASS;
-                    $mail->SMTPSecure = SMTP_SECURE;
-                    $mail->Port = SMTP_PORT;
 
-                    $mail->setFrom(SMTP_USER, SITE_NAME);
+                    configure_mailer_transport($mail);
+                    $mail->setFrom(default_mail_from_address(), SITE_NAME);
                     $mail->addAddress($email, $user['full_name']);
 
                     $mail->isHTML(true);
@@ -62,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
                             <div style='text-align: center; margin-bottom: 30px;'>
                                 <h1 style='color: #8B4513;'>Password Reset Request</h1>
-                                <img src='" . BASE_URL . "assets/images/logo.jpeg' alt='Logo' style='height: 80px;'>
+                                " . email_logo_html($mail, 80) . "
                             </div>
                             
                             <p>Hello {$user['full_name']},</p>
@@ -71,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             
                             <div style='background: #f9f6f0; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;'>
                                 <h2 style='color: #8B4513; margin: 0; font-size: 32px; letter-spacing: 5px;'>{$reset_code}</h2>
-                                <p style='margin: 10px 0 0 0; color: #666;'>This code expires in 1 hour</p>
+                                <p style='margin: 10px 0 0 0; color: #666;'>This code expires in 2 hours</p>
                             </div>
                             
                             <p>Enter this code on the password reset page to create a new password.</p>
@@ -86,8 +82,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </body>
                     </html>";
 
-                    $mail->send();
-                    $message = 'A 5-digit reset code has been sent to your email address. Please check your inbox.';
+                    $mail->AltBody = "Hello {$user['full_name']},\n\n"
+                        . "Your password reset code is: {$reset_code}\n"
+                        . "This code expires in 2 hours.\n\n"
+                        . "If you did not request this, please ignore this email.\n\n"
+                        . "The " . SITE_NAME . " Team";
+
+                    if (send_mail_with_fallback($mail)) {
+                        $message = 'A 5-digit reset code has been sent to your email address. Please check your inbox.';
+                    } else {
+                        $error = 'Failed to send reset email. Please try again later.';
+                    }
                 } catch (Exception $e) {
                     $error = 'Failed to send reset email. Please try again later.';
                     error_log('Password reset email failed: ' . $e->getMessage());

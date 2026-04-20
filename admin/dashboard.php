@@ -103,6 +103,7 @@ try {
                     <a href="orders.php" class="admin-actions-btn btn-info mb-3 shadow-sm">View All Orders</a>
                     <a href="categories.php" class="admin-actions-btn btn-secondary mb-3 shadow-sm">Manage Categories</a>
                     <a href="testimonials.php" class="admin-actions-btn btn-success mb-3 shadow-sm">Manage Testimonials</a>
+                    <a href="contact_messages.php" class="admin-actions-btn btn-warning mb-3 shadow-sm">View Contact Messages</a>
                 </div>
             </div>
         </div>

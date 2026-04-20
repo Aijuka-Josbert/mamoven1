@@ -21,25 +21,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             if ($orderUser) {
                 require_once __DIR__ . '/../vendor/autoload.php';
                 $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-                $mail->isSMTP();
-                $mail->Host = SMTP_HOST;
-                $mail->SMTPAuth = true;
-                $mail->Username = SMTP_USER;
-                $mail->Password = SMTP_PASS;
-                $mail->SMTPSecure = SMTP_SECURE;
-                $mail->Port = SMTP_PORT;
-                $mail->setFrom(SMTP_USER, SITE_NAME);
+                configure_mailer_transport($mail);
+                $mail->setFrom(default_mail_from_address(), SITE_NAME);
                 $mail->addAddress($orderUser['email'], $orderUser['full_name']);
                 $mail->isHTML(true);
 
                 $statusMsg = ucfirst($new_status);
                 $mail->Subject = "Order {$orderUser['order_number']} Status Update: {$statusMsg}";
                 $mail->Body = "
-                    <p>Dear {$orderUser['full_name']},</p>
-                    <p>Your order <strong>{$orderUser['order_number']}</strong> status has been updated to: <strong>{$statusMsg}</strong>.</p>
-                    <p>Thank you for shopping with " . SITE_NAME . ".</p>
+                <html>
+                <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                    <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                        <div style='text-align: center; margin-bottom: 30px;'>
+                            " . email_logo_html($mail, 80) . "
+                        </div>
+                        <h2 style='color: #8B4513;'>Order Status Update</h2>
+                        <p>Dear {$orderUser['full_name']},</p>
+                        <p>Your order <strong>{$orderUser['order_number']}</strong> status has been updated to: <strong style='color: #8B4513;'>{$statusMsg}</strong>.</p>
+                        <p>You can track your order status by visiting your <a href='" . BASE_URL . "/orders.php' style='color: #8B4513;'>order history</a>.</p>
+                        <p style='margin-top: 30px;'>
+                            Thank you for shopping with " . SITE_NAME . "!<br>
+                            <strong>The " . SITE_NAME . " Team</strong>
+                        </p>
+                    </div>
+                </body>
+                </html>
                 ";
-                $mail->send();
+                send_mail_with_fallback($mail);
             }
 
             // Redirect to avoid form resubmission on refresh

@@ -1,7 +1,5 @@
-```
 .env
-# ignore common things
+.env.save
 vendor/
 node_modules/
 .DS_Store
-```

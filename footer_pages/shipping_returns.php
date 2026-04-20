@@ -1,10 +1,10 @@
 <?php
-$page_title = 'Shipping & Returns';
+$page_title = 'Delivery & Returns';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="container my-5">
-    <h1 class="mb-4 section-title">Shipping & Returns</h1>
-    <h4>Shipping Policy</h4>
+    <h1 class="mb-4 section-title">Delivery & Returns</h1>
+    <h4>Delivery Policy</h4>
     <p class="text-muted">
         We deliver across Kampala and surrounding areas. Orders placed before 2pm are delivered same day. Delivery fees apply based on location.
     </p>

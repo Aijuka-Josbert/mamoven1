@@ -14,19 +14,19 @@
                 <div class="col-lg-2 col-md-4">
                     <h5 class="footer-title">Company</h5>
                     <ul class="footer-links">
-                        <li><a href="about.php">About Us</a></li>
-                        <li><a href="products.php">Our Products</a></li>
-                        <li><a href="contact.php">Contact</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/about.php">About Us</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/products.php">Our Products</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/contact.php">Contact</a></li>
                     </ul>
                 </div>
                 
                 <div class="col-lg-3 col-md-4">
                     <h5 class="footer-title">Help</h5>
                     <ul class="footer-links">
-                        <li><a href="footer_pages/faq.php">FAQ</a></li>
-                        <li><a href="footer_pages/shipping_returns.php">Shipping & Returns</a></li>
-                        <li><a href="footer_pages/privacy_policy.php">Privacy Policy</a></li>
-                        <li><a href="footer_pages/termsandconditions.php">Terms of Service</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/footer_pages/faq.php">FAQ</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/footer_pages/shipping_returns.php">Delivery & Returns</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/footer_pages/privacy_policy.php">Privacy Policy</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/footer_pages/terms_of_service.php">Terms of Service</a></li>
                     </ul>
                 </div>
                 

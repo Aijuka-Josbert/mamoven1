@@ -97,18 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Send verification email
             try {
                 $mail = new PHPMailer(true);
-                
-                // SMTP configuration
-                $mail->isSMTP();
-                $mail->Host = SMTP_HOST;
-                $mail->SMTPAuth = true;
-                $mail->Username = SMTP_USER;
-                $mail->Password = SMTP_PASS;
-                $mail->SMTPSecure = SMTP_SECURE;
-                $mail->Port = SMTP_PORT;
 
-                $mail->setFrom(SMTP_USER, SITE_NAME);
-                $mail->addReplyTo(SMTP_USER, SITE_NAME);
+                configure_mailer_transport($mail);
+                $fromEmail = default_mail_from_address();
+                $mail->setFrom($fromEmail, SITE_NAME);
+                $mail->addReplyTo($fromEmail, SITE_NAME);
                 $mail->addAddress($inputs['email'], $inputs['full_name']);
 
                 // SPAM Prevention: Always provide a Plain Text version along with the HTML
@@ -131,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
                     <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
                         <div style='text-align: center; margin-bottom: 30px;'>
+                            " . email_logo_html($mail, 60) . "
                             <h1 style='color: #8B4513; margin-bottom: 10px;'>Verify Your Account!</h1>
                         </div>
                         
@@ -152,8 +146,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </body>
                 </html>";
 
-                if(!$mail->send()) {
-                    error_log('Verification email failed! ErrorInfo: ' . $mail->ErrorInfo . ', User/Pass: ' . SMTP_USER . ' / ' . (empty(SMTP_PASS) ? 'Empty' : 'Set'));
+                if (!send_mail_with_fallback($mail)) {
+                    error_log('Verification email failed! ErrorInfo: ' . $mail->ErrorInfo);
                 }
             } catch (Exception $e) {
                 // Log email error but don't fail the registration

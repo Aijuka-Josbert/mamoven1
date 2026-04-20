@@ -78,7 +78,7 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
         <!-- Product Details -->
         <div class="col-lg-6 ps-lg-5">
             <nav aria-label="breadcrumb" class="mb-3">
-                <ol class="breadcrumb"></ol>
+                <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href='index.php'>Home</a></li>
                     <li class="breadcrumb-item"><a href='products.php'>Products</a></li>
                 </ol>
@@ -196,7 +196,7 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
                 <?php foreach ($related_products as $related): ?>
                     <div class="col-lg-3 col-md-6">
                          <div class="product-card">
-                            <a href="'product-details.php?id=' . $related['id']);" class="product-image-wrapper">
+                            <a href="<?php echo BASE_URL . '/product-details.php?id=' . (int)$related['id']; ?>" class="product-image-wrapper">
                                 <!-- Related Product Images -->
                                 <img src="<?php echo htmlspecialchars($related['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
                                      alt="<?php echo htmlspecialchars($related['name']); ?>" class="product-image">
@@ -204,7 +204,7 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
                             <div class="product-info">
                                 <div>
                                     <h5 class="product-name">
-                                        <a href="product-details.php?id=' . $related['id']);" class="text-decoration-none">
+                                        <a href="<?php echo BASE_URL . '/product-details.php?id=' . (int)$related['id']; ?>" class="text-decoration-none">
                                             <?php echo htmlspecialchars($related['name']); ?>
                                         </a>
                                     </h5>

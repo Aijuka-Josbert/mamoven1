@@ -68,6 +68,11 @@ function is_active($page_name) {
                     <i class="fas fa-users fa-fw"></i> Manage Customers
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo is_active('contact_messages.php'); ?>" href="contact_messages.php">
+                    <i class="fas fa-envelope fa-fw"></i> Contact Messages
+                </a>
+            </li>
             <li class="nav-item mt-auto">
                 <hr>
                 <a class="nav-link" href="../index.php" target="_blank">

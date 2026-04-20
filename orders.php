@@ -53,15 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
             // Notify Admin via Email about cancellation
             try {
                 $mail = new PHPMailer(true);
-                $mail->isSMTP();
-                $mail->Host = SMTP_HOST;
-                $mail->SMTPAuth = true;
-                $mail->Username = SMTP_USER;
-                $mail->Password = SMTP_PASS;
-                $mail->SMTPSecure = SMTP_SECURE;
-                $mail->Port = SMTP_PORT;
 
-                $mail->setFrom(SMTP_USER, SITE_NAME);
+                configure_mailer_transport($mail);
+                $mail->setFrom(default_mail_from_address(), SITE_NAME);
                 $mail->addAddress(ADMIN_EMAIL);
 
                 $mail->isHTML(true);
@@ -74,16 +68,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                 $customer_name = $user_info ? $user_info['full_name'] : 'Unknown Customer';
 
                 $mail->Body = "
-                    <h2>Order Cancellation Alert</h2>
-                    <p><strong>Order Number:</strong> {$order['order_number']}</p>
-                    <p><strong>Customer:</strong> " . htmlspecialchars($customer_name) . "</p>
-                    <p><strong>Status:</strong> Cancelled by User</p>
-                    <p><strong>Total Amount:</strong> UGX " . number_format($order['total_amount']) . "</p>
-                    <p>The items have been returned to stock automatically.</p>
-                    <p><a href='" . BASE_URL . "/admin/orders.php'>View in Admin Dashboard</a></p>
+                <html>
+                <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                    <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                        <div style='text-align: center; margin-bottom: 30px;'>
+                            " . email_logo_html($mail, 80) . "
+                        </div>
+                        <h2 style='color: #8B4513;'>Order Cancellation Alert</h2>
+                        <p><strong>Order Number:</strong> {$order['order_number']}</p>
+                        <p><strong>Customer:</strong> " . htmlspecialchars($customer_name) . "</p>
+                        <p><strong>Status:</strong> Cancelled by User</p>
+                        <p><strong>Total Amount:</strong> UGX " . number_format($order['total_amount']) . "</p>
+                        <p>The items have been returned to stock automatically.</p>
+                        <p><a href='" . BASE_URL . "/admin/orders.php' style='color: #8B4513;'>View in Admin Dashboard</a></p>
+                    </div>
+                </body>
+                </html>
                 ";
 
-                $mail->send();
+                send_mail_with_fallback($mail);
             } catch (Exception $e) {
                 // Log error but don't stop the success message flow
                 error_log("Failed to send cancellation email to admin: " . $e->getMessage());

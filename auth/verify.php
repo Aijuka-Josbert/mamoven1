@@ -70,27 +70,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Send Email
         try {
             $mail = new PHPMailer(true);
-            $mail->isSMTP();
-            $mail->Host = SMTP_HOST;
-            $mail->SMTPAuth = true;
-            $mail->Username = SMTP_USER;
-            $mail->Password = SMTP_PASS;
-            $mail->SMTPSecure = SMTP_SECURE;
-            $mail->Port = SMTP_PORT;
 
-            $mail->setFrom(SMTP_USER, SITE_NAME);
+            configure_mailer_transport($mail);
+            $mail->setFrom(default_mail_from_address(), SITE_NAME);
             $mail->addAddress($email, $user_full_name);
 
             $mail->isHTML(true);
             $mail->Subject = 'New Verification Code - ' . SITE_NAME;
-            $mail->Body = "<h2>Email Verification</h2>
-                           <p>Your new 6-digit verification code is:</p>
-                           <h1 style='color: #4CAF50; letter-spacing: 5px; font-size: 32px;'>$new_code</h1>
-                           <p>Please enter this code on the verification page.</p>";
+            $mail->Body = "<html>
+                           <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                               <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                                   <div style='text-align: center; margin-bottom: 30px;'>
+                                       " . email_logo_html($mail, 60) . "
+                                       <h2 style='color: #8B4513; margin: 0;'>Email Verification</h2>
+                                   </div>
+                                   <p>Your new 6-digit verification code is:</p>
+                                   <div style='background: #f9f6f0; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;'>
+                                       <h1 style='color: #8B4513; margin: 0; font-size: 32px; letter-spacing: 5px;'>$new_code</h1>
+                                   </div>
+                                   <p>Please enter this code on the verification page to activate your account.</p>
+                                   <p>If you did not request this, please ignore this email.</p>
+                                   <p style='margin-top: 30px;'>
+                                       Best regards,<br>
+                                       <strong>The " . SITE_NAME . " Team</strong>
+                                   </p>
+                               </div>
+                           </body>
+                           </html>";
             $mail->AltBody = "Your new verification code is: $new_code";
 
-            $mail->send();
-            $success = "A new verification code has been sent to your email.";
+            if (send_mail_with_fallback($mail)) {
+                $success = "A new verification code has been sent to your email.";
+            } else {
+                $error = "Failed to send the code. Please try again later.";
+            }
         } catch (Exception $e) {
             $error = "Failed to send the code. Please try again later.";
         }

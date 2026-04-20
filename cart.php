@@ -191,6 +191,11 @@ try {
             <div class="modal-body">
                 <form id="checkout-form" method="POST" action="api/place_order.php">
                     <input type="hidden" id="promo-code-hidden" name="promo_code" value="">
+                    <div class="mb-2">
+                        <label for="delivery_area_search" class="form-label">Search Delivery Area</label>
+                        <input type="text" id="delivery_area_search" class="form-control" placeholder="Type area name to filter list">
+                        <div class="form-text">Search first, then select from the area dropdown.</div>
+                    </div>
                     <div class="mb-3">
                         <label for="delivery_location" class="form-label">Select Delivery Area <span class="text-danger">*</span></label>
                         <select id="delivery_location" name="location_id" class="form-select" required onchange="updateDeliveryFee()">
@@ -252,7 +257,7 @@ function updateDeliveryFee() {
     const fee = option.value ? parseFloat(option.getAttribute("data-fee")) : 0;
     
     // Format helper
-    const formatUGX = (num) => new Intl.NumberFormat().format(num);
+    const formatUGX = (num) => String(Math.round(num)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
     // Update displays
     document.getElementById("delivery-fee").innerText = "UGX " + formatUGX(fee);
@@ -261,6 +266,46 @@ function updateDeliveryFee() {
     document.getElementById("total-amount").innerText = "UGX " + formatUGX(newTotal);
     document.getElementById("modal-total-amount").innerText = "UGX " + formatUGX(newTotal);
 }
+
+function filterDeliveryAreas() {
+    const searchInput = document.getElementById('delivery_area_search');
+    const locationSelect = document.getElementById('delivery_location');
+
+    if (!searchInput || !locationSelect) {
+        return;
+    }
+
+    const searchTerm = searchInput.value.trim().toLowerCase();
+    let hasVisibleSelected = false;
+
+    for (let i = 0; i < locationSelect.options.length; i++) {
+        const option = locationSelect.options[i];
+
+        if (i === 0) {
+            option.hidden = false;
+            continue;
+        }
+
+        const optionText = option.text.toLowerCase();
+        const isMatch = searchTerm === '' || optionText.includes(searchTerm);
+        option.hidden = !isMatch;
+
+        if (isMatch && option.selected) {
+            hasVisibleSelected = true;
+        }
+    }
+
+    if (!hasVisibleSelected && locationSelect.value !== '') {
+        locationSelect.value = '';
+        updateDeliveryFee();
+    }
+}
+
+document.getElementById('delivery_area_search')?.addEventListener('input', filterDeliveryAreas);
+
+document.getElementById('checkoutModal')?.addEventListener('shown.bs.modal', function() {
+    filterDeliveryAreas();
+});
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

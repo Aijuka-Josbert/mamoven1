@@ -7,8 +7,7 @@ include_once __DIR__ . '/../config/database.php';
 
 // A simple helper to determine the correct path prefix
 function asset_url($path) {
-    // Remove leading slashes from the path to prevent issues
-    return BASE_URL . './' . ltrim($path, './');
+    return rtrim(BASE_URL, '/') . '/' . ltrim($path, '/');
 }
 ?>
 <!DOCTYPE html>

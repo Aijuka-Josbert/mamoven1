@@ -82,7 +82,7 @@ try {
             AVG(rating) as avg_rating, 
             COUNT(*) as review_count 
         FROM reviews 
-        WHERE product_id = ? AND is_verified_purchase = 1
+           WHERE product_id = ?
     ");
     $avg_stmt->execute([$product_id]);
     $stats = $avg_stmt->fetch();
