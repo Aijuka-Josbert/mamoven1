@@ -228,14 +228,15 @@ try {
                     <div class="mb-3">
                         <label for="promo-code" class="form-label">Promo Code <small class="text-muted">(Optional)</small></label>
                         <div class="input-group">
-                            <input type="text" id="promo-code" class="form-control" placeholder="Enter promo code">
+                            <input type="text" id="promo-code" class="form-control" placeholder="Enter promo code" autocomplete="off">
                             <button type="button" class="btn btn-outline-secondary" onclick="applyPromoCode()">Apply</button>
                         </div>
+                        <div class="form-text">Use promo codes shared by admin. Discount is applied instantly if active and valid, and is always revalidated during checkout.</div>
                     </div>
                      <hr>
                     <div class="text-center">
                         <p class="mb-1">Your total is <strong class="h5" id="modal-total-amount">UGX <?php echo number_format($total); ?></strong>.</p>
-                        <p class="text-muted small"><i class="fas fa-money-bill-wave"></i> Payment: Cash on Delivery</p>
+                        <p class="text-muted small"><i class="fas fa-money-bill-wave"></i> Payment: Cash on Delivery (Mobile Money/Card coming soon)</p>
                     </div>
                 </form>
             </div>
@@ -266,6 +267,15 @@ function updateDeliveryFee() {
     document.getElementById("total-amount").innerText = "UGX " + formatUGX(newTotal);
     document.getElementById("modal-total-amount").innerText = "UGX " + formatUGX(newTotal);
 }
+
+window.setCurrentDiscount = function(discount) {
+    currentDiscount = parseFloat(discount) || 0;
+    const formatUGX = (num) => String(Math.round(num)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    document.getElementById('discount-amount').innerText = 'UGX ' + formatUGX(currentDiscount);
+    document.getElementById('discount-row').style.display = currentDiscount > 0 ? 'flex' : 'none';
+    updateDeliveryFee();
+};
 
 function filterDeliveryAreas() {
     const searchInput = document.getElementById('delivery_area_search');
@@ -305,6 +315,32 @@ document.getElementById('delivery_area_search')?.addEventListener('input', filte
 
 document.getElementById('checkoutModal')?.addEventListener('shown.bs.modal', function() {
     filterDeliveryAreas();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const storedDiscount = parseFloat(sessionStorage.getItem('promo_discount') || '0');
+    if (storedDiscount > 0 && typeof window.setCurrentDiscount === 'function') {
+        window.setCurrentDiscount(storedDiscount);
+    }
+
+    const checkoutForm = document.getElementById('checkout-form');
+    const promoInput = document.getElementById('promo-code');
+    const promoHidden = document.getElementById('promo-code-hidden');
+
+    if (checkoutForm && promoInput && promoHidden) {
+        checkoutForm.addEventListener('submit', function() {
+            promoHidden.value = promoInput.value.trim().toUpperCase();
+        });
+
+        promoInput.addEventListener('input', function() {
+            promoHidden.value = '';
+            sessionStorage.removeItem('promo_discount');
+            sessionStorage.removeItem('promo_id');
+            if (typeof window.setCurrentDiscount === 'function') {
+                window.setCurrentDiscount(0);
+            }
+        });
+    }
 });
 </script>
 

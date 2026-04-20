@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $inputs['phone'] = $_POST['phone'] ?? '';
     $inputs['password'] = $_POST['password'];
     $inputs['confirm_password'] = $_POST['confirm_password'];
+    $agreed_terms = isset($_POST['agree_terms']);
 
     $full_name = $inputs['full_name'];
     $username = $inputs['username'];
@@ -57,6 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($password !== $confirm_password) {
         $errors[] = 'Passwords do not match.';
+    }
+    if (!$agreed_terms) {
+        $errors[] = 'You must accept the terms and policies to continue.';
     }
     
     // --- Check for existing user if basic validation passes ---
@@ -174,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card shadow">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <img src="../assets/images/logo.jpeg" alt="Logo" style="height: 60px;" class="mb-3">
+                        <img src="../assets/images/logo.png" alt="Logo" style="height: 60px;" class="mb-3">
                         <h2 class="card-title h3">Create Your Account</h2>
                         <p class="text-muted">Join us to start ordering delicious treats!</p>
                     </div>
@@ -242,9 +246,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
 
                         <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="agree_terms" required>
+                            <input type="checkbox" class="form-check-input" id="agree_terms" name="agree_terms" required <?php echo isset($_POST['agree_terms']) ? 'checked' : ''; ?>>
                             <label class="form-check-label" for="agree_terms">
-                                I agree to the <a href="#">Terms & Conditions</a>
+                                I agree to the
+                                <a href="<?php echo BASE_URL; ?>/termsandconditions.php" target="_blank" rel="noopener">Terms & Conditions</a>,
+                                <a href="<?php echo BASE_URL; ?>/footer_pages/terms_of_service.php" target="_blank" rel="noopener">Terms of Service</a>, and
+                                <a href="<?php echo BASE_URL; ?>/footer_pages/shipping_returns.php" target="_blank" rel="noopener">Bakery Care & Delivery Policy</a>.
+                                <small class="d-block text-muted">Current live payment method is Cash on Delivery. Other payment options are coming soon.</small>
                             </label>
                         </div>
 

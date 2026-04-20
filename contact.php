@@ -7,6 +7,8 @@ use PHPMailer\PHPMailer\Exception;
 
 require __DIR__ . '/vendor/autoload.php';
 
+$supportEmail = 'mamasovenug@gmail.com';
+
 $success_message = '';
 $warning_message = '';
 $error_message = '';
@@ -33,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                 configure_mailer_transport($mail);
 
                 $mail->setFrom(default_mail_from_address(), SITE_NAME);
-                $mail->addAddress(ADMIN_EMAIL);
+                $mail->addAddress($supportEmail);
                 $mail->addReplyTo($email, $name);
                 $mail->Subject = $subject;
                 $mail->isHTML(true);
@@ -122,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                     <h4 class="mb-4">Contact Information</h4>
                     <p class="mb-3"><i class="fas fa-map-marker-alt fa-fw me-2 text-primary"></i>Plot 123, Main Street, Kampala, Uganda</p>
                     <p class="mb-3"><i class="fas fa-phone fa-fw me-2 text-primary"></i><a href="tel:+256700123456">+256 700 123456</a></p>
-                    <p class="mb-3"><i class="fas fa-envelope fa-fw me-2 text-primary"></i><a href="mailto:<?php echo ADMIN_EMAIL; ?>"><?php echo ADMIN_EMAIL; ?></a></p>
+                    <p class="mb-3"><i class="fas fa-envelope fa-fw me-2 text-primary"></i><a href="mailto:<?php echo htmlspecialchars($supportEmail); ?>"><?php echo htmlspecialchars($supportEmail); ?></a></p>
                     <hr>
                     <h5 class="h6 mt-4">Business Hours</h5>
                     <p class="text-muted mb-1">Everyday: 8:00 AM - 9:00 PM</p>

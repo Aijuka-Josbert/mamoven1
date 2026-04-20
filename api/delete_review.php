@@ -3,7 +3,9 @@ session_start();
 require_once __DIR__ . '/../config/database.php';
 
 header('Content-Type: application/json; charset=utf-8');
-ob_clean();
+if (ob_get_level() > 0) {
+    ob_clean();
+}
 
 // Only admin can delete reviews
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {

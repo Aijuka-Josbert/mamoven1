@@ -19,7 +19,32 @@ $(document).ready(function() {
     if (urlParams.get('order_success')) {
         showOrderSuccess(urlParams.get('order_number'));
     }
+
+    initGlobalRevealAnimations();
 });
+
+function initGlobalRevealAnimations() {
+    const elements = document.querySelectorAll('.animate-on-scroll');
+    if (!elements.length) {
+        return;
+    }
+
+    if (!('IntersectionObserver' in window)) {
+        elements.forEach((el) => el.classList.add('visible'));
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                obs.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.12 });
+
+    elements.forEach((el) => observer.observe(el));
+}
 
 /**
  * Checks if a user is logged in.
@@ -88,7 +113,7 @@ function showOrderSuccess(orderNumber) {
             <div style="text-align: center;">
                 <i class="fas fa-check-circle" style="color: #28a745; font-size: 3em; margin-bottom: 15px;"></i>
                 <p><strong>Order Number:</strong> ${orderNumber}</p>
-                <p>Thank you for your order! A confirmation email has been sent to your email address.</p>
+                <p>Thank you for your order! A confirmation email will be sent shortly when mail delivery is available.</p>
                 <p>You can track your order status in your order history.</p>
             </div>
         `,
@@ -219,6 +244,213 @@ function previewImage(input, previewId) {
 /**
  * Loads reviews for a product
  */
+let latestReviewData = null;
+
+function getProductIdFromUrl() {
+    const productId = new URLSearchParams(window.location.search).get('id');
+    return productId ? parseInt(productId, 10) : 0;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderStarsText(ratingValue) {
+    const safeRating = Math.max(0, Math.min(5, Math.round(Number(ratingValue) || 0)));
+    return '★'.repeat(safeRating) + '☆'.repeat(5 - safeRating);
+}
+
+function formatReviewComment(comment) {
+    const clean = String(comment ?? '').trim();
+    if (!clean) {
+        return 'No comment provided.';
+    }
+    return escapeHtml(clean).replace(/\n/g, '<br>');
+}
+
+function formatReviewDate(dateValue) {
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+function reviewWasEdited(review) {
+    if (!review || !review.updated_at || !review.created_at) {
+        return false;
+    }
+
+    const updatedAt = new Date(review.updated_at).getTime();
+    const createdAt = new Date(review.created_at).getTime();
+
+    if (Number.isNaN(updatedAt) || Number.isNaN(createdAt)) {
+        return false;
+    }
+
+    return updatedAt - createdAt > 3000;
+}
+
+function highlightStars(val) {
+    const interactiveStars = document.querySelectorAll('.star-interactive');
+    const safeValue = parseInt(val, 10) || 0;
+
+    interactiveStars.forEach((star) => {
+        const starValue = parseInt(star.getAttribute('data-value'), 10) || 0;
+        star.style.color = starValue <= safeValue ? '#FFD700' : '#ccc';
+    });
+}
+
+function updateReviewCharCounter() {
+    const commentInput = document.getElementById('comment');
+    const counter = document.getElementById('review-char-counter');
+    if (!commentInput || !counter) {
+        return;
+    }
+
+    counter.textContent = `${commentInput.value.length}/500`;
+}
+
+function resetReviewEditor(clearInputs) {
+    const reviewIdInput = document.getElementById('review-id-input');
+    const reviewTitle = document.getElementById('review-form-title');
+    const submitBtn = document.getElementById('review-submit-btn');
+    const cancelBtn = document.getElementById('review-cancel-btn');
+    const ratingInput = document.getElementById('rating-input');
+    const commentInput = document.getElementById('comment');
+
+    if (reviewIdInput) {
+        reviewIdInput.value = '';
+    }
+
+    if (reviewTitle) {
+        reviewTitle.textContent = 'Leave a Review';
+    }
+
+    if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Submit Review';
+    }
+
+    if (cancelBtn) {
+        cancelBtn.classList.add('d-none');
+    }
+
+    if (clearInputs) {
+        if (ratingInput) {
+            ratingInput.value = '0';
+        }
+        if (commentInput) {
+            commentInput.value = '';
+        }
+    }
+
+    highlightStars(ratingInput ? ratingInput.value : 0);
+    updateReviewCharCounter();
+}
+
+function beginEditReview(reviewId) {
+    if (!latestReviewData || !Array.isArray(latestReviewData.reviews)) {
+        showError('Review data is not ready yet. Please try again.');
+        return;
+    }
+
+    const targetReview = latestReviewData.reviews.find((review) => {
+        return Number(review.id) === Number(reviewId) && Number(review.can_edit) === 1;
+    });
+
+    if (!targetReview) {
+        showError('You can only edit your own review.');
+        return;
+    }
+
+    const reviewIdInput = document.getElementById('review-id-input');
+    const reviewTitle = document.getElementById('review-form-title');
+    const submitBtn = document.getElementById('review-submit-btn');
+    const cancelBtn = document.getElementById('review-cancel-btn');
+    const ratingInput = document.getElementById('rating-input');
+    const commentInput = document.getElementById('comment');
+    const reviewForm = document.getElementById('review-form');
+
+    if (!ratingInput || !commentInput || !reviewForm) {
+        showError('Review form is unavailable.');
+        return;
+    }
+
+    if (reviewIdInput) {
+        reviewIdInput.value = String(targetReview.id);
+    }
+    ratingInput.value = String(targetReview.rating || 0);
+    commentInput.value = targetReview.comment || '';
+
+    if (reviewTitle) {
+        reviewTitle.textContent = 'Edit Your Review';
+    }
+
+    if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fas fa-pen-to-square me-2"></i> Update Review';
+    }
+
+    if (cancelBtn) {
+        cancelBtn.classList.remove('d-none');
+    }
+
+    highlightStars(ratingInput.value);
+    updateReviewCharCounter();
+    reviewForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function renderReviewsSummary(reviewData) {
+    const summaryPanel = $('#reviews-summary');
+    if (!summaryPanel.length) {
+        return;
+    }
+
+    const totalReviews = Number(reviewData.review_count || 0);
+    const avgRating = Number(reviewData.avg_rating || 0);
+    const verifiedCount = Number(reviewData.verified_count || 0);
+
+    if (totalReviews <= 0) {
+        summaryPanel.addClass('d-none');
+        return;
+    }
+
+    $('#summary-average-rating').text(avgRating.toFixed(1));
+    $('#summary-stars').text(renderStarsText(avgRating));
+    $('#summary-review-count').text(totalReviews);
+    $('#summary-verified-count').text(verifiedCount);
+
+    const breakdown = reviewData.rating_breakdown || {};
+    let rows = '';
+
+    for (let star = 5; star >= 1; star--) {
+        const count = Number(breakdown[star] || 0);
+        const percentage = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+
+        rows += `
+            <div class="rating-breakdown-row">
+                <span class="rating-breakdown-label">${star}★</span>
+                <div class="progress flex-grow-1" role="progressbar" aria-label="${star} star reviews" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar" style="width: ${percentage}%"></div>
+                </div>
+                <span class="rating-breakdown-count">${count}</span>
+            </div>
+        `;
+    }
+
+    $('#rating-breakdown').html(rows);
+    summaryPanel.removeClass('d-none');
+}
+
 function loadProductReviews(productId) {
     $.ajax({
         url: BASE_URL + '/api/get_reviews.php',
@@ -227,11 +459,25 @@ function loadProductReviews(productId) {
         dataType: 'json',
         success: function(response) {
             if (response.success) {
+                latestReviewData = response;
+                renderReviewsSummary(response);
                 displayReviews(response);
             }
         },
-        error: function() {
-            $('#reviews-container').html('<p class="text-muted">Could not load reviews.</p>');
+        error: function(xhr) {
+            let serverMessage = '';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                serverMessage = xhr.responseJSON.message;
+            } else if (xhr.responseText) {
+                try {
+                    const parsed = JSON.parse(xhr.responseText);
+                    serverMessage = parsed.message || '';
+                } catch (e) {
+                    serverMessage = '';
+                }
+            }
+
+            $('#reviews-container').html('<p class="text-muted">' + (serverMessage || 'Could not load reviews.') + '</p>');
         }
     });
 }
@@ -242,29 +488,46 @@ function loadProductReviews(productId) {
 function displayReviews(reviewData) {
     let html = '';
 
-    if (reviewData.review_count === 0) {
+    if (Number(reviewData.review_count) === 0) {
         html = '<p class="text-muted text-center">No reviews yet. Be the first to review this product!</p>';
     } else {
         reviewData.reviews.forEach(function(review) {
-            let deleteBtn = '';
-            if (reviewData.is_admin) {
-                deleteBtn = `<button class="btn btn-sm btn-danger float-end" onclick="deleteReview(${review.id})"><i class="fas fa-trash"></i></button>`;
+            const canEdit = Number(review.can_edit) === 1;
+            let actionButtons = '';
+
+            if (canEdit) {
+                actionButtons += `<button type="button" class="btn btn-sm btn-outline-primary" onclick="beginEditReview(${Number(review.id)})"><i class="fas fa-pen-to-square me-1"></i>Edit</button>`;
             }
-            let starsHtml = '';
-            for (let i = 0; i < review.rating; i++) starsHtml += '★';
-            for (let i = review.rating; i < 5; i++) starsHtml += '☆';
+
+            if (reviewData.is_admin) {
+                actionButtons += ` <button class="btn btn-sm btn-danger" onclick="deleteReview(${Number(review.id)})"><i class="fas fa-trash me-1"></i>Delete</button>`;
+            }
+
+            const verifiedBadge = Number(review.is_verified_purchase) === 1
+                ? '<span class="badge bg-success-subtle text-success border border-success-subtle ms-2">Verified purchase</span>'
+                : '';
+            const ownBadge = canEdit ? '<span class="badge bg-info-subtle text-info border border-info-subtle ms-2 review-own-badge">Your review</span>' : '';
+            const editedNote = reviewWasEdited(review) ? '<span class="review-edited-note">(edited)</span>' : '';
+            const starsHtml = renderStarsText(review.rating);
+            const reviewDate = formatReviewDate(review.created_at);
+            const safeName = escapeHtml(review.full_name || 'Customer');
+            const safeComment = formatReviewComment(review.comment);
+
+            const actionsHtml = actionButtons.trim() !== ''
+                ? `<div class="review-actions d-flex align-items-center gap-2">${actionButtons}</div>`
+                : '';
             
             html += `
                 <div class="review-card mb-3 p-3 border rounded">
                     <div class="review-header d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="review-author fw-bold">${review.full_name}</div>
-                            <div class="review-date text-muted small">${new Date(review.created_at).toLocaleDateString()}</div>
+                            <div class="review-author fw-bold">${safeName}${verifiedBadge}${ownBadge}</div>
+                            <div class="review-date text-muted small">${reviewDate} ${editedNote}</div>
                         </div>
-                        ${deleteBtn}
+                        ${actionsHtml}
                     </div>
                     <div class="stars mb-2" style="color: #FFD700;">${starsHtml}</div>
-                    <p class="mb-0">${review.comment || 'No comment provided.'}</p>
+                    <p class="mb-0 review-comment-body">${safeComment}</p>
                 </div>
             `;
         });
@@ -303,6 +566,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Interactive Stars setup
     const interactiveStars = document.querySelectorAll('.star-interactive');
     const ratingInput = document.getElementById('rating-input');
+    const commentInput = document.getElementById('comment');
+    const cancelBtn = document.getElementById('review-cancel-btn');
+    const reviewForm = document.getElementById('review-form');
+    const productId = getProductIdFromUrl();
     
     if(interactiveStars.length > 0) {
         interactiveStars.forEach(star => {
@@ -318,40 +585,56 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             star.addEventListener('mouseout', function() {
-                let val = ratingInput.value;
+                let val = ratingInput ? ratingInput.value : 0;
                 highlightStars(val);
             });
             
             star.addEventListener('click', function() {
                 let val = this.getAttribute('data-value');
-                ratingInput.value = val;
+                if (ratingInput) {
+                    ratingInput.value = val;
+                }
                 highlightStars(val);
             });
         });
     }
 
-    function highlightStars(val) {
-        interactiveStars.forEach(star => {
-            if (star.getAttribute('data-value') <= val) {
-                star.style.color = '#FFD700'; // Gold
-            } else {
-                star.style.color = '#ccc'; // Gray
-            }
+    if (commentInput) {
+        commentInput.addEventListener('input', updateReviewCharCounter);
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            resetReviewEditor(true);
         });
     }
 
-    const reviewForm = document.getElementById('review-form');
+    updateReviewCharCounter();
+    highlightStars(ratingInput ? ratingInput.value : 0);
+
     if (reviewForm) {
         reviewForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const productId = new URLSearchParams(window.location.search).get('id');
-            const rating = ratingInput ? ratingInput.value : 0;
+            const rating = ratingInput ? parseInt(ratingInput.value, 10) : 0;
             const comment = document.getElementById('comment')?.value;
+            const reviewId = parseInt(document.getElementById('review-id-input')?.value || '0', 10);
+            const submitBtn = document.getElementById('review-submit-btn');
+            const originalSubmitHtml = submitBtn ? submitBtn.innerHTML : '';
 
-            if (!rating || rating == 0) {
+            if (!rating || rating === 0) {
                 showError('Please select a rating');
                 return;
+            }
+
+            if (!productId) {
+                showError('Missing product reference. Please reload and try again.');
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="loading"></span> Saving...';
             }
 
             $.ajax({
@@ -360,30 +643,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: { 
                     product_id: productId, 
                     rating: rating, 
-                    comment: comment 
+                    comment: comment,
+                    review_id: reviewId > 0 ? reviewId : ''
                 },
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
                         showSuccess(response.message);
-                        reviewForm.reset();
+                        resetReviewEditor(true);
                         // Reload reviews
                         loadProductReviews(productId);
                     } else {
                         showError(response.message);
                     }
                 },
-                error: function() {
-                    showError('Could not submit review');
+                error: function(xhr) {
+                    let serverMessage = '';
+
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        serverMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        try {
+                            const parsed = JSON.parse(xhr.responseText);
+                            serverMessage = parsed.message || '';
+                        } catch (e) {
+                            serverMessage = '';
+                        }
+                    }
+
+                    showError(serverMessage || 'Could not submit review');
+                },
+                complete: function() {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalSubmitHtml;
+                    }
                 }
             });
         });
+    }
 
-        // Load reviews on page load
-        const productId = new URLSearchParams(window.location.search).get('id');
-        if (productId) {
-            loadProductReviews(productId);
-        }
+    if (productId) {
+        loadProductReviews(productId);
     }
 });
 
@@ -391,7 +692,8 @@ document.addEventListener('DOMContentLoaded', function() {
  * Applies a promo code to the order
  */
 function applyPromoCode() {
-    const promoCode = document.getElementById('promo-code')?.value;
+    const promoInput = document.getElementById('promo-code');
+    const promoCode = (promoInput?.value || '').trim().toUpperCase();
     const subtotalText = document.getElementById('subtotal-amount')?.textContent || '0';
     // Extract numeric value from "UGX 50,000" format
     const subtotal = parseFloat(subtotalText.replace(/[^\d]/g, '')) || 0;
@@ -412,6 +714,9 @@ function applyPromoCode() {
         success: function(response) {
             if (response.success) {
                 showSuccess('Promo code applied!');
+                if (promoInput) {
+                    promoInput.value = promoCode;
+                }
                 // Update hidden field for form submission
                 const hiddenPromoField = document.getElementById('promo-code-hidden');
                 if (hiddenPromoField) {
@@ -423,10 +728,28 @@ function applyPromoCode() {
                 // Update the UI to show discount
                 updateOrderSummaryWithDiscount(response.discount);
             } else {
+                const hiddenPromoField = document.getElementById('promo-code-hidden');
+                if (hiddenPromoField) {
+                    hiddenPromoField.value = '';
+                }
+                sessionStorage.removeItem('promo_discount');
+                sessionStorage.removeItem('promo_id');
+                if (typeof window.setCurrentDiscount === 'function') {
+                    window.setCurrentDiscount(0);
+                }
                 showError(response.message);
             }
         },
         error: function() {
+            const hiddenPromoField = document.getElementById('promo-code-hidden');
+            if (hiddenPromoField) {
+                hiddenPromoField.value = '';
+            }
+            sessionStorage.removeItem('promo_discount');
+            sessionStorage.removeItem('promo_id');
+            if (typeof window.setCurrentDiscount === 'function') {
+                window.setCurrentDiscount(0);
+            }
             showError('Could not apply promo code');
         }
     });
@@ -493,6 +816,15 @@ function updateOrderSummaryWithDiscount(discount) {
     }
     if (totalElement) {
         totalElement.textContent = 'UGX ' + newTotal.toLocaleString();
+    }
+
+    const modalTotalElement = document.getElementById('modal-total-amount');
+    if (modalTotalElement) {
+        modalTotalElement.textContent = 'UGX ' + newTotal.toLocaleString();
+    }
+
+    if (typeof window.setCurrentDiscount === 'function') {
+        window.setCurrentDiscount(discount);
     }
 }
 /**

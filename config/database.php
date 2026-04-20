@@ -77,7 +77,16 @@ if (getenv('BASE_URL')) {
 } else {
     $https = $_SERVER['HTTPS'] ?? '';
     $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
-    $isHttps = $https === 'on' || $https === '1' || strtolower($forwardedProto) === 'https';
+    $requestScheme = strtolower($_SERVER['REQUEST_SCHEME'] ?? '');
+    $serverPort = (int)($_SERVER['SERVER_PORT'] ?? 0);
+    $cfVisitor = strtolower($_SERVER['HTTP_CF_VISITOR'] ?? '');
+    $isHttps =
+        $https === 'on' ||
+        $https === '1' ||
+        strtolower($forwardedProto) === 'https' ||
+        $requestScheme === 'https' ||
+        $serverPort === 443 ||
+        strpos($cfVisitor, '"scheme":"https"') !== false;
     $protocol = $isHttps ? 'https' : 'http';
 
     if ($isLocalhost) {
@@ -98,16 +107,492 @@ define('SMTP_USER', getenv('SMTP_USER') ?: '');
 define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
 define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'tls');
 
-$adminEmail = getenv('ADMIN_EMAIL') ?: (getenv('SMTP_USER') ?: 'info@mamasoven.com');
-define('ADMIN_EMAIL', $adminEmail);
+define('ADMIN_EMAIL', 'mamasovenug@gmail.com');
 
-$hostWithoutPort = preg_replace('/:\\d+$/', '', $httpHost);
-$defaultMailFrom = $hostWithoutPort ? ('noreply@' . $hostWithoutPort) : 'noreply@localhost';
+$defaultMailFrom = 'mamasovenug@gmail.com';
 define('MAIL_FROM', getenv('MAIL_FROM') ?: $defaultMailFrom);
 define('PASSWORD_RESET_EXPIRY', 7200); // 2 hours in seconds
+define('SESSION_INACTIVITY_TIMEOUT', (int)(getenv('SESSION_INACTIVITY_TIMEOUT') ?: 900));
+define('REMEMBER_ME_LIFETIME', (int)(getenv('REMEMBER_ME_LIFETIME') ?: 2592000));
+define('REMEMBER_ME_COOKIE', 'mamoven_remember');
 
 define('UPLOAD_PATH', __DIR__ . '/../assets/images/');
 define('UPLOAD_URL', BASE_URL . '/assets/images/');
+
+function request_expects_json_response()
+{
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    if (strpos($scriptName, '/api/') !== false) {
+        return true;
+    }
+
+    $accept = strtolower($_SERVER['HTTP_ACCEPT'] ?? '');
+    if (strpos($accept, 'application/json') !== false) {
+        return true;
+    }
+
+    $requestedWith = strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '');
+    return $requestedWith === 'xmlhttprequest';
+}
+
+function client_ip_address()
+{
+    $cfIp = trim((string)($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
+    if (filter_var($cfIp, FILTER_VALIDATE_IP)) {
+        return $cfIp;
+    }
+
+    $forwardedFor = trim((string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''));
+    if ($forwardedFor !== '') {
+        $parts = explode(',', $forwardedFor);
+        $firstIp = trim($parts[0]);
+        if (filter_var($firstIp, FILTER_VALIDATE_IP)) {
+            return $firstIp;
+        }
+    }
+
+    $remoteAddr = trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+    if (filter_var($remoteAddr, FILTER_VALIDATE_IP)) {
+        return $remoteAddr;
+    }
+
+    return 'unknown';
+}
+
+function ensure_db_rate_limit_table()
+{
+    static $checked = false;
+    static $available = false;
+
+    if ($checked) {
+        return $available;
+    }
+
+    $checked = true;
+
+    try {
+        global $pdo;
+        if (!($pdo instanceof PDO)) {
+            return false;
+        }
+
+        $pdo->exec(
+            "CREATE TABLE IF NOT EXISTS request_rate_limits (
+                bucket_hash CHAR(40) NOT NULL PRIMARY KEY,
+                window_start INT NOT NULL,
+                request_count INT NOT NULL DEFAULT 0,
+                updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_updated_at (updated_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        );
+
+        $available = true;
+    } catch (Throwable $e) {
+        error_log('Rate limit table setup failed: ' . $e->getMessage());
+        $available = false;
+    }
+
+    return $available;
+}
+
+function register_rate_limit_attempt_db($bucketKey, $maxRequests, $windowSeconds)
+{
+    if (!ensure_db_rate_limit_table()) {
+        return null;
+    }
+
+    global $pdo;
+    if (!($pdo instanceof PDO)) {
+        return null;
+    }
+
+    $now = time();
+    $bucketHash = sha1($bucketKey);
+    $ownsTransaction = false;
+
+    try {
+        if (!$pdo->inTransaction()) {
+            $pdo->beginTransaction();
+            $ownsTransaction = true;
+        } else {
+            $ownsTransaction = false;
+        }
+
+        $stmt = $pdo->prepare('SELECT window_start, request_count FROM request_rate_limits WHERE bucket_hash = ? FOR UPDATE');
+        $stmt->execute([$bucketHash]);
+        $row = $stmt->fetch();
+
+        $allowed = true;
+        $retryAfter = 0;
+
+        if (!$row) {
+            $insertStmt = $pdo->prepare('INSERT INTO request_rate_limits (bucket_hash, window_start, request_count) VALUES (?, ?, 1)');
+            $insertStmt->execute([$bucketHash, $now]);
+        } else {
+            $windowStart = (int)$row['window_start'];
+            $count = (int)$row['request_count'];
+
+            if (($now - $windowStart) >= $windowSeconds) {
+                $windowStart = $now;
+                $count = 0;
+            }
+
+            if ($count >= $maxRequests) {
+                $allowed = false;
+                $retryAfter = max(1, $windowSeconds - ($now - $windowStart));
+            } else {
+                $count++;
+            }
+
+            $updateStmt = $pdo->prepare('UPDATE request_rate_limits SET window_start = ?, request_count = ? WHERE bucket_hash = ?');
+            $updateStmt->execute([$windowStart, $count, $bucketHash]);
+        }
+
+        // Lightweight table hygiene.
+        if (($now % 37) === 0) {
+            $cleanupStmt = $pdo->prepare('DELETE FROM request_rate_limits WHERE updated_at < (NOW() - INTERVAL 1 DAY)');
+            $cleanupStmt->execute();
+        }
+
+        if ($ownsTransaction) {
+            $pdo->commit();
+        }
+
+        return ['allowed' => $allowed, 'retry_after' => $retryAfter];
+    } catch (Throwable $e) {
+        if ($ownsTransaction && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('Rate limit DB check failed: ' . $e->getMessage());
+        return null;
+    }
+}
+
+function register_rate_limit_attempt_session($bucketKey, $maxRequests, $windowSeconds)
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return ['allowed' => true, 'retry_after' => 0];
+    }
+
+    if (!isset($_SESSION['__rate_limits']) || !is_array($_SESSION['__rate_limits'])) {
+        $_SESSION['__rate_limits'] = [];
+    }
+
+    $key = sha1($bucketKey);
+    $now = time();
+
+    if (!isset($_SESSION['__rate_limits'][$key]) || !is_array($_SESSION['__rate_limits'][$key])) {
+        $_SESSION['__rate_limits'][$key] = [
+            'window_start' => $now,
+            'count' => 0,
+        ];
+    }
+
+    $windowStart = (int)($_SESSION['__rate_limits'][$key]['window_start'] ?? $now);
+    $count = (int)($_SESSION['__rate_limits'][$key]['count'] ?? 0);
+
+    if (($now - $windowStart) >= $windowSeconds) {
+        $windowStart = $now;
+        $count = 0;
+    }
+
+    $allowed = true;
+    $retryAfter = 0;
+
+    if ($count >= $maxRequests) {
+        $allowed = false;
+        $retryAfter = max(1, $windowSeconds - ($now - $windowStart));
+    } else {
+        $count++;
+    }
+
+    $_SESSION['__rate_limits'][$key] = [
+        'window_start' => $windowStart,
+        'count' => $count,
+    ];
+
+    return ['allowed' => $allowed, 'retry_after' => $retryAfter];
+}
+
+function rate_limit_storage_file($bucketKey)
+{
+    static $storageDir = null;
+
+    if ($storageDir === null) {
+        $projectDir = __DIR__ . '/../db/.ratelimits';
+        if (!is_dir($projectDir)) {
+            @mkdir($projectDir, 0775, true);
+        }
+
+        if (is_dir($projectDir) && is_writable($projectDir)) {
+            $storageDir = $projectDir;
+        } else {
+            $tmpDir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR);
+            if (is_dir($tmpDir) && is_writable($tmpDir)) {
+                $storageDir = $tmpDir;
+            } else {
+                $storageDir = '';
+            }
+        }
+    }
+
+    if ($storageDir === '') {
+        return '';
+    }
+
+    $safeKey = sha1($bucketKey);
+    return rtrim($storageDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mamoven_rl_' . $safeKey . '.json';
+}
+
+function register_rate_limit_attempt($bucketKey, $maxRequests, $windowSeconds)
+{
+    $maxRequests = max(1, (int)$maxRequests);
+    $windowSeconds = max(1, (int)$windowSeconds);
+
+    $dbCheck = register_rate_limit_attempt_db($bucketKey, $maxRequests, $windowSeconds);
+    if (is_array($dbCheck)) {
+        return $dbCheck;
+    }
+
+    $filePath = rate_limit_storage_file($bucketKey);
+    if ($filePath === '') {
+        return register_rate_limit_attempt_session($bucketKey, $maxRequests, $windowSeconds);
+    }
+
+    $now = time();
+
+    $handle = @fopen($filePath, 'c+');
+    if ($handle === false) {
+        return ['allowed' => true, 'retry_after' => 0];
+    }
+
+    if (!@flock($handle, LOCK_EX)) {
+        fclose($handle);
+        return ['allowed' => true, 'retry_after' => 0];
+    }
+
+    $existing = stream_get_contents($handle);
+    $data = json_decode((string)$existing, true);
+    if (!is_array($data) || !isset($data['window_start'], $data['count'])) {
+        $data = [
+            'window_start' => $now,
+            'count' => 0,
+        ];
+    }
+
+    $windowStart = (int)$data['window_start'];
+    $count = (int)$data['count'];
+
+    if (($now - $windowStart) >= $windowSeconds) {
+        $windowStart = $now;
+        $count = 0;
+    }
+
+    $allowed = true;
+    $retryAfter = 0;
+
+    if ($count >= $maxRequests) {
+        $allowed = false;
+        $retryAfter = max(1, $windowSeconds - ($now - $windowStart));
+    } else {
+        $count++;
+    }
+
+    $newData = [
+        'window_start' => $windowStart,
+        'count' => $count,
+    ];
+
+    rewind($handle);
+    ftruncate($handle, 0);
+    fwrite($handle, json_encode($newData));
+    fflush($handle);
+    flock($handle, LOCK_UN);
+    fclose($handle);
+
+    return ['allowed' => $allowed, 'retry_after' => $retryAfter];
+}
+
+function enforce_rate_limit($bucketKey, $maxRequests, $windowSeconds, $message = 'Too many requests. Please try again shortly.')
+{
+    $check = register_rate_limit_attempt($bucketKey, $maxRequests, $windowSeconds);
+    if (!empty($check['allowed'])) {
+        return;
+    }
+
+    $retryAfter = (int)($check['retry_after'] ?? 30);
+    header('Retry-After: ' . $retryAfter);
+    http_response_code(429);
+
+    if (request_expects_json_response()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'message' => $message,
+            'retry_after' => $retryAfter,
+        ]);
+        exit;
+    }
+
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!doctype html><html><head><meta charset="utf-8"><title>Rate Limited</title></head><body>';
+    echo '<h2>Please slow down</h2>';
+    echo '<p>' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</p>';
+    echo '<p>Try again in about ' . $retryAfter . ' seconds.</p>';
+    echo '</body></html>';
+    exit;
+}
+
+function auto_enforce_request_limits()
+{
+    if (PHP_SAPI === 'cli') {
+        return;
+    }
+
+    $scriptName = strtolower((string)($_SERVER['SCRIPT_NAME'] ?? ''));
+    if ($scriptName === '') {
+        return;
+    }
+
+    $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    $clientIp = client_ip_address();
+    $endpoint = basename($scriptName);
+
+    if (strpos($scriptName, '/api/') !== false) {
+        enforce_rate_limit('api-global:' . $clientIp, 180, 60, 'Too many API requests from your network. Please wait a moment.');
+        enforce_rate_limit('api-endpoint:' . $clientIp . ':' . $endpoint, 20, 60, 'Rate limit reached for this endpoint. Please retry shortly.');
+    }
+
+    if ($method === 'POST' && preg_match('#/auth/(login|register|forgot_password|reset_password|verify)\\.php$#', $scriptName, $matches)) {
+        enforce_rate_limit('auth-post:' . $clientIp . ':' . $matches[1], 10, 300, 'Too many authentication attempts. Please wait a few minutes and try again.');
+    }
+
+    if ($method === 'POST' && preg_match('#/contact\\.php$#', $scriptName)) {
+        enforce_rate_limit('contact-post:' . $clientIp, 8, 300, 'Too many contact requests. Please wait a few minutes before sending another message.');
+    }
+}
+
+function clear_auth_session_data()
+{
+    $cookieParams = session_get_cookie_params();
+    $cookiePath = $cookieParams['path'] ?? '/';
+    $cookieDomain = $cookieParams['domain'] ?? '';
+    $cookieSecure = !empty($cookieParams['secure']);
+    $cookieHttpOnly = !empty($cookieParams['httponly']);
+    $cookieSameSite = $cookieParams['samesite'] ?? 'Lax';
+
+    setcookie(REMEMBER_ME_COOKIE, '', [
+        'expires' => time() - 3600,
+        'path' => $cookiePath,
+        'domain' => $cookieDomain,
+        'secure' => $cookieSecure,
+        'httponly' => true,
+        'samesite' => $cookieSameSite,
+    ]);
+
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return;
+    }
+
+    $_SESSION = [];
+
+    setcookie(session_name(), '', [
+        'expires' => time() - 3600,
+        'path' => $cookiePath,
+        'domain' => $cookieDomain,
+        'secure' => $cookieSecure,
+        'httponly' => $cookieHttpOnly,
+        'samesite' => $cookieSameSite,
+    ]);
+
+    session_destroy();
+}
+
+function apply_auth_session_preferences($rememberMe)
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return;
+    }
+
+    $rememberMe = (bool)$rememberMe;
+    $_SESSION['remember_me'] = $rememberMe ? 1 : 0;
+    $_SESSION['last_activity'] = time();
+
+    $cookieParams = session_get_cookie_params();
+    $cookiePath = $cookieParams['path'] ?? '/';
+    $cookieDomain = $cookieParams['domain'] ?? '';
+    $cookieSecure = !empty($cookieParams['secure']);
+    $cookieHttpOnly = !empty($cookieParams['httponly']);
+    $cookieSameSite = $cookieParams['samesite'] ?? 'Lax';
+    $sessionExpiry = $rememberMe ? (time() + REMEMBER_ME_LIFETIME) : 0;
+
+    setcookie(session_name(), session_id(), [
+        'expires' => $sessionExpiry,
+        'path' => $cookiePath,
+        'domain' => $cookieDomain,
+        'secure' => $cookieSecure,
+        'httponly' => $cookieHttpOnly,
+        'samesite' => $cookieSameSite,
+    ]);
+
+    if ($rememberMe) {
+        setcookie(REMEMBER_ME_COOKIE, '1', [
+            'expires' => time() + REMEMBER_ME_LIFETIME,
+            'path' => $cookiePath,
+            'domain' => $cookieDomain,
+            'secure' => $cookieSecure,
+            'httponly' => true,
+            'samesite' => $cookieSameSite,
+        ]);
+    } else {
+        setcookie(REMEMBER_ME_COOKIE, '', [
+            'expires' => time() - 3600,
+            'path' => $cookiePath,
+            'domain' => $cookieDomain,
+            'secure' => $cookieSecure,
+            'httponly' => true,
+            'samesite' => $cookieSameSite,
+        ]);
+    }
+}
+
+function enforce_auth_session_policy()
+{
+    if (session_status() !== PHP_SESSION_ACTIVE || !isset($_SESSION['user_id'])) {
+        return;
+    }
+
+    $scriptName = basename($_SERVER['SCRIPT_NAME'] ?? '');
+    if ($scriptName === 'logout.php') {
+        return;
+    }
+
+    $now = time();
+    $lastActivity = (int)($_SESSION['last_activity'] ?? $now);
+    $isRemembered = !empty($_SESSION['remember_me']);
+
+    if (!$isRemembered && ($now - $lastActivity) > SESSION_INACTIVITY_TIMEOUT) {
+        clear_auth_session_data();
+
+        if (request_expects_json_response()) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Session expired. Please log in again.',
+                'session_expired' => true,
+            ]);
+            exit;
+        }
+
+        header('Location: ' . BASE_URL . '/auth/login.php?timeout=1');
+        exit;
+    }
+
+    $_SESSION['last_activity'] = $now;
+}
+
+enforce_auth_session_policy();
+auto_enforce_request_limits();
 
 function should_use_smtp_transport()
 {
@@ -145,6 +630,11 @@ function configure_mailer_transport($mail)
 
 function default_mail_from_address()
 {
+    $configuredFrom = trim((string)MAIL_FROM);
+    if ($configuredFrom !== '') {
+        return $configuredFrom;
+    }
+
     if (should_use_smtp_transport()) {
         return SMTP_USER;
     }
@@ -186,12 +676,12 @@ function email_logo_path()
     $resolved = true;
 
     $candidates = [
-        __DIR__ . '/../assets/images/logo.jpeg',
-        __DIR__ . '/../assets/images/logo.jpg',
         __DIR__ . '/../assets/images/logo.png',
-        __DIR__ . '/../assets/image2/logo.jpeg',
-        __DIR__ . '/../assets/image2/logo.jpg',
+        __DIR__ . '/../assets/images/logo.jpg',
+        __DIR__ . '/../assets/images/logo.jpeg',
         __DIR__ . '/../assets/image2/logo.png',
+        __DIR__ . '/../assets/image2/logo.jpg',
+        __DIR__ . '/../assets/image2/logo.jpeg',
     ];
 
     foreach ($candidates as $candidate) {
@@ -206,19 +696,34 @@ function email_logo_path()
 
 function email_logo_html($mail, $height = 80)
 {
-    $height = max(24, (int)$height);
-    $style = "height: {$height}px; margin-bottom: 15px;";
-    $alt = htmlspecialchars(SITE_NAME . ' Logo', ENT_QUOTES, 'UTF-8');
-    $logoPath = email_logo_path();
+    // The $mail argument is intentionally retained for backward compatibility.
+    unset($mail);
 
-    if ($logoPath && is_object($mail) && method_exists($mail, 'addEmbeddedImage')) {
-        try {
-            $mail->addEmbeddedImage($logoPath, 'site-logo', basename($logoPath));
-            return "<img src='cid:site-logo' alt='{$alt}' style='{$style}'>";
-        } catch (Throwable $e) {
-            error_log('Could not embed email logo: ' . $e->getMessage());
+    $height = max(24, (int)$height);
+    $style = "height: {$height}px; margin-bottom: 15px; display: inline-block;";
+    $alt = htmlspecialchars(SITE_NAME . ' Logo', ENT_QUOTES, 'UTF-8');
+
+    $candidates = [
+        [
+            'path' => __DIR__ . '/../assets/images/logo.png',
+            'url' => BASE_URL . '/assets/images/logo.png',
+        ],
+        [
+            'path' => __DIR__ . '/../assets/images/logo.jpg',
+            'url' => BASE_URL . '/assets/images/logo.jpg',
+        ],
+        [
+            'path' => __DIR__ . '/../assets/images/logo.jpeg',
+            'url' => BASE_URL . '/assets/images/logo.jpeg',
+        ],
+    ];
+
+    foreach ($candidates as $candidate) {
+        if (is_readable($candidate['path'])) {
+            $logoUrl = htmlspecialchars($candidate['url'], ENT_QUOTES, 'UTF-8');
+            return "<img src='{$logoUrl}' alt='{$alt}' style='{$style}'>";
         }
     }
 
-    return "<img src='" . BASE_URL . "/assets/images/logo.jpeg' alt='{$alt}' style='{$style}'>";
+    return "<strong style='color:#8B4513;font-size:22px;display:inline-block;margin-bottom:15px;'>" . htmlspecialchars(SITE_NAME, ENT_QUOTES, 'UTF-8') . "</strong>";
 }

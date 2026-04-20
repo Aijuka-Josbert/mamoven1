@@ -34,7 +34,7 @@ function asset_url($path) {
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand" href="<?php echo BASE_URL; ?>/index.php">
-                <img src="<?php echo BASE_URL; ?>/assets/images/logo.jpeg" alt="<?php echo SITE_NAME; ?> Logo" class="logo">
+                <img src="<?php echo BASE_URL; ?>/assets/images/logo.png" alt="<?php echo SITE_NAME; ?> Logo" class="logo">
                 <span class="brand-text"><?php echo SITE_NAME; ?></span>
             </a>
             

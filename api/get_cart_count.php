@@ -4,7 +4,9 @@ include_once '../config/database.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-cache, must-revalidate');
-ob_clean();
+if (ob_get_level() > 0) {
+    ob_clean();
+}
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['count' => 0]);

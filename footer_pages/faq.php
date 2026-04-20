@@ -25,7 +25,7 @@ require_once __DIR__ . '/../includes/header.php';
             </h2>
             <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
-                    We accept cash on delivery, mobile money, and bank transfer.
+                    We currently accept Cash on Delivery (COD). Mobile Money, card, and other payment options are coming soon.
                 </div>
             </div>
         </div>

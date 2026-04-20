@@ -148,6 +148,22 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
         <div class="col-lg-8">
             <h3 class="section-title mb-4">Customer Reviews</h3>
 
+            <div id="reviews-summary" class="reviews-summary-panel mb-4 d-none">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="summary-main-rating">
+                        <span class="summary-average" id="summary-average-rating">0.0</span>
+                        <div class="summary-meta">
+                            <div class="summary-stars" id="summary-stars">☆☆☆☆☆</div>
+                            <small class="text-muted"><span id="summary-review-count">0</span> review(s)</small>
+                        </div>
+                    </div>
+                    <div class="summary-verified text-muted small">
+                        <i class="fas fa-badge-check me-1"></i><span id="summary-verified-count">0</span> verified purchase review(s)
+                    </div>
+                </div>
+                <div id="rating-breakdown" class="rating-breakdown mt-3"></div>
+            </div>
+
             <!-- Reviews List -->
             <div id="reviews-container" class="mb-4">
                 <p class="text-muted text-center"><i class="fas fa-spinner fa-spin"></i> Loading reviews...</p>
@@ -157,10 +173,12 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
             <?php if (isset($_SESSION['user_id'])): ?>
             <div class="card mt-5">
                 <div class="card-header">
-                    <h5 class="mb-0">Leave a Review</h5>
+                    <h5 class="mb-0" id="review-form-title">Leave a Review</h5>
                 </div>
                 <div class="card-body">
+                    <p class="text-muted small mb-3 review-help-text">Your feedback helps other customers choose better. You can edit your review anytime.</p>
                     <form id="review-form" class="mt-3">
+                        <input type="hidden" name="review_id" id="review-id-input" value="">
                         <div class="mb-3">
                             <label class="form-label">Rating <span class="text-danger">*</span></label>
                             <div class="rating-stars-input" id="interactive-stars">
@@ -174,11 +192,17 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
                         </div>
                         <div class="mb-3">
                             <label for="comment" class="form-label">Your Review</label>
-                            <textarea id="comment" name="comment" class="form-control" rows="3" placeholder="Share your experience with this product..."></textarea>
+                            <textarea id="comment" name="comment" class="form-control" rows="3" maxlength="500" placeholder="Share your experience with this product..."></textarea>
+                            <div class="text-end mt-1"><small class="text-muted" id="review-char-counter">0/500</small></div>
                         </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-2"></i> Submit Review
-                        </button>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary" id="review-submit-btn">
+                                <i class="fas fa-paper-plane me-2"></i> Submit Review
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary d-none" id="review-cancel-btn">
+                                Cancel Edit
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

@@ -2,10 +2,14 @@
 $page_title = 'Manage Orders';
 require_once __DIR__ . '/includes/header.php';
 
+$status_filter = $_GET['filter'] ?? 'all';
+$notice = $_GET['notice'] ?? '';
+
 // Handle order status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
     $order_id = (int)($_POST['order_id'] ?? 0);
     $new_status = $_POST['status'] ?? '';
+    $filter_redirect = $_POST['filter'] ?? 'all';
     $valid_statuses = ['pending', 'confirmed', 'processing', 'ready', 'delivered', 'cancelled'];
 
     if ($order_id > 0 && in_array($new_status, $valid_statuses)) {
@@ -51,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
 
             // Redirect to avoid form resubmission on refresh
-            header("Location: " . 'orders.php?status=updated');
+            header('Location: orders.php?notice=updated&filter=' . urlencode($filter_redirect));
             exit;
         } catch (PDOException $e) {
             $error_message = "Failed to update order status: " . $e->getMessage();
@@ -59,8 +63,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Get filter status from URL
-$status_filter = $_GET['status'] ?? '';
+// Handle order deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_order') {
+    $order_id = (int)($_POST['order_id'] ?? 0);
+    $filter_redirect = $_POST['filter'] ?? 'all';
+
+    if ($order_id > 0) {
+        try {
+            $pdo->beginTransaction();
+
+            $order_stmt = $pdo->prepare("SELECT id, order_number, status FROM orders WHERE id = ?");
+            $order_stmt->execute([$order_id]);
+            $order_row = $order_stmt->fetch();
+
+            if (!$order_row) {
+                throw new Exception('Order not found.');
+            }
+
+            $status_normalized = strtolower((string)$order_row['status']);
+
+            // Restore stock only when the order was still in active pipeline.
+            if (in_array($status_normalized, ['pending', 'confirmed', 'processing', 'ready'], true)) {
+                $items_stmt = $pdo->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = ?");
+                $items_stmt->execute([$order_id]);
+                $order_items = $items_stmt->fetchAll();
+
+                $restore_stmt = $pdo->prepare("UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?");
+                foreach ($order_items as $item) {
+                    $restore_stmt->execute([(int)$item['quantity'], (int)$item['product_id']]);
+                }
+            }
+
+            $delete_stmt = $pdo->prepare("DELETE FROM orders WHERE id = ?");
+            $delete_stmt->execute([$order_id]);
+
+            $pdo->commit();
+
+            header('Location: orders.php?notice=deleted&filter=' . urlencode($filter_redirect));
+            exit;
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $error_message = 'Failed to delete order: ' . $e->getMessage();
+        }
+    }
+}
 
 // Build the query based on the filter
 $sql = "SELECT o.id, o.order_number, o.total_amount, o.status, o.created_at, u.full_name 
@@ -68,7 +116,7 @@ $sql = "SELECT o.id, o.order_number, o.total_amount, o.status, o.created_at, u.f
         JOIN users u ON o.user_id = u.id";
 
 if (!empty($status_filter) && $status_filter !== 'all') {
-    $sql .= " WHERE o.status = :status";
+    $sql .= " WHERE LOWER(o.status) = :status";
 }
 
 $sql .= " ORDER BY o.created_at DESC";
@@ -76,7 +124,8 @@ $sql .= " ORDER BY o.created_at DESC";
 try {
     $stmt = $pdo->prepare($sql);
     if (!empty($status_filter) && $status_filter !== 'all') {
-        $stmt->bindParam(':status', $status_filter, PDO::PARAM_STR);
+        $status_filter_param = strtolower($status_filter);
+        $stmt->bindParam(':status', $status_filter_param, PDO::PARAM_STR);
     }
     $stmt->execute();
     $orders = $stmt->fetchAll();
@@ -91,7 +140,7 @@ try {
     <!-- Filter Dropdown -->
     <form method="GET" class="d-flex align-items-center">
         <label for="status-filter" class="form-label me-2 mb-0">Filter:</label>
-        <select class="form-select w-auto" id="status-filter" name="status" onchange="this.form.submit()">
+        <select class="form-select w-auto" id="status-filter" name="filter" onchange="this.form.submit()">
             <option value="all" <?php echo ($status_filter === 'all' || $status_filter === '') ? 'selected' : ''; ?>>All Orders</option>
             <option value="pending" <?php echo ($status_filter === 'pending') ? 'selected' : ''; ?>>Pending</option>
             <option value="confirmed" <?php echo ($status_filter === 'confirmed') ? 'selected' : ''; ?>>Confirmed</option>
@@ -103,8 +152,11 @@ try {
     </form>
 </div>
 
-<?php if (isset($_GET['status']) && $_GET['status'] === 'updated'): ?>
+<?php if ($notice === 'updated'): ?>
     <div class="alert alert-success">Order status has been updated successfully.</div>
+<?php endif; ?>
+<?php if ($notice === 'deleted'): ?>
+    <div class="alert alert-success">Order deleted successfully.</div>
 <?php endif; ?>
 <?php if (isset($error_message)): ?>
     <div class="alert alert-danger"><?php echo htmlspecialchars($error_message); ?></div>
@@ -139,6 +191,7 @@ try {
                                     <form method="POST" class="d-inline-flex">
                                         <input type="hidden" name="action" value="update_status">
                                         <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                                        <input type="hidden" name="filter" value="<?php echo htmlspecialchars($status_filter ?: 'all'); ?>">
                                         <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                                             <option value="pending" <?php echo ($order['status'] === 'pending') ? 'selected' : ''; ?>>Pending</option>
                                             <option value="confirmed" <?php echo ($order['status'] === 'confirmed') ? 'selected' : ''; ?>>Confirmed</option>
@@ -153,6 +206,14 @@ try {
                                     <a href="order_details.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye"></i> View
                                     </a>
+                                    <form method="POST" class="d-inline" onsubmit="return confirm('Delete this order permanently?');">
+                                        <input type="hidden" name="action" value="delete_order">
+                                        <input type="hidden" name="order_id" value="<?php echo (int)$order['id']; ?>">
+                                        <input type="hidden" name="filter" value="<?php echo htmlspecialchars($status_filter ?: 'all'); ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

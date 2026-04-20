@@ -14,10 +14,18 @@ if (isset($_SESSION['user_id'])) {
 }
 
 $error = '';
+$timeout_message = '';
+$redirect_target = trim($_GET['redirect'] ?? ($_POST['redirect'] ?? ''));
+
+if (isset($_GET['timeout'])) {
+    $timeout_message = 'You were logged out due to inactivity. Please sign in again.';
+}
+
 // Handle login form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
+    $remember_me = isset($_POST['remember_me']);
   
     if (empty($username) || empty($password)) {
         $error = 'Please fill in both username/email and password.';
@@ -34,6 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Block unverified users from logging in
                 if ($user['role'] === 'customer' && isset($user['is_verified']) && $user['is_verified'] == 0) {
                     $_SESSION['verify_email'] = $user['email'];
+                    $_SESSION['pending_remember_me'] = $remember_me ? 1 : 0;
+
+                    if (!empty($redirect_target) && strpos($redirect_target, 'http') !== 0 && strpos($redirect_target, '//') !== 0) {
+                        $_SESSION['redirect_after_login'] = BASE_URL . '/' . ltrim($redirect_target, '/');
+                    }
+
                     header('Location: ' . BASE_URL . '/auth/verify.php');
                     exit;
                 }
@@ -47,17 +61,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['full_name'] = $user['full_name'];
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['email'] = $user['email'];
+                apply_auth_session_preferences($remember_me);
 
                 // Redirect based on role
                 if ($user['role'] === 'admin') {
                     header('Location: ' . BASE_URL . '/admin/dashboard.php');
                 } else {
                     // Respect optional redirect param if provided (must be a safe local path)
-                    $redirect_param = $_GET['redirect'] ?? '';
-                    if (!empty($redirect_param) && strpos($redirect_param, 'http') !== 0) {
+                    if (!empty($redirect_target) && strpos($redirect_target, 'http') !== 0 && strpos($redirect_target, '//') !== 0) {
                         // normalize leading slash
-                        $redirect_param = ltrim($redirect_param, '/');
-                        header('Location: ' . BASE_URL . '/' . $redirect_param);
+                        $redirect_target = ltrim($redirect_target, '/');
+                        header('Location: ' . BASE_URL . '/' . $redirect_target);
                     } else {
                         header('Location: ' . BASE_URL . '/index.php');
                     }
@@ -80,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card shadow-sm border-0 login-card login-variant-warm">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <img src="../assets/images/logo.jpeg" alt="Logo" style="height: 80px;" class="mb-3">
+                        <img src="../assets/images/logo.png" alt="Logo" style="height: 80px;" class="mb-3">
                         <h2 class="card-title h3">Welcome Back!</h2>
                         <p class="text-muted">Sign in to continue to <?php echo SITE_NAME; ?>.</p>
                     </div>
@@ -91,7 +105,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     <?php endif; ?>
 
+                    <?php if (!empty($timeout_message)): ?>
+                        <div class="alert alert-warning" role="alert">
+                            <?php echo htmlspecialchars($timeout_message); ?>
+                        </div>
+                    <?php endif; ?>
+
                     <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+                        <input type="hidden" name="redirect" value="<?php echo htmlspecialchars($redirect_target); ?>">
                         <div class="mb-3">
                             <label for="username" class="form-label">Username or Email</label>
                             <input type="text" class="form-control form-control-lg" id="username" name="username" value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>" required autofocus>
@@ -105,6 +126,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <i class="fas fa-eye"></i>
                                 </span>
                             </div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me" value="1" <?php echo isset($_POST['remember_me']) ? 'checked' : ''; ?>>
+                            <label class="form-check-label" for="remember_me">Remember me</label>
                         </div>
 
                         <div class="d-grid mb-3">

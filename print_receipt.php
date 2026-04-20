@@ -166,7 +166,7 @@ try {
 
     <div class="receipt-container">
         <div class="receipt-header">
-            <img src="<?php echo htmlspecialchars(BASE_URL); ?>/assets/images/logo.jpeg" alt="Business Logo" style="max-width: 150px; height: auto;">
+            <img src="<?php echo htmlspecialchars(BASE_URL); ?>/assets/images/logo.png" alt="Business Logo" style="max-width: 150px; height: auto;">
             <p><strong>Receipt</strong></p>
             <p><?php echo htmlspecialchars($settings['business_address'] ?? 'Kampala, Uganda'); ?></p>
             <p>+256 747 686189</p>

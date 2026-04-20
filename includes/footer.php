@@ -24,8 +24,9 @@
                     <h5 class="footer-title">Help</h5>
                     <ul class="footer-links">
                         <li><a href="<?php echo BASE_URL; ?>/footer_pages/faq.php">FAQ</a></li>
-                        <li><a href="<?php echo BASE_URL; ?>/footer_pages/shipping_returns.php">Delivery & Returns</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/footer_pages/shipping_returns.php">Bakery Care & Delivery</a></li>
                         <li><a href="<?php echo BASE_URL; ?>/footer_pages/privacy_policy.php">Privacy Policy</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/termsandconditions.php">Terms & Conditions</a></li>
                         <li><a href="<?php echo BASE_URL; ?>/footer_pages/terms_of_service.php">Terms of Service</a></li>
                     </ul>
                 </div>
@@ -34,7 +35,7 @@
                     <h5 class="footer-title">Contact Us</h5>
                     <address class="mb-0" style="font-style: normal;">
                         Kampala, Uganda<br>
-                        <strong>Email:</strong> <a href="mailto:<?php echo ADMIN_EMAIL; ?>"><?php echo ADMIN_EMAIL; ?></a><br>
+                        <strong>Email:</strong> <a href="mailto:mamasovenug@gmail.com">mamasovenug@gmail.com</a><br>
                         <strong>Phone:</strong> <a href="tel:+256747686189">+256 747 686189</a>
                     </address>
                 </div>

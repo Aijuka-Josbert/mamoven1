@@ -1,6 +1,5 @@
 <?php
 $page_title = 'Verify Your Account';
-require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -40,7 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['username'] = $user_data['username'];
             $_SESSION['full_name'] = $user_data['full_name'];
             $_SESSION['role'] = $user_data['role'];
+            $remember_me = !empty($_SESSION['pending_remember_me']);
+            apply_auth_session_preferences($remember_me);
             unset($_SESSION['verify_email']);
+            unset($_SESSION['pending_remember_me']);
             
             $redirect = $_SESSION['redirect_after_login'] ?? BASE_URL . '/index.php?registered=1';
             unset($_SESSION['redirect_after_login']);

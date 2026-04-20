@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
 
                 configure_mailer_transport($mail);
                 $mail->setFrom(default_mail_from_address(), SITE_NAME);
-                $mail->addAddress(ADMIN_EMAIL);
+                $mail->addAddress('mamasovenug@gmail.com');
 
                 $mail->isHTML(true);
                 $mail->Subject = "Order Cancelled - " . $order['order_number'];

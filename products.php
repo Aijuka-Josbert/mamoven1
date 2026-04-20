@@ -48,17 +48,21 @@ try {
 }
 ?>
 
-<div class="container my-5">
+<div class="container my-5 products-page">
     <!-- Page Header -->
-    <div class="text-center mb-5">
+    <div class="products-hero text-center mb-5">
+        <span class="products-hero-kicker">Freshly Baked • Daily</span>
         <h1 class="section-title">Our Delicious Menu</h1>
-        <p class="lead text-muted">Browse our selection of freshly baked goods.</p>
+        <p class="lead text-muted mb-2">Browse our selection of handcrafted cakes, snacks, and pastries.</p>
+        <p class="small text-muted mb-0">
+            Current payment method: <strong>Cash on Delivery</strong>. Other payment methods are coming soon.
+        </p>
     </div>
 
     <!-- Filters -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm filter-shell">
                 <div class="card-body">
                     <form method="GET" class="row g-3 align-items-end">
                         <div class="col-md-5">
@@ -94,6 +98,22 @@ try {
         <div class="alert alert-danger"><?php echo $error_message; ?></div>
     <?php endif; ?>
 
+    <?php if (!isset($error_message)): ?>
+        <div class="products-meta d-flex flex-wrap justify-content-between align-items-center mb-4">
+            <p class="mb-2 mb-md-0 text-muted">
+                Showing <strong><?php echo count($products); ?></strong> product<?php echo count($products) === 1 ? '' : 's'; ?>
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <?php if ($category_filter !== ''): ?>
+                    <span class="badge rounded-pill text-bg-light border">Category: <?php echo htmlspecialchars($category_filter); ?></span>
+                <?php endif; ?>
+                <?php if ($search_query !== ''): ?>
+                    <span class="badge rounded-pill text-bg-light border">Search: <?php echo htmlspecialchars($search_query); ?></span>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <!-- Products Grid -->
     <div class="row gy-4">
         <?php if (empty($products)): ?>
@@ -106,9 +126,9 @@ try {
                 </div>
             </div>
         <?php else: ?>
-            <?php foreach ($products as $product): ?>
-                <div class="col-lg-4 col-md-6">
-                    <div class="product-card">
+            <?php foreach ($products as $index => $product): ?>
+                <div class="col-lg-4 col-md-6 animate-on-scroll fade-in-up" style="animation-delay: <?php echo $index * 0.08; ?>s;">
+                    <div class="product-card catalog-card">
                         <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper">
                             <img src="<?php echo !empty($product['image']) && strpos($product['image'], 'data:image/') === 0 
     ? htmlspecialchars($product['image']) 
@@ -123,6 +143,13 @@ try {
                                     </a>
                                 </h5>
                                 <p class="product-price">UGX <?php echo number_format($product['price']); ?></p>
+                                <?php
+                                $productDescription = (string)($product['description'] ?? '');
+                                if (strlen($productDescription) > 80) {
+                                    $productDescription = substr($productDescription, 0, 80) . '...';
+                                }
+                                ?>
+                                <p class="small text-muted mb-2"><?php echo htmlspecialchars($productDescription); ?></p>
                                 <div class="mb-2">
                                     <?php if ($product['stock_quantity'] > 10): ?>
                                         <span class="stock-badge in-stock"><i class="fas fa-check-circle me-1"></i> In Stock</span>

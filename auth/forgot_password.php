@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <img src="../assets/images/logo.jpeg" alt="Logo" style="height: 80px;" class="mb-3">
+                        <img src="../assets/images/logo.png" alt="Logo" style="height: 80px;" class="mb-3">
                         <h2 class="card-title h3">Forgot Password</h2>
                         <p class="text-muted">Enter your email to receive a reset code</p>
                     </div>

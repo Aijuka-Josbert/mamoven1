@@ -10,7 +10,9 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../config/database.php';
 
 // Clear any buffered output before sending JSON headers
-ob_clean();
+if (ob_get_level() > 0) {
+    ob_clean();
+}
 
 header('Content-Type: application/json');
 

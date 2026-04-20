@@ -2,7 +2,9 @@
 require_once __DIR__ . '/../config/database.php';
 
 header('Content-Type: application/json; charset=utf-8');
-ob_clean();
+if (ob_get_level() > 0) {
+    ob_clean();
+}
 
 try {
     // Get top rated products with verified reviews for dashboard display
@@ -15,8 +17,11 @@ try {
             p.image,
             AVG(r.rating) as avg_rating,
             COUNT(r.id) as review_count,
-            (SELECT comment FROM reviews WHERE product_id = p.id AND is_verified_purchase = 1 ORDER BY created_at DESC LIMIT 1) as latest_comment,
-            (SELECT u.full_name FROM reviews r2 JOIN users u ON r2.user_id = u.id WHERE r2.product_id = p.id AND r2.is_verified_purchase = 1 ORDER BY r2.created_at DESC LIMIT 1) as latest_reviewer
+            COALESCE(
+                (SELECT comment FROM reviews WHERE product_id = p.id AND is_verified_purchase = 1 AND TRIM(COALESCE(comment, '')) <> '' ORDER BY COALESCE(updated_at, created_at) DESC LIMIT 1),
+                (SELECT comment FROM reviews WHERE product_id = p.id AND is_verified_purchase = 1 ORDER BY COALESCE(updated_at, created_at) DESC LIMIT 1)
+            ) as latest_comment,
+            (SELECT u.full_name FROM reviews r2 JOIN users u ON r2.user_id = u.id WHERE r2.product_id = p.id AND r2.is_verified_purchase = 1 ORDER BY COALESCE(r2.updated_at, r2.created_at) DESC LIMIT 1) as latest_reviewer
         FROM products p
         LEFT JOIN reviews r ON p.id = r.product_id AND r.is_verified_purchase = 1
         WHERE p.status = 'active'

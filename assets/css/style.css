@@ -301,7 +301,7 @@ a:hover {
     }
     
     .hero-section {
-        min-height: auto;
+        min-height: initial;
         padding: 40px 0;
     }
 }
@@ -1318,8 +1318,379 @@ body {
 .admin-actions-btn.btn-info { background-color: #4A2B1D; color: white; border: none; }
 .admin-actions-btn.btn-info:hover { background-color: #382116; }
 
+/* --- 2026 Visual Refresh --- */
+.navbar-brand .logo {
+    height: 56px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 8px rgba(90, 51, 31, 0.22));
+}
+
+.btn-primary {
+    background-color: #c96f3d;
+    border-color: #c96f3d;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #ae5d32;
+    border-color: #ae5d32;
+    color: #fff;
+}
+
+.announcement-ribbon {
+    background: linear-gradient(90deg, #3f2618 0%, #6d3d24 45%, #c96f3d 100%);
+    color: #fff4ea;
+    padding: 10px 0;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.announcement-ribbon span {
+    opacity: 0.96;
+}
+
+.announcement-ribbon i {
+    color: #ffd7b6;
+}
+
+.hero-premium {
+    background:
+        radial-gradient(circle at 15% 20%, rgba(246, 199, 160, 0.65) 0%, rgba(246, 199, 160, 0) 52%),
+        radial-gradient(circle at 92% 12%, rgba(255, 237, 223, 0.9) 0%, rgba(255, 237, 223, 0) 48%),
+        linear-gradient(135deg, #fff6ee 0%, #fbe8d9 52%, #fffaf5 100%);
+    border-bottom: 1px solid rgba(90, 51, 31, 0.08);
+}
+
+.hero-kicker {
+    display: inline-block;
+    background: #fff;
+    border: 1px solid rgba(90, 51, 31, 0.16);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 700;
+    color: #6f4129;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 26px rgba(111, 65, 41, 0.09);
+}
+
+.hero-pills {
+    max-width: 650px;
+}
+
+.hero-pill {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(90, 51, 31, 0.12);
+    color: #613623;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 700;
+}
+
+.hero-orb {
+    position: absolute;
+    inset: 12% 14% auto auto;
+    width: 300px;
+    height: 300px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(201, 111, 61, 0.3) 0%, rgba(201, 111, 61, 0.02) 70%);
+    filter: blur(12px);
+    z-index: 0;
+}
+
+.hero-image-focus {
+    max-height: 510px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.showcase-card {
+    border: 1px solid rgba(90, 51, 31, 0.08);
+    background:
+        radial-gradient(circle at top right, rgba(245, 209, 177, 0.24), rgba(255, 255, 255, 0.96) 34%),
+        #fff;
+}
+
+.showcase-card .product-price {
+    color: #b45d31;
+}
+
+.reviews-ribbon-container {
+    overflow: hidden;
+    border-radius: 14px;
+    border: 1px solid rgba(90, 51, 31, 0.08);
+    background: linear-gradient(180deg, #fffaf6 0%, #fff 100%);
+    padding: 14px 0;
+}
+
+.reviews-ribbon-track {
+    display: flex;
+    width: max-content;
+    animation: reviewsRibbonMove 34s linear infinite;
+}
+
+.reviews-ribbon-container:hover .reviews-ribbon-track {
+    animation-play-state: paused;
+}
+
+.reviews-ribbon-group {
+    display: flex;
+    gap: 18px;
+    padding: 0 18px;
+}
+
+.reviews-ribbon-card {
+    min-width: 300px;
+    max-width: 330px;
+    white-space: normal;
+}
+
+@keyframes reviewsRibbonMove {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.products-page {
+    position: relative;
+}
+
+.products-hero {
+    background:
+        radial-gradient(circle at 10% 0%, rgba(201, 111, 61, 0.2), rgba(255, 255, 255, 0) 45%),
+        linear-gradient(135deg, #fff9f3 0%, #fff 45%, #fff4eb 100%);
+    border: 1px solid rgba(90, 51, 31, 0.08);
+    border-radius: 20px;
+    padding: 28px 20px;
+}
+
+.products-hero-kicker {
+    display: inline-block;
+    color: #7a452b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    margin-bottom: 8px;
+    font-size: 0.82rem;
+}
+
+.filter-shell {
+    border: 1px solid rgba(90, 51, 31, 0.08);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fff 0%, #fffbf8 100%);
+}
+
+.catalog-card {
+    border: 1px solid rgba(90, 51, 31, 0.08);
+    border-radius: 16px;
+}
+
+.catalog-card .product-image-wrapper {
+    background: linear-gradient(180deg, #fff8f1 0%, #fff 100%);
+}
+
+.catalog-card .product-name a {
+    color: #4b2d1f;
+}
+
+.catalog-card .product-price {
+    color: #b1582e;
+}
+
+.products-meta .badge {
+    color: #6b3d27;
+    background: #fff3e8 !important;
+    border-color: rgba(90, 51, 31, 0.16) !important;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .announcement-ribbon {
+        font-size: 0.86rem;
+        padding: 8px 0;
+    }
+
+    .reviews-ribbon-card {
+        min-width: 260px;
+    }
+
+    .products-hero {
+        padding: 22px 14px;
+    }
+}
+
 .admin-actions-btn.btn-secondary { background-color: #858796; color: white; border: none; }
 .admin-actions-btn.btn-secondary:hover { background-color: #717384; }
 
 .admin-actions-btn.btn-success { background-color: #1cc88a; color: white; border: none; }
 .admin-actions-btn.btn-success:hover { background-color: #17a673; }
+
+/* --- Review Editing & Accuracy UI --- */
+.reviews-summary-panel {
+    border: 1px solid rgba(90, 51, 31, 0.12);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fffaf6 0%, #fff 100%);
+    padding: 16px;
+}
+
+.summary-main-rating {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.summary-average {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 800;
+    color: #6c3f29;
+}
+
+.summary-stars {
+    color: #f4bf2f;
+    letter-spacing: 2px;
+    font-size: 1.1rem;
+}
+
+.rating-breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.rating-breakdown-row:last-child {
+    margin-bottom: 0;
+}
+
+.rating-breakdown-label {
+    width: 36px;
+    font-weight: 700;
+    color: #6a3d28;
+}
+
+.rating-breakdown-row .progress {
+    height: 10px;
+    border-radius: 999px;
+    background-color: #f4e4d8;
+}
+
+.rating-breakdown-row .progress .progress-bar {
+    background: linear-gradient(90deg, #c96f3d 0%, #e38d57 100%);
+}
+
+.rating-breakdown-count {
+    width: 32px;
+    text-align: right;
+    font-weight: 700;
+    color: #5a331f;
+}
+
+.review-own-badge {
+    font-weight: 600;
+}
+
+.review-edited-note {
+    color: #7a6a61;
+    margin-left: 4px;
+}
+
+.review-actions .btn {
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+.review-comment-body {
+    line-height: 1.65;
+    color: #3f3029;
+}
+
+.review-help-text {
+    margin-bottom: 6px;
+}
+
+#review-char-counter {
+    font-weight: 600;
+    color: #7c6a60;
+}
+
+/* --- Home Relevance Section --- */
+.relevance-section {
+    background:
+        radial-gradient(circle at 8% 10%, rgba(201, 111, 61, 0.12) 0%, rgba(201, 111, 61, 0) 38%),
+        radial-gradient(circle at 92% 86%, rgba(90, 51, 31, 0.1) 0%, rgba(90, 51, 31, 0) 40%),
+        linear-gradient(180deg, #fff8f1 0%, #fff 100%);
+    border-top: 1px solid rgba(90, 51, 31, 0.08);
+    border-bottom: 1px solid rgba(90, 51, 31, 0.08);
+}
+
+.relevance-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(90, 51, 31, 0.15);
+    color: #6a3b25;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-size: 0.86rem;
+}
+
+.relevance-card {
+    border: 1px solid rgba(90, 51, 31, 0.1);
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    height: 100%;
+}
+
+.relevance-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(90, 51, 31, 0.12);
+}
+
+.relevance-card .product-image-wrapper {
+    background: linear-gradient(180deg, #fff6ee 0%, #fff 100%);
+    height: 220px;
+}
+
+.relevance-card .product-info {
+    text-align: left;
+}
+
+.relevance-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.relevance-rating {
+    font-size: 0.9rem;
+    color: #8a5a3f;
+    font-weight: 700;
+}
+
+.relevance-price {
+    color: #b1582e;
+    font-size: 1.06rem;
+    font-weight: 800;
+}
+
+@media (max-width: 768px) {
+    .summary-average {
+        font-size: 1.7rem;
+    }
+
+    .relevance-card .product-image-wrapper {
+        height: 190px;
+    }
+}

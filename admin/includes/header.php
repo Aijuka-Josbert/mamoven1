@@ -73,6 +73,16 @@ function is_active($page_name) {
                     <i class="fas fa-envelope fa-fw"></i> Contact Messages
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo is_active('testimonials.php'); ?>" href="testimonials.php">
+                    <i class="fas fa-comment-dots fa-fw"></i> Manage Feedback
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo is_active('promo_codes.php'); ?>" href="promo_codes.php">
+                    <i class="fas fa-percent fa-fw"></i> Promo Codes
+                </a>
+            </li>
             <li class="nav-item mt-auto">
                 <hr>
                 <a class="nav-link" href="../index.php" target="_blank">

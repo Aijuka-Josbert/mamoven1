@@ -24,7 +24,7 @@ $location_id = (int)($_POST['location_id'] ?? 0);
 $delivery_address = trim($_POST['delivery_address'] ?? '');
 $delivery_phone = trim($_POST['delivery_phone'] ?? '');
 $special_instructions = trim($_POST['special_instructions'] ?? '');
-$promo_code = trim($_POST['promo_code'] ?? '');
+$promo_code = strtoupper(trim($_POST['promo_code'] ?? ''));
 
 if (!$location_id || !$delivery_address || !$delivery_phone) {
     echo json_encode(['success' => false, 'message' => 'Delivery location, address, and phone are required']);
@@ -58,11 +58,11 @@ try {
     $stmt = $pdo->prepare("SELECT name, fee FROM delivery_locations WHERE id = ? AND is_active = 1");
     $stmt->execute([$location_id]);
     $locData = $stmt->fetch();
-    
+
     if (!$locData) {
         throw new Exception('Invalid delivery location selected');
     }
-    
+
     $delivery_fee = (float)$locData['fee'];
     $full_delivery_address = $locData['name'] . ' - ' . $delivery_address;
 
@@ -70,41 +70,46 @@ try {
     $promo_code_id = null;
     $discount_amount = 0;
     if (!empty($promo_code)) {
-        $promo_stmt = $pdo->prepare("
-            SELECT * FROM promo_codes 
-            WHERE code = ? AND status = 'active'
-            AND NOW() BETWEEN IFNULL(valid_from, NOW()) AND IFNULL(valid_until, NOW())
-        ");
+        $promo_stmt = $pdo->prepare(
+            "SELECT * FROM promo_codes
+             WHERE code = ? AND status = 'active'
+             AND NOW() BETWEEN IFNULL(valid_from, NOW()) AND IFNULL(valid_until, NOW())"
+        );
         $promo_stmt->execute([$promo_code]);
         $promo = $promo_stmt->fetch();
 
-        if ($promo) {
-            // Check usage limits
-            $usage_stmt = $pdo->prepare("SELECT COUNT(*) FROM promo_usage WHERE promo_code_id = ?");
-            $usage_stmt->execute([$promo['id']]);
-            $usage_count = (int)$usage_stmt->fetchColumn();
-
-            if ($promo['max_uses'] && $usage_count >= $promo['max_uses']) {
-                throw new Exception('This promo code has reached its usage limit');
-            }
-
-            // Check minimum order
-            if ($subtotal < $promo['min_order_amount']) {
-                throw new Exception('Minimum order amount for this promo is UGX ' . number_format($promo['min_order_amount']));
-            }
-
-            // Calculate discount
-            if ($promo['discount_type'] === 'percentage') {
-                $discount_amount = ($subtotal * $promo['discount_value']) / 100;
-            } else {
-                $discount_amount = $promo['discount_value'];
-            }
-
-            $promo_code_id = $promo['id'];
+        if (!$promo) {
+            throw new Exception('Promo code is invalid or expired');
         }
+
+        // Check usage limits
+        $usage_stmt = $pdo->prepare("SELECT COUNT(*) FROM promo_usage WHERE promo_id = ?");
+        $usage_stmt->execute([$promo['id']]);
+        $usage_count = (int)$usage_stmt->fetchColumn();
+
+        if ($promo['max_uses'] && $usage_count >= $promo['max_uses']) {
+            throw new Exception('This promo code has reached its usage limit');
+        }
+
+        // Check minimum order
+        if ($subtotal < $promo['min_order_amount']) {
+            throw new Exception('Minimum order amount for this promo is UGX ' . number_format($promo['min_order_amount']));
+        }
+
+        // Calculate discount safely for both percentage and fixed values.
+        if ($promo['discount_type'] === 'percentage') {
+            $percent = max(0.0, min(100.0, (float)$promo['discount_value']));
+            $discount_amount = ($subtotal * $percent) / 100;
+        } else {
+            $discount_amount = max(0.0, (float)$promo['discount_value']);
+        }
+
+        $discount_amount = round(min($discount_amount, $subtotal), 2);
+
+        $promo_code_id = $promo['id'];
     }
 
-    $total_amount = $subtotal + $delivery_fee - $discount_amount;
+    $total_amount = max(0, round($subtotal + $delivery_fee - $discount_amount, 2));
 
     // Generate a unique order number using cryptographically secure randomness.
     $check_order_stmt = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE order_number = ?");
@@ -133,8 +138,11 @@ try {
 
     // Log promo usage if code was applied
     if ($promo_code_id) {
-        $usage_insert = $pdo->prepare("INSERT INTO promo_usage (promo_code_id, user_id, order_id) VALUES (?, ?, ?)");
+        $usage_insert = $pdo->prepare("INSERT INTO promo_usage (promo_id, user_id, order_id) VALUES (?, ?, ?)");
         $usage_insert->execute([$promo_code_id, $user_id, $order_id]);
+
+        $usage_count_update = $pdo->prepare("UPDATE promo_codes SET used_count = used_count + 1 WHERE id = ?");
+        $usage_count_update->execute([$promo_code_id]);
     }
 
     // Reserve stock and create order items
@@ -203,7 +211,7 @@ try {
         $mail->addAddress($user['email'], $user['full_name']);
 
         // ALSO send to admin
-        $mail->addAddress(ADMIN_EMAIL);
+        $mail->addAddress('mamasovenug@gmail.com');
 
         $mail->isHTML(true);
         $mail->Subject = "Order Confirmation - " . $order_number;
@@ -302,7 +310,7 @@ try {
         $adminMail = new PHPMailer(true);
         configure_mailer_transport($adminMail);
         $adminMail->setFrom(default_mail_from_address(), SITE_NAME . ' Orders');
-        $adminMail->addAddress(ADMIN_EMAIL);
+        $adminMail->addAddress('mamasovenug@gmail.com');
 
         $adminMail->isHTML(true);
         $adminMail->Subject = "New Order Placed - {$order_number}";

@@ -38,8 +38,12 @@ try {
         throw new Exception('Promo code is invalid or expired');
     }
 
+    $usage_count_stmt = $pdo->prepare("SELECT COUNT(*) FROM promo_usage WHERE promo_id = ?");
+    $usage_count_stmt->execute([$promo['id']]);
+    $usage_count = (int)$usage_count_stmt->fetchColumn();
+
     // Check if max uses reached
-    if ($promo['max_uses'] && $promo['used_count'] >= $promo['max_uses']) {
+    if ($promo['max_uses'] && $usage_count >= $promo['max_uses']) {
         throw new Exception('This promo code has reached its usage limit');
     }
 
@@ -59,21 +63,26 @@ try {
     // Allow multiple uses unless specified
     // For now, we'll allow multiple uses per user
 
-    // Calculate discount
-    $discount = 0;
+    // Calculate discount safely for both percentage and fixed values.
+    $discount = 0.0;
     if ($promo['discount_type'] === 'percentage') {
-        $discount = ($subtotal * $promo['discount_value']) / 100;
+        $percent = max(0.0, min(100.0, (float)$promo['discount_value']));
+        $discount = ($subtotal * $percent) / 100;
     } else {
-        $discount = $promo['discount_value'];
+        $discount = max(0.0, (float)$promo['discount_value']);
     }
+
+    $discount = round(min($discount, $subtotal), 2);
 
     echo json_encode([
         'success' => true,
         'message' => 'Promo code applied successfully!',
         'discount' => $discount,
+        'usage_count' => $usage_count,
         'discount_type' => $promo['discount_type'],
         'discount_value' => $promo['discount_value'],
         'promo_id' => $promo['id'],
+        'promo_code' => $promo['code'],
         'description' => $promo['description']
     ]);
 

@@ -102,7 +102,7 @@ if (isset($_SESSION['reset_user_id']) && isset($_SESSION['reset_email']) && !$sh
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
-                        <img src="../assets/images/logo.jpeg" alt="Logo" style="height: 80px;" class="mb-3">
+                        <img src="../assets/images/logo.png" alt="Logo" style="height: 80px;" class="mb-3">
                         <h2 class="card-title h3">Reset Password</h2>
                         <p class="text-muted">
                             <?php echo $show_password_form ? 'Enter your new password' : 'Enter the 5-digit code sent to your email'; ?>

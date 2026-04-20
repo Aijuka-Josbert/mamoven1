@@ -2,6 +2,56 @@
 $page_title = 'About Us';
 require_once __DIR__ . '/includes/header.php';
 
+$feedback_success = '';
+$feedback_error = '';
+$feedback_input = [
+    'name' => $_SESSION['full_name'] ?? '',
+    'email' => $_SESSION['email'] ?? '',
+    'rating' => '5',
+    'message' => '',
+];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_feedback'])) {
+    $feedback_input['name'] = trim($_POST['name'] ?? '');
+    $feedback_input['email'] = trim($_POST['email'] ?? '');
+    $feedback_input['rating'] = (string)((int)($_POST['rating'] ?? 0));
+    $feedback_input['message'] = trim($_POST['message'] ?? '');
+
+    $rating = (int)$feedback_input['rating'];
+
+    if ($feedback_input['name'] === '') {
+        $feedback_error = 'Please enter your name.';
+    } elseif ($feedback_input['message'] === '') {
+        $feedback_error = 'Please write your feedback message.';
+    } elseif ($rating < 1 || $rating > 5) {
+        $feedback_error = 'Please select a rating between 1 and 5.';
+    } elseif ($feedback_input['email'] !== '' && !filter_var($feedback_input['email'], FILTER_VALIDATE_EMAIL)) {
+        $feedback_error = 'Please enter a valid email address.';
+    } elseif (strlen($feedback_input['message']) > 1000) {
+        $feedback_error = 'Feedback message is too long.';
+    } else {
+        try {
+            $insert_stmt = $pdo->prepare(
+                'INSERT INTO testimonials (user_id, name, email, message, rating, status) VALUES (?, ?, ?, ?, ?, "pending")'
+            );
+            $insert_stmt->execute([
+                $_SESSION['user_id'] ?? null,
+                $feedback_input['name'],
+                $feedback_input['email'] !== '' ? $feedback_input['email'] : null,
+                $feedback_input['message'],
+                $rating,
+            ]);
+
+            $feedback_success = 'Thanks for your feedback. It has been submitted for admin review.';
+            $feedback_input['message'] = '';
+            $feedback_input['rating'] = '5';
+        } catch (PDOException $e) {
+            $feedback_error = 'Could not submit feedback right now. Please try again later.';
+            error_log('Feedback submission failed: ' . $e->getMessage());
+        }
+    }
+}
+
 // Fetch approved testimonials
 try {
     $testimonials_stmt = $pdo->prepare("
@@ -84,6 +134,61 @@ try {
     </div>
 
     <!-- Testimonials Section -->
+    <div class="row mt-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+                    <h3 class="section-title mb-3">Share Your Feedback</h3>
+                    <p class="text-muted mb-4">Tell us about your experience with Mama's Oven. Approved feedback appears on this page.</p>
+
+                    <?php if (!empty($feedback_success)): ?>
+                        <div class="alert alert-success"><?php echo htmlspecialchars($feedback_success); ?></div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($feedback_error)): ?>
+                        <div class="alert alert-danger"><?php echo htmlspecialchars($feedback_error); ?></div>
+                    <?php endif; ?>
+
+                    <form method="POST" action="">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="feedback_name" class="form-label">Name <span class="text-danger">*</span></label>
+                                <input type="text" id="feedback_name" name="name" class="form-control" required value="<?php echo htmlspecialchars($feedback_input['name']); ?>">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="feedback_email" class="form-label">Email (Optional)</label>
+                                <input type="email" id="feedback_email" name="email" class="form-control" value="<?php echo htmlspecialchars($feedback_input['email']); ?>">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="feedback_rating" class="form-label">Rating <span class="text-danger">*</span></label>
+                                <select id="feedback_rating" name="rating" class="form-select" required>
+                                    <option value="5" <?php echo $feedback_input['rating'] === '5' ? 'selected' : ''; ?>>5 - Excellent</option>
+                                    <option value="4" <?php echo $feedback_input['rating'] === '4' ? 'selected' : ''; ?>>4 - Very Good</option>
+                                    <option value="3" <?php echo $feedback_input['rating'] === '3' ? 'selected' : ''; ?>>3 - Good</option>
+                                    <option value="2" <?php echo $feedback_input['rating'] === '2' ? 'selected' : ''; ?>>2 - Fair</option>
+                                    <option value="1" <?php echo $feedback_input['rating'] === '1' ? 'selected' : ''; ?>>1 - Poor</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="feedback_message" class="form-label">Feedback <span class="text-danger">*</span></label>
+                                <textarea id="feedback_message" name="message" class="form-control" rows="4" maxlength="1000" required><?php echo htmlspecialchars($feedback_input['message']); ?></textarea>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button type="submit" name="submit_feedback" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i> Submit Feedback
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?php if (!empty($testimonials)): ?>
     <div class="row mt-5">
         <div class="col-12 text-center mb-4">
