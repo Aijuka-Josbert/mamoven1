@@ -1260,6 +1260,91 @@ a:hover {
     transform: scale(1.2) rotate(-5deg);
 }
 
+/* --- How It Works (numbered steps) --- */
+.how-it-works-step {
+    position: relative;
+    padding-left: 70px;
+    min-height: 60px;
+}
+
+.how-it-works-number {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--color-secondary);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.3rem;
+    box-shadow: 0 6px 16px rgba(90, 51, 31, 0.15);
+}
+
+.how-it-works-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 26px;
+    top: 60px;
+    width: 2px;
+    height: calc(100% - 30px);
+    background: repeating-linear-gradient(to bottom, var(--color-border) 0, var(--color-border) 6px, transparent 6px, transparent 12px);
+}
+
+@media (min-width: 992px) {
+    .how-it-works-step:not(:last-child)::after {
+        display: none;
+    }
+}
+
+/* --- Delivery & Pickup tiles --- */
+.delivery-tile {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    min-height: 260px;
+    display: flex;
+    align-items: flex-end;
+    background-color: var(--color-primary);
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 8px 24px rgba(90, 51, 31, 0.15);
+    transition: transform 0.4s ease;
+}
+
+.delivery-tile:hover {
+    transform: translateY(-6px);
+}
+
+.delivery-tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(58, 32, 22, 0.88) 0%, rgba(58, 32, 22, 0.15) 65%, rgba(58, 32, 22, 0) 100%);
+}
+
+.delivery-tile-body {
+    position: relative;
+    z-index: 1;
+    padding: 24px;
+    color: var(--color-white);
+}
+
+.delivery-tile-body h4 {
+    color: var(--color-white);
+    margin-bottom: 6px;
+}
+
+.delivery-tile-body p {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.92rem;
+    margin-bottom: 12px;
+}
+
 /* Smooth gradient updates for better depth */
 body {
     background: linear-gradient(to bottom, #FBF2EA 0%, #FFFFFF 100%);

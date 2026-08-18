@@ -196,6 +196,39 @@ if (empty($relevance_products)) {
         </div>
     </section>
 
+    <!-- How It Works Section -->
+    <section class="how-it-works py-5 animate-on-scroll fade-in-up">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">How It Works</h2>
+                <p class="lead text-muted">From our oven to your door, in three simple steps.</p>
+            </div>
+            <div class="row gy-4 gy-lg-0">
+                <div class="col-lg-4">
+                    <div class="how-it-works-step">
+                        <div class="how-it-works-number">1</div>
+                        <h5 class="fw-bold mb-2">Place Your Order</h5>
+                        <p class="text-muted mb-0">Browse our menu and add your favorites to cart. Pay cash on delivery today &mdash; mobile money and card options are coming soon.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="how-it-works-step">
+                        <div class="how-it-works-number">2</div>
+                        <h5 class="fw-bold mb-2">We Bake It Fresh</h5>
+                        <p class="text-muted mb-0">Every order is prepared in small batches with fresh, locally-sourced ingredients &mdash; nothing sits waiting on a shelf.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="how-it-works-step">
+                        <div class="how-it-works-number">3</div>
+                        <h5 class="fw-bold mb-2">Delivered to Your Door</h5>
+                        <p class="text-muted mb-0">Hygienically packaged and delivered fresh across our Kampala delivery zones, right when you need it.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Featured Products Section -->
     <section class="featured-products py-5 animate-on-scroll fade-in-up delay-1">
         <div class="container">
@@ -322,6 +355,48 @@ if (empty($relevance_products)) {
                     <i class="fas fa-truck-fast fa-3x text-primary mb-3"></i>
                     <h4>Delivered Fresh</h4>
                     <p class="text-muted">Order online and get our delicious baked goods delivered fresh to your doorstep.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Delivery & Pickup Section -->
+    <section class="delivery-options py-5 animate-on-scroll fade-in-up delay-2">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Getting Your Order</h2>
+                <p class="lead text-muted">Choose the option that works best for you.</p>
+            </div>
+            <div class="row gy-4">
+                <div class="col-md-4">
+                    <div class="delivery-tile" style="background-image: url('assets/image2/fresh-baked-sweet-delights-rustic-bakery-shelf-generated-by-ai.jpg');">
+                        <div class="delivery-tile-body">
+                            <i class="fas fa-truck-fast fa-lg mb-2"></i>
+                            <h4>Home Delivery</h4>
+                            <p>Order online and get it delivered fresh across our Kampala delivery zones.</p>
+                            <a href="products.php" class="btn btn-sm btn-primary rounded-pill px-4">Order Now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="delivery-tile" style="background-image: url('assets/image2/newpic.jpeg');">
+                        <div class="delivery-tile-body">
+                            <i class="fas fa-store fa-lg mb-2"></i>
+                            <h4>Custom Orders</h4>
+                            <p>Planning a celebration? Talk to us about a custom cake made just for the occasion.</p>
+                            <a href="contact.php" class="btn btn-sm btn-primary rounded-pill px-4">Get in Touch</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="delivery-tile" style="background-image: url('assets/image2/about-us.jpeg');">
+                        <div class="delivery-tile-body">
+                            <i class="fas fa-heart fa-lg mb-2"></i>
+                            <h4>Our Story</h4>
+                            <p>Small-batch baking, honest ingredients, and a lot of love in every order.</p>
+                            <a href="about.php" class="btn btn-sm btn-primary rounded-pill px-4">Read More</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
