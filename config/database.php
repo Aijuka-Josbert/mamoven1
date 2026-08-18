@@ -328,6 +328,22 @@ function validate_csrf_token($token) {
     return hash_equals($_SESSION['csrf_token'], $token);
 }
 
+// Enforce CSRF for state-changing API endpoints. Accepts the token either as
+// a POST field (csrf_token) or as the X-CSRF-Token header (used by main.js's
+// global AJAX setup), so existing form-based callers keep working unchanged.
+function require_csrf_or_fail() {
+    $token = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+    if (!validate_csrf_token($token)) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Your session security token is missing or expired. Please refresh the page and try again.'
+        ]);
+        exit;
+    }
+}
+
 // --------------------- SESSION MANAGEMENT ---------------------
 function clear_auth_session_data() {
     $cookieParams = session_get_cookie_params();

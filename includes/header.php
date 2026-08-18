@@ -15,6 +15,7 @@ function asset_url($path) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo generate_csrf_token(); ?>">
     <title><?php echo isset($page_title) ? htmlspecialchars($page_title) . ' | ' : ''; ?><?php echo SITE_NAME; ?></title>
     
     <!-- Stylesheets -->

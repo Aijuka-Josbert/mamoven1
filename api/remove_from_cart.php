@@ -14,6 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+require_csrf_or_fail();
+
 $cart_id = $_POST['cart_id'] ?? 0;
 $user_id = $_SESSION['user_id'];
 

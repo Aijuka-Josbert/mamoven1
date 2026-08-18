@@ -1,4 +1,21 @@
 // Main JavaScript file for Mama's Oven
+
+// Attach the CSRF token to every POST AJAX request automatically, so
+// individual $.ajax() calls throughout this file don't each need to
+// remember to send it. Reads the token from the <meta name="csrf-token">
+// tag rendered by includes/header.php / admin/includes/header.php.
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        const method = (settings.type || settings.method || 'GET').toUpperCase();
+        if (method === 'POST') {
+            const token = $('meta[name="csrf-token"]').attr('content');
+            if (token) {
+                xhr.setRequestHeader('X-CSRF-Token', token);
+            }
+        }
+    }
+});
+
 $(document).ready(function() {
     // Initialize Bootstrap tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

@@ -14,6 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+require_csrf_or_fail();
+
 $user_id = $_SESSION['user_id'];
 $promo_code = strtoupper(trim($_POST['promo_code'] ?? ''));
 $subtotal = (float)($_POST['subtotal'] ?? 0);

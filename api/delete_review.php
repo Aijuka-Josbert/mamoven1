@@ -13,6 +13,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+    exit;
+}
+
+require_csrf_or_fail();
+
 $review_id = (int)($_POST['review_id'] ?? 0);
 
 if ($review_id <= 0) {

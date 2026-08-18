@@ -19,6 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+require_csrf_or_fail();
+
 $user_id = $_SESSION['user_id'];
 $location_id = (int)($_POST['location_id'] ?? 0);
 $delivery_address = trim($_POST['delivery_address'] ?? '');

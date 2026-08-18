@@ -12,6 +12,13 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+    exit;
+}
+
+require_csrf_or_fail();
+
 $order_id = (int)($_POST['order_id'] ?? 0);
 
 if ($order_id <= 0) {

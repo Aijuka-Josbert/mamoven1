@@ -14,6 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+require_csrf_or_fail();
+
 $user_id = $_SESSION['user_id'];
 $order_id = (int)($_POST['order_id'] ?? 0);
 
