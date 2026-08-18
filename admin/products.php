@@ -1,6 +1,7 @@
 <?php
 $page_title = 'Manage Products';
 require_once __DIR__ . '/includes/header.php';
+require_admin();
 
 // Handle product deletion
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {

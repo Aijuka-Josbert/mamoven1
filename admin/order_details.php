@@ -1,6 +1,7 @@
 <?php
 $page_title = 'Order Details';
 require_once __DIR__ . '/includes/header.php';
+require_admin();
 
 // Validate order ID from URL
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {

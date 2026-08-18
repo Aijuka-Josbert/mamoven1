@@ -1,6 +1,7 @@
 <?php
 $page_title = 'Promo Codes';
 require_once __DIR__ . '/includes/header.php';
+require_admin();
 
 $success_message = '';
 $error_message = '';

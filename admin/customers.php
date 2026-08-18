@@ -1,6 +1,7 @@
 <?php
 $page_title = 'Manage Customers';
 require_once __DIR__ . '/includes/header.php';
+require_admin();
 
 $errors = [];
 $success_message = '';

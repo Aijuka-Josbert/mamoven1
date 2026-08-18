@@ -1,11 +1,13 @@
 <?php
 // Admin Add Product Page
 require_once '../config/database.php';
+require_admin();
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../auth/login.php');
     exit();
 }
+
 
 $page_title = 'Add New Product';
 require_once __DIR__ . '/includes/header.php';
@@ -22,71 +24,76 @@ try {
 
 // Handle add product
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Sanitize inputs
-    $name = trim($_POST['name'] ?? '');
-    $description = trim($_POST['description'] ?? '');
-    $flavours = trim($_POST['flavours'] ?? '');
-    $ingredients = trim($_POST['ingredients'] ?? '');
-    $price = filter_var($_POST['price'] ?? 0, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-    $category_id = filter_var($_POST['category_id'] ?? null, FILTER_SANITIZE_NUMBER_INT);
-    $stock_quantity = filter_var($_POST['stock_quantity'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
-    $status = $_POST['status'] ?? 'active';
-    $featured = isset($_POST['featured']) ? 1 : 0;
-    
-    // --- Validation ---
-    if (empty($name)) $errors[] = "Product name is required.";
-    if ($price <= 0) $errors[] = "Price must be a positive number.";
-    if (empty($category_id)) $errors[] = "Please select a category.";
-
-    // --- Image Upload & Base64 Conversion ---
-    $image_base64 = null;
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $file = $_FILES['image'];
-        
-        // Check file type
-        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!in_array($file['type'], $allowed_types)) {
-            $errors[] = "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.";
-        } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
-            $errors[] = "Image file is too large. Maximum size is 2MB.";
-        } else {
-            // Read the image file content
-            $image_data = file_get_contents($file['tmp_name']);
-            if ($image_data !== false) {
-                // Convert to base64
-                $image_base64 = 'data:' . $file['type'] . ';base64,' . base64_encode($image_data);
-            } else {
-                $errors[] = "Failed to read the image file.";
-            }
-        }
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $errors[] = 'Invalid security token. Please refresh and try again.';
     } else {
-        $errors[] = "Product image is required.";
-    }
-    
-    if (empty($errors)) {
-        try {
-            // Store all data including base64 image in the products table
-            $sql = "INSERT INTO products (name, description, flavours, ingredients, price, category_id, stock_quantity, status, featured, image) 
+        // Sanitize inputs
+
+        $name = trim($_POST['name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $flavours = trim($_POST['flavours'] ?? '');
+        $ingredients = trim($_POST['ingredients'] ?? '');
+        $price = filter_var($_POST['price'] ?? 0, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        $category_id = filter_var($_POST['category_id'] ?? null, FILTER_SANITIZE_NUMBER_INT);
+        $stock_quantity = filter_var($_POST['stock_quantity'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
+        $status = $_POST['status'] ?? 'active';
+        $featured = isset($_POST['featured']) ? 1 : 0;
+
+        // --- Validation ---
+        if (empty($name)) $errors[] = "Product name is required.";
+        if ($price <= 0) $errors[] = "Price must be a positive number.";
+        if (empty($category_id)) $errors[] = "Please select a category.";
+
+        // --- Image Upload & Base64 Conversion ---
+        $image_base64 = null;
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES['image'];
+
+            // Check file type
+            $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!in_array($file['type'], $allowed_types)) {
+                $errors[] = "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.";
+            } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
+                $errors[] = "Image file is too large. Maximum size is 2MB.";
+            } else {
+                // Read the image file content
+                $image_data = file_get_contents($file['tmp_name']);
+                if ($image_data !== false) {
+                    // Convert to base64
+                    $image_base64 = 'data:' . $file['type'] . ';base64,' . base64_encode($image_data);
+                } else {
+                    $errors[] = "Failed to read the image file.";
+                }
+            }
+        } else {
+            $errors[] = "Product image is required.";
+        }
+
+        if (empty($errors)) {
+            try {
+                // Store all data including base64 image in the products table
+                $sql = "INSERT INTO products (name, description, flavours, ingredients, price, category_id, stock_quantity, status, featured, image) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                $name, 
-                $description, 
-                $flavours ?: null,
-                $ingredients ?: null,
-                $price, 
-                $category_id, 
-                $stock_quantity, 
-                $status, 
-                $featured, 
-                $image_base64
-            ]);
-            
-            // Redirect with success message
-            header("Location: products.php?status=added");
-            exit;
-        } catch (PDOException $e) {
-            $errors[] = "Database error: " . $e->getMessage();
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    $name,
+                    $description,
+                    $flavours ?: null,
+                    $ingredients ?: null,
+                    $price,
+                    $category_id,
+                    $stock_quantity,
+                    $status,
+                    $featured,
+                    $image_base64
+                ]);
+
+                // Redirect with success message
+                header("Location: products.php?status=added");
+                exit;
+            } catch (PDOException $e) {
+                $errors[] = "Database error: " . $e->getMessage();
+            }
         }
     }
 }
@@ -108,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="card shadow">
     <div class="card-body">
         <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
             <div class="row">
                 <div class="col-md-8">
                     <div class="mb-3">
@@ -122,9 +130,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <!-- New: Flavours and Ingredients -->
                     <div class="mb-3">
                         <label for="flavours" class="form-label">Flavours (comma separated)</label>
-                        <input type="text" class="form-control" id="flavours" name="flavours" 
-                               value="<?php echo htmlspecialchars($_POST['flavours'] ?? ''); ?>" 
-                               placeholder="e.g., Vanilla, Chocolate, Red Velvet">
+                        <input type="text" class="form-control" id="flavours" name="flavours"
+                            value="<?php echo htmlspecialchars($_POST['flavours'] ?? ''); ?>"
+                            placeholder="e.g., Vanilla, Chocolate, Red Velvet">
                         <div class="form-text">Enter multiple flavours separated by commas.</div>
                     </div>
 
@@ -182,20 +190,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-function previewImage(input, previewId) {
-    const preview = document.getElementById(previewId);
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        preview.src = '#';
-        preview.style.display = 'none';
+    function previewImage(input, previewId) {
+        const preview = document.getElementById(previewId);
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none';
+        }
     }
-}
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

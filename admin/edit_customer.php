@@ -1,6 +1,7 @@
 <?php
 $page_title = 'Edit User';
 require_once __DIR__ . '/includes/header.php';
+require_admin();
 
 $errors = [];
 $user_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);

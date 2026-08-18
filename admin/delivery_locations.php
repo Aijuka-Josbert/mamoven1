@@ -1,7 +1,7 @@
 <?php
 $page_title = 'Delivery Locations';
 require_once __DIR__ . '/includes/header.php';
-
+require_admin();
 $success_msg = '';
 $error_msg = '';
 

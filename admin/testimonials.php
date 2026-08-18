@@ -1,6 +1,7 @@
 <?php
 $page_title = 'Manage Testimonials';
 require_once __DIR__ . '/includes/header.php';
+require_admin();
 
 // Admin check
 if ($_SESSION['role'] !== 'admin') {

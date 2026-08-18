@@ -2,7 +2,6 @@
 $page_title = 'My Profile';
 require_once __DIR__ . '/includes/header.php';
 
-// User must be logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: auth/login.php?redirect=' . urlencode('customer_profile.php'));
     exit;
@@ -12,37 +11,37 @@ $user_id = $_SESSION['user_id'];
 $errors = [];
 $success = '';
 
-// Handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $full_name = trim($_POST['full_name'] ?? '');
-    $phone = trim($_POST['phone'] ?? '');
-    $address = trim($_POST['address'] ?? '');
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $errors[] = 'Invalid security token. Please refresh and try again.';
+    } else {
+        $full_name = trim($_POST['full_name'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $address = trim($_POST['address'] ?? '');
 
-    // Validation
-    if (empty($full_name)) {
-        $errors[] = 'Full name is required';
-    }
-    if (empty($phone)) {
-        $errors[] = 'Phone number is required';
-    } elseif (!preg_match('/^[\+]?[0-9\s\(\)\-\.]+$/', $phone) || strlen(preg_replace('/\D/', '', $phone)) < 7) {
-        $errors[] = 'Invalid phone number format (minimum 7 digits required)';
-    }
+        if (empty($full_name)) {
+            $errors[] = 'Full name is required';
+        }
+        if (empty($phone)) {
+            $errors[] = 'Phone number is required';
+        } elseif (!preg_match('/^[\+]?[0-9\s\(\)\-\.]+$/', $phone) || strlen(preg_replace('/\D/', '', $phone)) < 7) {
+            $errors[] = 'Invalid phone number format (minimum 7 digits required)';
+        }
 
-    if (empty($errors)) {
-        try {
-            $stmt = $pdo->prepare("UPDATE users SET full_name = ?, phone = ?, address = ? WHERE id = ?");
-            $stmt->execute([$full_name, $phone, $address, $user_id]);
-
-            // Update session
-            $_SESSION['full_name'] = $full_name;
-            $success = 'Profile updated successfully!';
-        } catch (PDOException $e) {
-            $errors[] = 'Failed to update profile. Please try again.';
+        if (empty($errors)) {
+            try {
+                $stmt = $pdo->prepare("UPDATE users SET full_name = ?, phone = ?, address = ? WHERE id = ?");
+                $stmt->execute([$full_name, $phone, $address, $user_id]);
+                $_SESSION['full_name'] = $full_name;
+                $success = 'Profile updated successfully!';
+            } catch (PDOException $e) {
+                $errors[] = 'Failed to update profile. Please try again.';
+            }
         }
     }
 }
 
-// Fetch current user data
+$user = [];
 try {
     $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
@@ -51,7 +50,7 @@ try {
     $user = [];
 }
 
-// Fetch recent orders
+$recent_orders = [];
 try {
     $orders_stmt = $pdo->prepare("
         SELECT id, order_number, total_amount, status, created_at 
@@ -70,7 +69,6 @@ try {
 <div class="container my-5">
     <div class="row">
         <div class="col-lg-4 mb-4">
-            <!-- Profile Card -->
             <div class="profile-card">
                 <div class="profile-header text-center">
                     <div class="profile-avatar">
@@ -116,7 +114,6 @@ try {
                 </div>
             <?php endif; ?>
 
-            <!-- Edit Profile Form -->
             <div class="collapse mb-4" id="profile-edit">
                 <div class="card">
                     <div class="card-header">
@@ -124,6 +121,7 @@ try {
                     </div>
                     <div class="card-body">
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                             <div class="mb-3">
                                 <label for="full_name" class="form-label">Full Name</label>
                                 <input type="text" id="full_name" name="full_name" class="form-control" 
@@ -162,7 +160,6 @@ try {
                 </div>
             </div>
 
-            <!-- Recent Orders -->
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Recent Orders</h5>

@@ -1,7 +1,7 @@
 <?php
 $page_title = 'Manage Orders';
 require_once __DIR__ . '/includes/header.php';
-
+require_admin();
 $status_filter = $_GET['filter'] ?? 'all';
 $notice = $_GET['notice'] ?? '';
 

@@ -15,89 +15,93 @@ if (!isset($_SESSION['user_id'])) {
 
 // Handle order cancellation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
-    $order_id = (int)($_POST['order_id'] ?? 0);
-    
-    try {
-        // Verify order belongs to user and can be cancelled
-        $stmt = $pdo->prepare("
-            SELECT * FROM orders 
-            WHERE id = ? AND user_id = ? AND status IN ('pending', 'confirmed')
-        ");
-        $stmt->execute([$order_id, $_SESSION['user_id']]);
-        $order = $stmt->fetch();
-        
-        if ($order) {
-            // Update order status to cancelled
-            $update_stmt = $pdo->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?");
-            $update_stmt->execute([$order_id]);
-            
-            // Restore product stock
-            $items_stmt = $pdo->prepare("
-                SELECT product_id, quantity 
-                FROM order_items 
-                WHERE order_id = ?
+    $error_message = ''; // initialize
+
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid request. Please try again.';
+    } else {
+        $order_id = (int)($_POST['order_id'] ?? 0);
+
+        try {
+            // Verify order belongs to user and can be cancelled
+            $stmt = $pdo->prepare("
+                SELECT * FROM orders 
+                WHERE id = ? AND user_id = ? AND status IN ('pending', 'confirmed')
             ");
-            $items_stmt->execute([$order_id]);
-            $items = $items_stmt->fetchAll();
-            
-            $restore_stmt = $pdo->prepare("
-                UPDATE products 
-                SET stock_quantity = stock_quantity + ? 
-                WHERE id = ?
-            ");
-            
-            foreach ($items as $item) {
-                $restore_stmt->execute([$item['quantity'], $item['product_id']]);
-            }
-            
-            // Notify Admin via Email about cancellation
-            try {
-                $mail = new PHPMailer(true);
+            $stmt->execute([$order_id, $_SESSION['user_id']]);
+            $order = $stmt->fetch();
 
-                configure_mailer_transport($mail);
-                $mail->setFrom(default_mail_from_address(), SITE_NAME);
-                $mail->addAddress('mamasovenug@gmail.com');
+            if ($order) {
+                // Update order status to cancelled
+                $update_stmt = $pdo->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?");
+                $update_stmt->execute([$order_id]);
 
-                $mail->isHTML(true);
-                $mail->Subject = "Order Cancelled - " . $order['order_number'];
-                
-                // Fetch user details for the email
-                $user_stmt = $pdo->prepare("SELECT full_name FROM users WHERE id = ?");
-                $user_stmt->execute([$_SESSION['user_id']]);
-                $user_info = $user_stmt->fetch();
-                $customer_name = $user_info ? $user_info['full_name'] : 'Unknown Customer';
+                // Restore product stock
+                $items_stmt = $pdo->prepare("
+                    SELECT product_id, quantity 
+                    FROM order_items 
+                    WHERE order_id = ?
+                ");
+                $items_stmt->execute([$order_id]);
+                $items = $items_stmt->fetchAll();
 
-                $mail->Body = "
-                <html>
-                <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-                    <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
-                        <div style='text-align: center; margin-bottom: 30px;'>
-                            " . email_logo_html($mail, 80) . "
+                $restore_stmt = $pdo->prepare("
+                    UPDATE products 
+                    SET stock_quantity = stock_quantity + ? 
+                    WHERE id = ?
+                ");
+
+                foreach ($items as $item) {
+                    $restore_stmt->execute([$item['quantity'], $item['product_id']]);
+                }
+
+                // Notify Admin via Email about cancellation
+                try {
+                    $mail = new PHPMailer(true);
+                    configure_mailer_transport($mail);
+                    $mail->setFrom(default_mail_from_address(), SITE_NAME);
+                    $mail->addAddress('mamasovenug@gmail.com');
+
+                    $mail->isHTML(true);
+                    $mail->Subject = "Order Cancelled - " . $order['order_number'];
+
+                    // Fetch user details for the email
+                    $user_stmt = $pdo->prepare("SELECT full_name FROM users WHERE id = ?");
+                    $user_stmt->execute([$_SESSION['user_id']]);
+                    $user_info = $user_stmt->fetch();
+                    $customer_name = $user_info ? $user_info['full_name'] : 'Unknown Customer';
+
+                    $mail->Body = "
+                    <html>
+                    <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                        <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                            <div style='text-align: center; margin-bottom: 30px;'>
+                                " . email_logo_html($mail, 80) . "
+                            </div>
+                            <h2 style='color: #8B4513;'>Order Cancellation Alert</h2>
+                            <p><strong>Order Number:</strong> {$order['order_number']}</p>
+                            <p><strong>Customer:</strong> " . htmlspecialchars($customer_name) . "</p>
+                            <p><strong>Status:</strong> Cancelled by User</p>
+                            <p><strong>Total Amount:</strong> UGX " . number_format($order['total_amount']) . "</p>
+                            <p>The items have been returned to stock automatically.</p>
+                            <p><a href='" . BASE_URL . "/admin/orders.php' style='color: #8B4513;'>View in Admin Dashboard</a></p>
                         </div>
-                        <h2 style='color: #8B4513;'>Order Cancellation Alert</h2>
-                        <p><strong>Order Number:</strong> {$order['order_number']}</p>
-                        <p><strong>Customer:</strong> " . htmlspecialchars($customer_name) . "</p>
-                        <p><strong>Status:</strong> Cancelled by User</p>
-                        <p><strong>Total Amount:</strong> UGX " . number_format($order['total_amount']) . "</p>
-                        <p>The items have been returned to stock automatically.</p>
-                        <p><a href='" . BASE_URL . "/admin/orders.php' style='color: #8B4513;'>View in Admin Dashboard</a></p>
-                    </div>
-                </body>
-                </html>
-                ";
+                    </body>
+                    </html>
+                    ";
 
-                send_mail_with_fallback($mail);
-            } catch (Exception $e) {
-                // Log error but don't stop the success message flow
-                error_log("Failed to send cancellation email to admin: " . $e->getMessage());
+                    send_mail_with_fallback($mail);
+                } catch (Exception $e) {
+                    error_log("Failed to send cancellation email to admin: " . $e->getMessage());
+                }
+
+                $success_message = "Order #{$order['order_number']} has been cancelled successfully.";
+            } else {
+                $error_message = "Order not found or cannot be cancelled.";
             }
-
-            $success_message = "Order #{$order['order_number']} has been cancelled successfully.";
-        } else {
-            $error_message = "Order not found or cannot be cancelled.";
+        } catch (PDOException $e) {
+            $error_message = "Failed to cancel order: " . $e->getMessage();
         }
-    } catch (PDOException $e) {
-        $error_message = "Failed to cancel order: " . $e->getMessage();
     }
 }
 

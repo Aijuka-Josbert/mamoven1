@@ -1,6 +1,7 @@
 <?php
 $page_title = 'Edit Product';
 require_once __DIR__ . '/includes/header.php';
+require_admin();
 
 // Validate product ID from URL
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
@@ -37,65 +38,69 @@ try {
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Sanitize and validate inputs
-    $name = trim($_POST['name'] ?? '');
-    $description = trim($_POST['description'] ?? '');
-    $price = filter_var($_POST['price'] ?? 0, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-    $category_id = filter_var($_POST['category_id'] ?? null, FILTER_SANITIZE_NUMBER_INT);
-    $stock_quantity = filter_var($_POST['stock_quantity'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
-    $status = $_POST['status'] ?? 'active';
-    $featured = isset($_POST['featured']) ? 1 : 0;
-    
-    // --- Validation ---
-    if (empty($name)) $errors[] = "Product name is required.";
-    if ($price <= 0) $errors[] = "Price must be a positive number.";
-    if (empty($category_id)) $errors[] = "Please select a category.";
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $errors[] = 'Invalid security token. Please refresh and try again.';
+    } else {
+        // Sanitize and validate inputs
+        $name = trim($_POST['name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $price = filter_var($_POST['price'] ?? 0, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        $category_id = filter_var($_POST['category_id'] ?? null, FILTER_SANITIZE_NUMBER_INT);
+        $stock_quantity = filter_var($_POST['stock_quantity'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
+        $status = $_POST['status'] ?? 'active';
+        $featured = isset($_POST['featured']) ? 1 : 0;
 
-    // --- Image Upload Logic ---
-    $image_base64 = $product['image']; // Keep existing base64 image by default
+        // --- Validation ---
+        if (empty($name)) $errors[] = "Product name is required.";
+        if ($price <= 0) $errors[] = "Price must be a positive number.";
+        if (empty($category_id)) $errors[] = "Please select a category.";
 
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $file = $_FILES['image'];
-        
-        // Validate file type and size
-        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!in_array($file['type'], $allowed_types)) {
-            $errors[] = "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.";
-        } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
-            $errors[] = "Image file is too large. Maximum size is 2MB.";
-        } else {
-            // Read the image file content
-            $image_data = file_get_contents($file['tmp_name']);
-            if ($image_data !== false) {
-                // Convert to base64
-                $image_base64 = 'data:' . $file['type'] . ';base64,' . base64_encode($image_data);
+        // --- Image Upload Logic ---
+        $image_base64 = $product['image']; // Keep existing base64 image by default
+
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES['image'];
+
+            // Validate file type and size
+            $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!in_array($file['type'], $allowed_types)) {
+                $errors[] = "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.";
+            } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
+                $errors[] = "Image file is too large. Maximum size is 2MB.";
             } else {
-                $errors[] = "Failed to read the image file.";
+                // Read the image file content
+                $image_data = file_get_contents($file['tmp_name']);
+                if ($image_data !== false) {
+                    // Convert to base64
+                    $image_base64 = 'data:' . $file['type'] . ';base64,' . base64_encode($image_data);
+                } else {
+                    $errors[] = "Failed to read the image file.";
+                }
             }
         }
-    }
-    
-    if (empty($errors)) {
-        try {
-            $sql = "UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, stock_quantity = ?, status = ?, featured = ?, image = ? WHERE id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$name, $description, $price, $category_id, $stock_quantity, $status, $featured, $image_base64, $product_id]);
-            
-            // Redirect with success message
-            header("Location: " . 'products.php?status=updated');
-            exit;
-        } catch (PDOException $e) {
-            $errors[] = "Database update failed: " . $e->getMessage();
+
+        if (empty($errors)) {
+            try {
+                $sql = "UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, stock_quantity = ?, status = ?, featured = ?, image = ? WHERE id = ?";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$name, $description, $price, $category_id, $stock_quantity, $status, $featured, $image_base64, $product_id]);
+
+                // Redirect with success message
+                header("Location: " . 'products.php?status=updated');
+                exit;
+            } catch (PDOException $e) {
+                $errors[] = "Database update failed: " . $e->getMessage();
+            }
         }
+        // If there were errors, repopulate the product array with submitted data to keep the form filled
+        $product['name'] = $name;
+        $product['description'] = $description;
+        $product['price'] = $price;
+        $product['category_id'] = $category_id;
+        $product['stock_quantity'] = $stock_quantity;
+        $product['status'] = $status;
+        $product['featured'] = $featured;
     }
-    // If there were errors, repopulate the product array with submitted data to keep the form filled
-    $product['name'] = $name;
-    $product['description'] = $description;
-    $product['price'] = $price;
-    $product['category_id'] = $category_id;
-    $product['stock_quantity'] = $stock_quantity;
-    $product['status'] = $status;
-    $product['featured'] = $featured;
 }
 ?>
 
@@ -116,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="card shadow">
     <div class="card-body">
         <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
             <div class="row">
                 <div class="col-md-8">
                     <div class="mb-3">
@@ -164,11 +170,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label for="image" class="form-label">Change Product Image</label>
                         <input class="form-control" type="file" id="image" name="image" onchange="previewImage(this, 'imagePreview')">
                         <p class="form-text">Leave blank to keep the current image.</p>
-                        <img id="imagePreview" 
-                             src="<?php echo $product['image'] ? BASE_URL . '/' . $product['image'] : '#'; ?>" 
-                             alt="Current Image" 
-                             class="mt-3 img-fluid rounded" 
-                             style="<?php echo $product['image'] ? 'display:block;' : 'display:none;'; ?> max-height: 200px;">
+                        <img id="imagePreview"
+                            src="<?php echo $product['image'] ? BASE_URL . '/' . $product['image'] : '#'; ?>"
+                            alt="Current Image"
+                            class="mt-3 img-fluid rounded"
+                            style="<?php echo $product['image'] ? 'display:block;' : 'display:none;'; ?> max-height: 200px;">
                     </div>
                 </div>
             </div>

@@ -1,6 +1,8 @@
 <?php
+
 $page_title = 'Manage Categories';
 require_once __DIR__ . '/includes/header.php';
+require_admin();
 
 $errors = [];
 $success_message = '';
