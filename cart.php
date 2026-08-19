@@ -245,10 +245,34 @@ try {
                         </div>
                         <div class="form-text">Use promo codes shared by admin. Discount is applied instantly if active and valid, and is always revalidated during checkout.</div>
                     </div>
+                    <!-- Payment Method -->
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                        <div class="payment-method-options">
+                            <label class="payment-method-option">
+                                <input type="radio" name="payment_method" value="cash_on_delivery" checked onchange="togglePaymentFields()">
+                                <span><i class="fas fa-truck me-1"></i> Cash on Delivery</span>
+                            </label>
+                            <label class="payment-method-option">
+                                <input type="radio" name="payment_method" value="mobile_money" onchange="togglePaymentFields()">
+                                <span><i class="fas fa-mobile-alt me-1"></i> Mobile Money</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3 d-none" id="mobile-money-fields">
+                        <label for="mm_provider" class="form-label">Mobile Money Provider</label>
+                        <select id="mm_provider" name="mm_provider" class="form-select mb-2">
+                            <option value="mtn">MTN Mobile Money</option>
+                            <option value="airtel">Airtel Money</option>
+                        </select>
+                        <label for="mm_phone" class="form-label">Mobile Money Phone Number</label>
+                        <input type="tel" id="mm_phone" name="mm_phone" class="form-control" placeholder="+2567XXXXXXXX">
+                        <div class="form-text">You'll get a payment prompt on this number to approve after placing your order.</div>
+                    </div>
+
                      <hr>
                     <div class="text-center">
                         <p class="mb-1">Your total is <strong class="h5" id="modal-total-amount">UGX <?php echo number_format($total); ?></strong>.</p>
-                        <p class="text-muted small"><i class="fas fa-money-bill-wave"></i> Payment: Cash on Delivery (Mobile Money/Card coming soon)</p>
                     </div>
                 </form>
             </div>
@@ -263,6 +287,14 @@ try {
 <script>
 let currentSubtotal = <?php echo $subtotal; ?>;
 let currentDiscount = 0;
+
+function togglePaymentFields() {
+    const mobileMoneySelected = document.querySelector('input[name="payment_method"]:checked').value === 'mobile_money';
+    const fieldsWrap = document.getElementById('mobile-money-fields');
+    const phoneInput = document.getElementById('mm_phone');
+    fieldsWrap.classList.toggle('d-none', !mobileMoneySelected);
+    phoneInput.required = mobileMoneySelected;
+}
 
 function updateDeliveryFee() {
     const select = document.getElementById("delivery_location");

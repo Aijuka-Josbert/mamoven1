@@ -160,15 +160,29 @@ try {
                             <p><strong>Total Amount:</strong> UGX <?php echo number_format($order['total_amount']); ?></p>
                             <p><strong>Delivery To:</strong> <?php echo nl2br(htmlspecialchars($order['delivery_address'])); ?></p>
                             <p><strong>Contact Phone:</strong> <?php echo htmlspecialchars($order['delivery_phone']); ?></p>
+                            <?php if (($order['payment_method'] ?? 'cash_on_delivery') === 'mobile_money'): ?>
+                                <p>
+                                    <strong>Payment:</strong> Mobile Money
+                                    <span class="order-status-pill status-<?php echo htmlspecialchars($order['payment_status'] === 'completed' ? 'delivered' : ($order['payment_status'] === 'failed' ? 'cancelled' : 'pending')); ?>" id="payment-status-<?php echo $order['id']; ?>">
+                                        <?php echo ucfirst(htmlspecialchars($order['payment_status'])); ?>
+                                    </span>
+                                </p>
+                            <?php else: ?>
+                                <p><strong>Payment:</strong> Cash on Delivery</p>
+                            <?php endif; ?>
                             <?php if(!empty($order['special_instructions'])): ?>
                                 <p><strong>Special Instructions:</strong> <?php echo htmlspecialchars($order['special_instructions']); ?></p>
                             <?php endif; ?>
                             <hr>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap">
                                 <a href="print_receipt.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-outline-primary" target="_blank">
                                     <i class="fas fa-print me-2"></i> Print Receipt
                                 </a>
-                                
+                                <?php if (($order['payment_method'] ?? '') === 'mobile_money' && in_array($order['payment_status'], ['pending', 'processing'])): ?>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="checkPaymentStatus(<?php echo $order['id']; ?>)">
+                                        <i class="fas fa-sync-alt me-2"></i> Check Payment Status
+                                    </button>
+                                <?php endif; ?>
                                 <?php if (in_array($order['status'], ['pending', 'confirmed'])): ?>
                                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmCancelOrder(<?php echo $order['id']; ?>, '<?php echo htmlspecialchars($order['order_number']); ?>')">
                                         <i class="fas fa-times me-2"></i> Cancel Order
@@ -207,6 +221,39 @@ function confirmCancelOrder(orderId, orderNumber) {
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById('cancel-form-' + orderId).submit();
+        }
+    });
+}
+
+function checkPaymentStatus(orderId) {
+    const pill = document.getElementById('payment-status-' + orderId);
+    const originalText = pill ? pill.innerText : '';
+    if (pill) pill.innerText = 'Checking...';
+
+    $.ajax({
+        url: 'api/check_payment_status.php',
+        type: 'POST',
+        data: { order_id: orderId },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success && pill) {
+                const status = response.payment_status;
+                pill.innerText = status.charAt(0).toUpperCase() + status.slice(1);
+                pill.className = 'order-status-pill status-' + (status === 'completed' ? 'delivered' : (status === 'failed' ? 'cancelled' : 'pending'));
+                if (status === 'completed') {
+                    Swal.fire('Payment Confirmed', 'This order has been paid.', 'success');
+                } else if (status === 'failed') {
+                    Swal.fire('Payment Failed', 'The mobile money payment did not go through. Please contact us or try again.', 'error');
+                } else {
+                    Swal.fire('Still Processing', 'Payment is still being processed. Check again shortly.', 'info');
+                }
+            } else if (pill) {
+                pill.innerText = originalText;
+            }
+        },
+        error: function() {
+            if (pill) pill.innerText = originalText;
+            Swal.fire('Error', 'Could not check payment status right now.', 'error');
         }
     });
 }

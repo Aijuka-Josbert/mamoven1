@@ -2434,3 +2434,35 @@ body {
         margin-left: 220px;
     }
 }
+
+/* --- Checkout Payment Method Selector --- */
+.payment-method-options {
+    display: flex;
+    gap: 10px;
+}
+
+.payment-method-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid rgba(90, 51, 31, 0.15);
+    border-radius: 10px;
+    padding: 10px 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #5A331F;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.payment-method-option input {
+    display: none;
+}
+
+.payment-method-option:has(input:checked) {
+    background: #FFF3E8;
+    border-color: #F39C6A;
+    color: #b1582e;
+}

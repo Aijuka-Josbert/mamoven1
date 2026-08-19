@@ -6,6 +6,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../payments/pesajet.php';
 
 header('Content-Type: application/json');
 
@@ -27,10 +28,33 @@ $delivery_address = trim($_POST['delivery_address'] ?? '');
 $delivery_phone = trim($_POST['delivery_phone'] ?? '');
 $special_instructions = trim($_POST['special_instructions'] ?? '');
 $promo_code = strtoupper(trim($_POST['promo_code'] ?? ''));
+$payment_method = ($_POST['payment_method'] ?? 'cash_on_delivery') === 'mobile_money' ? 'mobile_money' : 'cash_on_delivery';
+$mm_provider = in_array($_POST['mm_provider'] ?? '', ['mtn', 'airtel'], true) ? $_POST['mm_provider'] : 'mtn';
+$mm_phone_raw = trim($_POST['mm_phone'] ?? '');
 
 if (!$location_id || !$delivery_address || !$delivery_phone) {
     echo json_encode(['success' => false, 'message' => 'Delivery location, address, and phone are required']);
     exit;
+}
+
+if ($payment_method === 'mobile_money' && $mm_phone_raw === '') {
+    echo json_encode(['success' => false, 'message' => 'A mobile money phone number is required for that payment method']);
+    exit;
+}
+
+// Normalize to E.164-ish format (+256...) the way PesaJet expects.
+$mm_phone = $mm_phone_raw;
+if ($payment_method === 'mobile_money') {
+    $digits = preg_replace('/\D/', '', $mm_phone_raw);
+    if (strpos($digits, '0') === 0) {
+        $mm_phone = '+256' . substr($digits, 1);
+    } elseif (strpos($digits, '256') === 0) {
+        $mm_phone = '+' . $digits;
+    } elseif (strpos($mm_phone_raw, '+') === 0) {
+        $mm_phone = $mm_phone_raw;
+    } else {
+        $mm_phone = '+256' . $digits;
+    }
 }
 
 try {
@@ -132,10 +156,10 @@ try {
 
     // Create order
     $stmt = $pdo->prepare("
-        INSERT INTO orders (user_id, order_number, total_amount, delivery_address, delivery_phone, special_instructions, promo_code_id, discount_amount) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (user_id, order_number, total_amount, delivery_address, delivery_phone, special_instructions, promo_code_id, discount_amount, payment_method) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->execute([$user_id, $order_number, $total_amount, $full_delivery_address, $delivery_phone, $special_instructions, $promo_code_id, $discount_amount]);
+    $stmt->execute([$user_id, $order_number, $total_amount, $full_delivery_address, $delivery_phone, $special_instructions, $promo_code_id, $discount_amount, $payment_method]);
     $order_id = $pdo->lastInsertId();
 
     // Log promo usage if code was applied
@@ -203,6 +227,41 @@ try {
     $user = $stmt->fetch();
 
     $pdo->commit();
+
+    // --- Initiate mobile money collection (if chosen) ---
+    // This runs after commit intentionally: the order is already safely
+    // saved, so a slow or failing PesaJet call can never lose the order or
+    // block the customer from getting their confirmation. If this fails,
+    // the order simply stays payment_status='pending' for manual follow-up.
+    if ($payment_method === 'mobile_money') {
+        try {
+            $pesajet = new PesaJetPay();
+            $collection = $pesajet->createCollection([
+                'amount' => (int)round($total_amount),
+                'phoneNumber' => $mm_phone,
+                'provider' => $mm_provider,
+                'reference' => $order_number,
+                'idempotencyKey' => $order_number . '-1',
+            ]);
+
+            if ($collection['success']) {
+                $transactionId = $collection['data']['transactionId'] ?? ($collection['data']['id'] ?? null);
+                $update_payment = $pdo->prepare("
+                    UPDATE orders SET payment_status = 'processing', payment_reference = ?, payment_provider = ?
+                    WHERE id = ?
+                ");
+                $update_payment->execute([$transactionId, $mm_provider, $order_id]);
+            } else {
+                error_log('PesaJet collection failed for order ' . $order_number . ': ' . $collection['error']);
+                $update_payment = $pdo->prepare("UPDATE orders SET payment_status = 'failed' WHERE id = ?");
+                $update_payment->execute([$order_id]);
+            }
+        } catch (Throwable $e) {
+            error_log('PesaJet collection exception for order ' . $order_number . ': ' . $e->getMessage());
+            $update_payment = $pdo->prepare("UPDATE orders SET payment_status = 'failed' WHERE id = ?");
+            $update_payment->execute([$order_id]);
+        }
+    }
 
     // Send order confirmation email
     try {

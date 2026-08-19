@@ -1,4 +1,18 @@
 <?php
+// Buffer all output for the entire request. Every entry point in this app
+// requires this file first, so this guarantees header()/redirect calls work
+// anywhere later in a script's execution, even after HTML has already been
+// echoed (e.g. admin pages print the sidebar and page banner via
+// admin/includes/header.php before their own POST-handling code runs and
+// tries to redirect). Without this, PHP flushes output once it crosses the
+// server's output_buffering threshold, which locks in headers and throws
+// "headers already sent" — exactly what a large enough page (like the
+// admin sidebar) can trigger. PHP automatically flushes this buffer to the
+// client when the script ends, so no matching ob_end_flush() is needed.
+// Safe to nest: files that call their own ob_start()/ob_clean() (the /api/
+// endpoints) simply operate one buffer level deeper, unaffected by this one.
+ob_start();
+
 // Load .env file (if present)
 function load_dotenv($path) {
     if (!is_readable($path)) return;
