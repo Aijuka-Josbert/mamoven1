@@ -331,10 +331,14 @@ function validate_csrf_token($token) {
 // Enforce CSRF for state-changing API endpoints. Accepts the token either as
 // a POST field (csrf_token) or as the X-CSRF-Token header (used by main.js's
 // global AJAX setup), so existing form-based callers keep working unchanged.
+// Deliberately returns HTTP 200 with success:false in the body, matching the
+// convention every other endpoint in this codebase already uses (e.g. the
+// "Not logged in" checks) — a non-2xx status here would make jQuery route the
+// response to the generic .error() handler instead of .success(), hiding the
+// real message behind a canned "network error".
 function require_csrf_or_fail() {
     $token = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
     if (!validate_csrf_token($token)) {
-        http_response_code(403);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode([
             'success' => false,

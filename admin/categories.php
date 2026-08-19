@@ -28,8 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // --- DELETE CATEGORY ---
-if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
-    $category_id = (int)$_GET['id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $errors[] = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    } else {
+    $category_id = (int)$_POST['id'];
     try {
         // First, check if any products are using this category
         $check_stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE category_id = ?");
@@ -43,6 +46,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id']))
         }
     } catch(PDOException $e) {
         $errors[] = "Failed to delete category: " . $e->getMessage();
+    }
     }
 }
 
@@ -64,6 +68,7 @@ try {
             <div class="card-header"><h6 class="m-0 font-weight-bold text-primary">Add New Category</h6></div>
             <div class="card-body">
                 <form method="POST">
+                    <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                     <div class="mb-3">
                         <label for="name" class="form-label">Category Name *</label>
                         <input type="text" class="form-control" id="name" name="name" required>
@@ -110,9 +115,14 @@ try {
                                     <td><strong><?php echo htmlspecialchars($category['name']); ?></strong></td>
                                     <td><?php echo htmlspecialchars($category['description']); ?></td>
                                     <td class="text-end">
-                                        <a href="javascript:void(0);" onclick="confirmDelete('categories.php?action=delete&id=<?php echo $category['id']; ?>')" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <form method="POST" id="delete-category-<?php echo $category['id']; ?>" class="d-none">
+                                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?php echo $category['id']; ?>">
+                                        </form>
+                                        <button type="button" onclick="confirmDelete('delete-category-<?php echo $category['id']; ?>')" class="btn btn-sm btn-outline-danger" title="Delete">
                                             <i class="fas fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>

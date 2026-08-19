@@ -7,6 +7,9 @@ $notice = $_GET['notice'] ?? '';
 
 // Handle order status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    } else {
     $order_id = (int)($_POST['order_id'] ?? 0);
     $new_status = $_POST['status'] ?? '';
     $filter_redirect = $_POST['filter'] ?? 'all';
@@ -61,10 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $error_message = "Failed to update order status: " . $e->getMessage();
         }
     }
+    }
 }
 
 // Handle order deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_order') {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    } else {
     $order_id = (int)($_POST['order_id'] ?? 0);
     $filter_redirect = $_POST['filter'] ?? 'all';
 
@@ -107,6 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
             $error_message = 'Failed to delete order: ' . $e->getMessage();
         }
+    }
     }
 }
 
@@ -189,6 +197,7 @@ try {
                                 <td>
                                     <!-- Status Update Form -->
                                     <form method="POST" class="d-inline-flex">
+                                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                         <input type="hidden" name="action" value="update_status">
                                         <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
                                         <input type="hidden" name="filter" value="<?php echo htmlspecialchars($status_filter ?: 'all'); ?>">
@@ -207,6 +216,7 @@ try {
                                         <i class="fas fa-eye"></i> View
                                     </a>
                                     <form method="POST" class="d-inline" onsubmit="return confirm('Delete this order permanently?');">
+                                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                         <input type="hidden" name="action" value="delete_order">
                                         <input type="hidden" name="order_id" value="<?php echo (int)$order['id']; ?>">
                                         <input type="hidden" name="filter" value="<?php echo htmlspecialchars($status_filter ?: 'all'); ?>">

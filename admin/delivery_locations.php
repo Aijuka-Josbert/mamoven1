@@ -7,7 +7,9 @@ $error_msg = '';
 
 // Handle Add/Edit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['add_location'])) {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error_msg = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    } elseif (isset($_POST['add_location'])) {
         $name = trim($_POST['name']);
         $fee = (float)$_POST['fee'];
         try {
@@ -41,6 +43,7 @@ $locations = $pdo->query("SELECT * FROM delivery_locations ORDER BY name ASC")->
                 <div class="card-header bg-white"><h5>Add New Zone</h5></div>
                 <div class="card-body">
                     <form method="POST">
+                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                         <div class="mb-3">
                             <label>Location Name (e.g., Ntinda, Entebbe)</label>
                             <input type="text" name="name" class="form-control" required>
@@ -68,6 +71,7 @@ $locations = $pdo->query("SELECT * FROM delivery_locations ORDER BY name ASC")->
                                 <td><?php echo number_format($loc['fee']); ?></td>
                                 <td>
                                     <form method="POST" onsubmit="return confirm('Delete this location?');">
+                                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                         <input type="hidden" name="location_id" value="<?php echo $loc['id']; ?>">
                                         <button type="submit" name="delete_location" class="btn btn-sm btn-danger">Delete</button>
                                     </form>

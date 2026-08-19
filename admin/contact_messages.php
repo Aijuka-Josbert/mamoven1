@@ -6,6 +6,9 @@ require_admin();
 $success_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_message') {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    } else {
     $message_id = (int)($_POST['message_id'] ?? 0);
 
     if ($message_id > 0) {
@@ -16,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } catch (PDOException $e) {
             $error_message = 'Failed to delete message: ' . $e->getMessage();
         }
+    }
     }
 }
 
@@ -74,6 +78,7 @@ try {
                                 <td><?php echo date('d M Y, g:ia', strtotime($msg['created_at'])); ?></td>
                                 <td class="text-end">
                                     <form method="POST" class="d-inline" onsubmit="return confirm('Delete this contact message?');">
+                                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                         <input type="hidden" name="action" value="delete_message">
                                         <input type="hidden" name="message_id" value="<?php echo (int)$msg['id']; ?>">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">

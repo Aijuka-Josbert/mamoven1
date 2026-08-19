@@ -7,6 +7,9 @@ $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    } else {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'create_promo') {
@@ -98,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+    }
 }
 
 try {
@@ -151,6 +155,7 @@ try {
     </div>
     <div class="card-body">
         <form method="POST" class="row g-3">
+            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
             <input type="hidden" name="action" value="create_promo">
 
             <div class="col-md-4">
@@ -278,6 +283,7 @@ try {
                                 </td>
                                 <td class="text-end">
                                     <form method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                         <input type="hidden" name="action" value="toggle_status">
                                         <input type="hidden" name="promo_id" value="<?php echo (int)$promo['id']; ?>">
                                         <input type="hidden" name="next_status" value="<?php echo $promo['status'] === 'active' ? 'inactive' : 'active'; ?>">
@@ -287,6 +293,7 @@ try {
                                     </form>
 
                                     <form method="POST" class="d-inline" onsubmit="return confirm('Delete this promo code permanently?');">
+                                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                         <input type="hidden" name="action" value="delete_promo">
                                         <input type="hidden" name="promo_id" value="<?php echo (int)$promo['id']; ?>">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>

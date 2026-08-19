@@ -179,6 +179,7 @@ try {
                             
                             <!-- Hidden form for cancellation -->
                             <form id="cancel-form-<?php echo $order['id']; ?>" method="POST" style="display: none;">
+                                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                 <input type="hidden" name="cancel_order" value="1">
                                 <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
                             </form>

@@ -4,8 +4,11 @@ require_once __DIR__ . '/includes/header.php';
 require_admin();
 
 // Handle product deletion
-if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
-    $product_id = (int)$_GET['id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    } else {
+    $product_id = (int)$_POST['id'];
     try {
         // Check if product exists first
         $check_stmt = $pdo->prepare("SELECT id FROM products WHERE id = ?");
@@ -20,6 +23,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id']))
         }
     } catch(PDOException $e) {
         $error_message = "Failed to delete product: " . $e->getMessage();
+    }
     }
 }
 
@@ -97,9 +101,14 @@ try {
                                     <a href="edit_product.php?id=<?php echo $product['id']; ?>" class="btn btn-sm btn-outline-primary" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="javascript:void(0);" onclick="confirmDelete('products.php?action=delete&id=<?php echo $product['id']; ?>')" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <form method="POST" id="delete-product-<?php echo $product['id']; ?>" class="d-none">
+                                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
+                                    </form>
+                                    <button type="button" onclick="confirmDelete('delete-product-<?php echo $product['id']; ?>')" class="btn btn-sm btn-outline-danger" title="Delete">
                                         <i class="fas fa-trash"></i>
-                                    </a>
+                                    </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

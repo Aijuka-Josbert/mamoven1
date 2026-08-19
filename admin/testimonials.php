@@ -13,11 +13,14 @@ $error_message = '';
 $success_message = '';
 
 // Handle approval/rejection
-if (isset($_GET['action']) && isset($_GET['id'])) {
-    $action = $_GET['action'];
-    $testimonial_id = (int)$_GET['id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && isset($_POST['id'])) {
+    $action = $_POST['action'];
+    $testimonial_id = (int)$_POST['id'];
 
     if (in_array($action, ['approve', 'reject'])) {
+        if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+            $error_message = 'Your session security token is missing or expired. Please refresh the page and try again.';
+        } else {
         $status = ($action === 'approve') ? 'approved' : 'rejected';
         try {
             $stmt = $pdo->prepare("UPDATE testimonials SET status = ? WHERE id = ?");
@@ -26,18 +29,23 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
         } catch (PDOException $e) {
             $error_message = "Failed to update testimonial: " . $e->getMessage();
         }
+        }
     }
 }
 
 // Handle deletion
-if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
-    $testimonial_id = (int)$_GET['id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    } else {
+    $testimonial_id = (int)$_POST['id'];
     try {
         $stmt = $pdo->prepare("DELETE FROM testimonials WHERE id = ?");
         $stmt->execute([$testimonial_id]);
         $success_message = "Testimonial has been deleted.";
     } catch (PDOException $e) {
         $error_message = "Failed to delete testimonial: " . $e->getMessage();
+    }
     }
 }
 
@@ -124,12 +132,22 @@ try {
                                     <td><?php echo mb_substr(htmlspecialchars($testimonial['content'] ?? $testimonial['content'] ?? $testimonial['message'] ?? '' ?? ''), 0, 50) . '...'; ?></td>
                                     <td><?php echo date('d M Y', strtotime($testimonial['created_at'])); ?></td>
                                     <td>
-                                        <a href="?action=approve&id=<?php echo $testimonial['id']; ?>" class="btn btn-sm btn-success" title="Approve">
+                                        <form method="POST" id="approve-testimonial-<?php echo $testimonial['id']; ?>" class="d-none">
+                                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                            <input type="hidden" name="action" value="approve">
+                                            <input type="hidden" name="id" value="<?php echo $testimonial['id']; ?>">
+                                        </form>
+                                        <button type="button" onclick="document.getElementById('approve-testimonial-<?php echo $testimonial['id']; ?>').submit()" class="btn btn-sm btn-success" title="Approve">
                                             <i class="fas fa-check"></i>
-                                        </a>
-                                        <a href="?action=reject&id=<?php echo $testimonial['id']; ?>" class="btn btn-sm btn-danger" title="Reject">
+                                        </button>
+                                        <form method="POST" id="reject-testimonial-<?php echo $testimonial['id']; ?>" class="d-none">
+                                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                            <input type="hidden" name="action" value="reject">
+                                            <input type="hidden" name="id" value="<?php echo $testimonial['id']; ?>">
+                                        </form>
+                                        <button type="button" onclick="document.getElementById('reject-testimonial-<?php echo $testimonial['id']; ?>').submit()" class="btn btn-sm btn-danger" title="Reject">
                                             <i class="fas fa-times"></i>
-                                        </a>
+                                        </button>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -171,9 +189,14 @@ try {
                                     </td>
                                     <td><?php echo substr(htmlspecialchars($testimonial['content'] ?? $testimonial['message'] ?? ''), 0, 50) . '...'; ?></td>
                                     <td>
-                                        <a href="?action=delete&id=<?php echo $testimonial['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this testimonial?')" title="Delete">
+                                        <form method="POST" id="delete-testimonial-approved-<?php echo $testimonial['id']; ?>" class="d-none">
+                                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?php echo $testimonial['id']; ?>">
+                                        </form>
+                                        <button type="button" onclick="confirmDelete('delete-testimonial-approved-<?php echo $testimonial['id']; ?>')" class="btn btn-sm btn-outline-danger" title="Delete">
                                             <i class="fas fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -215,9 +238,14 @@ try {
                                     </td>
                                     <td><?php echo substr(htmlspecialchars($testimonial['content'] ?? $testimonial['message'] ?? ''), 0, 50) . '...'; ?></td>
                                     <td>
-                                        <a href="?action=delete&id=<?php echo $testimonial['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this testimonial?')" title="Delete">
+                                        <form method="POST" id="delete-testimonial-rejected-<?php echo $testimonial['id']; ?>" class="d-none">
+                                            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?php echo $testimonial['id']; ?>">
+                                        </form>
+                                        <button type="button" onclick="confirmDelete('delete-testimonial-rejected-<?php echo $testimonial['id']; ?>')" class="btn btn-sm btn-outline-danger" title="Delete">
                                             <i class="fas fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>

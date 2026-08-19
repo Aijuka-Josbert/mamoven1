@@ -31,6 +31,9 @@ try {
 
 // 2. --- HANDLE FORM SUBMISSION (UPDATE LOGIC) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $errors[] = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    }
     // Sanitize and retrieve form data
     $full_name = trim($_POST['full_name'] ?? '');
     $username = trim($_POST['username'] ?? '');
@@ -115,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="card shadow">
     <div class="card-body">
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
             <div class="row">
                 <!-- Left Column -->
                 <div class="col-md-6">

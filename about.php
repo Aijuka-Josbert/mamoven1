@@ -19,7 +19,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_feedback'])) {
 
     $rating = (int)$feedback_input['rating'];
 
-    if ($feedback_input['name'] === '') {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $feedback_error = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    } elseif ($feedback_input['name'] === '') {
         $feedback_error = 'Please enter your name.';
     } elseif ($feedback_input['message'] === '') {
         $feedback_error = 'Please write your feedback message.';
@@ -150,6 +152,7 @@ try {
                     <?php endif; ?>
 
                     <form method="POST" action="">
+                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="feedback_name" class="form-label">Name <span class="text-danger">*</span></label>

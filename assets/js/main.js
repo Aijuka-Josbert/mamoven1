@@ -4,14 +4,19 @@
 // individual $.ajax() calls throughout this file don't each need to
 // remember to send it. Reads the token from the <meta name="csrf-token">
 // tag rendered by includes/header.php / admin/includes/header.php.
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        const method = (settings.type || settings.method || 'GET').toUpperCase();
-        if (method === 'POST') {
-            const token = $('meta[name="csrf-token"]').attr('content');
-            if (token) {
-                xhr.setRequestHeader('X-CSRF-Token', token);
-            }
+//
+// Uses ajaxPrefilter rather than ajaxSetup's beforeSend: jQuery does NOT
+// chain beforeSend hooks — any individual $.ajax() call that defines its
+// own beforeSend (e.g. addToCart's loading-spinner toggle below) silently
+// overwrites this one entirely, so the header would never be sent for that
+// call. Prefilters always run for every request regardless of per-call
+// options, and set the header directly on jqXHR before beforeSend fires.
+$.ajaxPrefilter(function(options, originalOptions, jqXHR) {
+    const method = (options.type || options.method || 'GET').toUpperCase();
+    if (method === 'POST') {
+        const token = $('meta[name="csrf-token"]').attr('content');
+        if (token) {
+            jqXHR.setRequestHeader('X-CSRF-Token', token);
         }
     }
 });

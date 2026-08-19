@@ -7,8 +7,11 @@ $errors = [];
 $success_message = '';
 
 // --- HANDLE DELETE ACTION ---
-if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
-    $user_id_to_delete = (int)$_GET['id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['id'])) {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $errors[] = 'Your session security token is missing or expired. Please refresh the page and try again.';
+    } else {
+    $user_id_to_delete = (int)$_POST['id'];
 
     // Security check: Prevent an admin from deleting their own account
     if ($user_id_to_delete === $_SESSION['user_id']) {
@@ -27,6 +30,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id']))
 
     } catch(PDOException $e) {
         $errors[] = "Failed to delete user: " . $e->getMessage();
+    }
     }
 }
 
@@ -111,9 +115,14 @@ try {
                                 </a>
                                 <?php // Prevent deleting the current logged-in user ?>
                                 <?php if ($user['id'] != $_SESSION['user_id']): ?>
-                                <a href="javascript:void(0);" onclick="confirmDelete('customers.php?action=delete&id=<?php echo $user['id']; ?>')" class="btn btn-sm btn-outline-danger" title="Delete">
+                                <form method="POST" id="delete-customer-<?php echo $user['id']; ?>" class="d-none">
+                                    <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+                                </form>
+                                <button type="button" onclick="confirmDelete('delete-customer-<?php echo $user['id']; ?>')" class="btn btn-sm btn-outline-danger" title="Delete">
                                     <i class="fas fa-trash"></i>
-                                </a>
+                                </button>
                                 <?php endif; ?>
                             </td>
                         </tr>

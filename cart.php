@@ -11,6 +11,10 @@ $user_id = $_SESSION['user_id'];
 
 // Handle cart updates (remove/update quantity) from POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        header("Location: cart.php?error=invalid_token");
+        exit;
+    }
     $cart_id = (int)($_POST['cart_id'] ?? 0);
     $action = $_POST['action'] ?? '';
 
@@ -120,6 +124,7 @@ try {
                                 </div>
                                 <div class="col-md-3">
                                     <form method="POST" class="d-flex">
+                                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                         <input type="hidden" name="action" value="update">
                                         <input type="hidden" name="cart_id" value="<?php echo $item['id']; ?>">
                                         <input type="number" name="quantity" class="form-control form-control-sm text-center" 
@@ -131,6 +136,7 @@ try {
                                 </div>
                                 <div class="col-md-1 text-end">
                                     <form method="POST">
+                                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                         <input type="hidden" name="action" value="remove">
                                         <input type="hidden" name="cart_id" value="<?php echo $item['id']; ?>">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove Item">&times;</button>
@@ -190,6 +196,7 @@ try {
             </div>
             <div class="modal-body">
                 <form id="checkout-form" method="POST" action="api/place_order.php">
+                    <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                     <input type="hidden" id="promo-code-hidden" name="promo_code" value="">
                     <div class="mb-2">
                         <label for="delivery_area_search" class="form-label">Search Delivery Area</label>
