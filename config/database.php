@@ -116,6 +116,14 @@ define('SESSION_INACTIVITY_TIMEOUT', (int)env_value('SESSION_INACTIVITY_TIMEOUT'
 define('REMEMBER_ME_LIFETIME', (int)env_value('REMEMBER_ME_LIFETIME', 2592000));
 define('REMEMBER_ME_COOKIE', 'mamoven_remember');
 
+// PesaJet Pay (mobile money). Set PESAJET_ENABLED=false in .env to turn the
+// whole feature off cleanly — cart.php hides the Mobile Money option and
+// place_order.php force-falls-back to Cash on Delivery — instead of
+// commenting code out. Set it back to true to re-enable.
+define('PESAJET_ENABLED', filter_var(env_value('PESAJET_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN));
+define('PESAJET_BASE_URL', env_value('PESAJET_BASE_URL', 'https://payments.pesajet.com/api/v1'));
+define('PESAJET_API_KEY', env_value('PESAJET_API_KEY', ''));
+
 function request_expects_json_response() {
     $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
     if (strpos($scriptName, '/api/') !== false) return true;

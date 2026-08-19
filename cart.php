@@ -248,6 +248,7 @@ try {
                     <!-- Payment Method -->
                     <div class="mb-3">
                         <label class="form-label">Payment Method <span class="text-danger">*</span></label>
+                        <?php if (PESAJET_ENABLED): ?>
                         <div class="payment-method-options">
                             <label class="payment-method-option">
                                 <input type="radio" name="payment_method" value="cash_on_delivery" checked onchange="togglePaymentFields()">
@@ -258,7 +259,12 @@ try {
                                 <span><i class="fas fa-mobile-alt me-1"></i> Mobile Money</span>
                             </label>
                         </div>
+                        <?php else: ?>
+                        <input type="hidden" name="payment_method" value="cash_on_delivery">
+                        <p class="text-muted small mb-0"><i class="fas fa-truck me-1"></i> Cash on Delivery (Mobile Money coming soon)</p>
+                        <?php endif; ?>
                     </div>
+                    <?php if (PESAJET_ENABLED): ?>
                     <div class="mb-3 d-none" id="mobile-money-fields">
                         <label for="mm_provider" class="form-label">Mobile Money Provider</label>
                         <select id="mm_provider" name="mm_provider" class="form-select mb-2">
@@ -269,6 +275,7 @@ try {
                         <input type="tel" id="mm_phone" name="mm_phone" class="form-control" placeholder="+2567XXXXXXXX">
                         <div class="form-text">You'll get a payment prompt on this number to approve after placing your order.</div>
                     </div>
+                    <?php endif; ?>
 
                      <hr>
                     <div class="text-center">

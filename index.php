@@ -190,6 +190,9 @@ if (empty($relevance_products)) {
                 </div>
                 <div class="col-lg-6 position-relative text-center">
                     <div class="hero-orb"></div>
+                    <span class="hero-steam hero-steam-1"></span>
+                    <span class="hero-steam hero-steam-2"></span>
+                    <span class="hero-steam hero-steam-3"></span>
                     <img src="assets/image2/new.jpg" alt="Delicious baked goods" class="img-fluid border border-5 border-white shadow-lg organic-blob position-relative z-1 hero-image-focus">
                 </div>
             </div>

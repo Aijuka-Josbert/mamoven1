@@ -28,8 +28,8 @@ class PesaJetPay
 
     public function __construct(?string $baseUrl = null, ?string $apiKey = null, int $timeoutSeconds = 15)
     {
-        $this->baseUrl = rtrim($baseUrl ?? (getenv('PESAJET_BASE_URL') ?: 'https://payments.pesajet.com/api/v1'), '/');
-        $this->apiKey = $apiKey ?? (getenv('PESAJET_API_KEY') ?: '');
+        $this->baseUrl = rtrim($baseUrl ?? (defined('PESAJET_BASE_URL') ? PESAJET_BASE_URL : (getenv('PESAJET_BASE_URL') ?: 'https://payments.pesajet.com/api/v1')), '/');
+        $this->apiKey = $apiKey ?? (defined('PESAJET_API_KEY') ? PESAJET_API_KEY : (getenv('PESAJET_API_KEY') ?: ''));
         $this->timeoutSeconds = $timeoutSeconds;
     }
 
@@ -93,7 +93,12 @@ class PesaJetPay
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $this->timeoutSeconds,
             CURLOPT_CONNECTTIMEOUT => 5,
-            CURLOPT_SSL_VERIFYPEER => true,
+            // Verify SSL strictly in production. Locally, a missing or
+            // outdated CA bundle is a very common reason curl fails to
+            // reach ANY HTTPS API on a fresh install — relaxing this only
+            // outside production avoids that whole class of false failures
+            // without weakening the real deployment.
+            CURLOPT_SSL_VERIFYPEER => defined('IS_PRODUCTION') ? IS_PRODUCTION : true,
         ];
 
         if ($method === 'POST') {

@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($errors)) {
             try {
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                $verification_code = sprintf('%06d', mt_rand(100000, 999999));
+                $verification_code = sprintf('%06d', random_int(100000, 999999));
 
                 $stmt = $pdo->prepare("
                     INSERT INTO users (username, email, password, full_name, phone, address, role, verification_code, is_verified)

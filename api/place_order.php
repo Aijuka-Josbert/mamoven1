@@ -29,6 +29,9 @@ $delivery_phone = trim($_POST['delivery_phone'] ?? '');
 $special_instructions = trim($_POST['special_instructions'] ?? '');
 $promo_code = strtoupper(trim($_POST['promo_code'] ?? ''));
 $payment_method = ($_POST['payment_method'] ?? 'cash_on_delivery') === 'mobile_money' ? 'mobile_money' : 'cash_on_delivery';
+if (!PESAJET_ENABLED) {
+    $payment_method = 'cash_on_delivery';
+}
 $mm_provider = in_array($_POST['mm_provider'] ?? '', ['mtn', 'airtel'], true) ? $_POST['mm_provider'] : 'mtn';
 $mm_phone_raw = trim($_POST['mm_phone'] ?? '');
 
@@ -228,6 +231,25 @@ try {
 
     $pdo->commit();
 
+    // --- Respond to the customer immediately ---
+    // Everything from here down (PesaJet + confirmation emails) can take a
+    // real, noticeable amount of time — a mobile money prompt or a slow SMTP
+    // server can each add seconds. The order is already safely committed,
+    // so there's no reason to make the customer's browser sit and wait for
+    // any of that. Send the redirect now and keep working in the
+    // background; the request stays open server-side, but the browser
+    // already has what it needs to move on.
+    header('Location: ../print_receipt.php?id=' . $order_id);
+    session_write_close(); // release the session lock so the page we just redirected to isn't blocked waiting on it
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request(); // PHP-FPM: closes the client connection now, script keeps running
+    } else {
+        if (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        flush(); // mod_php: best-effort early flush, still much faster than waiting on emails
+    }
+
     // --- Initiate mobile money collection (if chosen) ---
     // This runs after commit intentionally: the order is already safely
     // saved, so a slow or failing PesaJet call can never lose the order or
@@ -253,13 +275,16 @@ try {
                 $update_payment->execute([$transactionId, $mm_provider, $order_id]);
             } else {
                 error_log('PesaJet collection failed for order ' . $order_number . ': ' . $collection['error']);
-                $update_payment = $pdo->prepare("UPDATE orders SET payment_status = 'failed' WHERE id = ?");
-                $update_payment->execute([$order_id]);
+                // Store the reason (truncated) directly on the order row so
+                // it's visible with a plain SELECT — no log-file digging
+                // needed to see why a payment failed.
+                $update_payment = $pdo->prepare("UPDATE orders SET payment_status = 'failed', payment_reference = ? WHERE id = ?");
+                $update_payment->execute(['ERROR: ' . substr((string)$collection['error'], 0, 90), $order_id]);
             }
         } catch (Throwable $e) {
             error_log('PesaJet collection exception for order ' . $order_number . ': ' . $e->getMessage());
-            $update_payment = $pdo->prepare("UPDATE orders SET payment_status = 'failed' WHERE id = ?");
-            $update_payment->execute([$order_id]);
+            $update_payment = $pdo->prepare("UPDATE orders SET payment_status = 'failed', payment_reference = ? WHERE id = ?");
+            $update_payment->execute(['ERROR: ' . substr($e->getMessage(), 0, 90), $order_id]);
         }
     }
 
@@ -433,7 +458,8 @@ try {
         // Log email error but don't fail the order
         error_log('Order confirmation email failed: ' . $e->getMessage());
     }
-    header('Location: ../print_receipt.php?id=' . $order_id);
+    // The response was already sent to the browser right after commit —
+    // nothing left to output here, just end the script.
     exit;
 
 } catch (Exception $e) {

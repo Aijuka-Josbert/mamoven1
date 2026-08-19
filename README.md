@@ -78,6 +78,9 @@ mysql -u root -p -e "CREATE DATABASE mamaove CHARACTER SET utf8mb4 COLLATE utf8m
 
 # Import schema
 mysql -u root -p mamaove < database/schema.sql
+
+# One-time migration for mobile money payment tracking columns
+mysql -u root -p mamaove < database/migration_pesajet_payments.sql
 ```
 
 ### Step 4: Environment Configuration
@@ -109,6 +112,11 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 SMTP_SECURE=tls
 ADMIN_EMAIL=admin@mamasoven.com
+
+# PesaJet Mobile Money (set PESAJET_ENABLED=false to disable the feature entirely)
+PESAJET_ENABLED=true
+PESAJET_BASE_URL=https://payments.pesajet.com/api/v1
+PESAJET_API_KEY=your_pesajet_merchant_key
 ```
 
 ### Step 5: Set Permissions (Linux/macOS)
@@ -240,13 +248,76 @@ Products use **base64 encoded images** stored directly in the database:
 | Feature | Implementation |
 |---------|----------------|
 | **Password Hashing** | Bcrypt via `password_hash()` |
-| **SQL Injection Prevention** | PDO prepared statements |
+| **Password Breach Checking** | Every new/reset password checked against the HaveIBeenPwned range API |
+| **SQL Injection Prevention** | PDO prepared statements everywhere, `ATTR_EMULATE_PREPARES` disabled |
 | **XSS Protection** | `htmlspecialchars()` on all output |
-| **CSRF Protection** | Session-based verification |
-| **Session Security** | `session_regenerate_id()` after login |
-| **Role-Based Access** | Admin/customer role checking |
+| **CSRF Protection** | Per-session token, enforced on every state-changing form and API endpoint (not just login) |
+| **No GET-triggered mutations** | Every delete/update action requires a POST + valid CSRF token — nothing destructive can be triggered by a link or `<img>` tag |
+| **Session Security** | `session_regenerate_id()` after login, `httponly`/`samesite`/`secure` cookies, inactivity timeout |
+| **Role-Based Access** | Admin/customer role checking, `require_admin()` guard on every admin page |
+| **Rate Limiting** | Auth endpoints limited to 10 attempts / 15 minutes |
+| **Cryptographic randomness** | Verification and reset codes use `random_int()`, not `mt_rand()` |
 | **Input Validation** | Server-side validation on all forms |
-| **Environment Variables** | `.env` for sensitive data |
+| **File Upload Validation** | MIME-type whitelist + 2MB size limit on product image uploads |
+| **Environment Variables** | `.env` for all secrets — API keys, DB credentials, SMTP creds — never hardcoded |
+| **Security Headers** | CSP, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` set in `.htaccess` |
+| **Sensitive File Blocking** | `.env`, `backup.sql`, `composer.json/lock` denied at the web server level |
+| **Custom Error Pages** | 403/404/500 don't leak stack traces or server info |
+
+## 🛡️ Security Threat Checklist for Future Projects
+
+This is the running list of what actually broke or needed hardening while building this project — kept here so the same mistakes aren't repeated on the next one. Not theoretical; every item below was a real issue found and fixed in this codebase.
+
+**1. CSRF is not "add a token to the login form" — it's every single POST.**
+It's easy to protect the obvious forms (login, register) and miss the AJAX-driven ones (`/api/*.php`) or the ones that submit via a plain HTML `<form>` instead of `fetch`/`$.ajax` (checkout, cart quantity updates). Audit every file that reads `$_POST`, not just the ones that look like "auth."
+
+**2. GET requests must never mutate state — not even behind a confirm() dialog.**
+A JavaScript `confirm()` before navigating to `?action=delete&id=5` protects nothing: a crafted link, a forum post, or even an `<img src="...delete...">` tag fires the GET automatically, no click required. Every destructive action needs to be a POST with CSRF, full stop.
+
+**3. "Headers already sent" is a symptom, not the bug.**
+The real bug is mixing HTML output with `header()` redirect calls in the same request. It can stay silently broken for a long time if your buffer never fills — until a page grows (a new sidebar, more markup) and suddenly a previously-working redirect starts fatal-erroring. Fix at the root with a single `ob_start()` at the true entry point of the app, not by chasing each broken redirect individually.
+
+**4. Never trust client-submitted prices, fees, or totals.**
+Always recalculate subtotal, delivery fee, discount, and total server-side from the database at checkout time — never from hidden form fields or JS variables the client controls.
+
+**5. A "confirmation dialog" is not authorization. A CSRF token is not authentication.**
+Keep them conceptually separate: CSRF proves the request came from your own site's page; login/session proves who the user is; role checks (`require_admin()`) prove they're allowed to do this specific thing. Skipping any one of the three leaves a real hole.
+
+**6. Weak randomness in security-sensitive codes.**
+`mt_rand()` is a predictable PRNG — fine for game logic, not for verification codes, password reset tokens, or anything an attacker could brute-force or predict. Use `random_int()` (or `random_bytes()` for tokens) everywhere security matters.
+
+**7. Third-party API failures should degrade, not cascade.**
+When integrating a payment gateway (or any external API) into a checkout flow, sequence it so a slow or failing third-party call can never lose or block an already-valid transaction. Commit your own data first; treat the external call as best-effort afterward, with a clear status field the user or admin can retry/check later.
+
+**8. Secrets belong in `.env`, checked once, not spread across files.**
+Every API key, DB password, and SMTP credential should route through one config-loading layer (`env_value()`/`define()` pattern here) — never `getenv()` calls scattered ad hoc through feature code, and never hardcoded literals, even "just for testing."
+
+**9. A single feature-flag beats commented-out code, every time.**
+Ship new integrations behind one boolean (`PESAJET_ENABLED` here). It's the difference between "toggle a line in `.env`" and "hope you find and uncomment every reference correctly."
+
+**10. Local dev environments fail differently than production — don't let that create false alarms.**
+A missing/outdated CA bundle can make `curl` fail against *any* HTTPS API on a fresh local PHP install, with an error that looks identical to "the third-party API is down." Relax strict checks (like SSL peer verification) only outside production, gated behind an explicit `IS_PRODUCTION` check — never relax them everywhere just to make local testing easier.
+
+## 🍰 Payments (PesaJet Mobile Money)
+
+Mobile money checkout is integrated via [PesaJet Pay](https://pay.pesajet.com/api-keys) alongside the existing Cash on Delivery flow.
+
+- **Enable/disable the whole feature** with one line in `.env`:
+  ```
+  PESAJET_ENABLED=true   # or false — no code changes needed either way
+  ```
+- **Required `.env` values** when enabled:
+  ```
+  PESAJET_BASE_URL=https://payments.pesajet.com/api/v1
+  PESAJET_API_KEY=your_real_merchant_key
+  ```
+- **One-time database migration** (adds `payment_method`, `payment_status`, `payment_reference`, `payment_provider` to `orders`):
+  ```bash
+  mysql -u root mamaove < database/migration_pesajet_payments.sql
+  ```
+- **Client class**: [`payments/pesajet.php`](payments/pesajet.php) — wraps PesaJet's collection and status-check endpoints.
+- **Status polling**: since a local/dev deployment can't receive PesaJet's webhooks, `orders.php` includes a "Check Payment Status" button that calls [`api/check_payment_status.php`](api/check_payment_status.php) on demand instead.
+- **A failed collection never loses the order.** Payment is initiated *after* the order is already committed to the database — if PesaJet is slow, down, or misconfigured, the order still exists with `payment_status = 'failed'` and the actual failure reason stored directly on the row (`payment_reference` column) for easy diagnosis without digging through server logs.
 
 ## 🎨 Customization
 

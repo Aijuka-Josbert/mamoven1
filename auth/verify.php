@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         if (isset($_POST['resend_code'])) {
-            $new_code = sprintf("%06d", mt_rand(100000, 999999));
+            $new_code = sprintf("%06d", random_int(100000, 999999));
             $stmt = $pdo->prepare("UPDATE users SET verification_code = ? WHERE email = ?");
             $stmt->execute([$new_code, $email]);
             $stmt = $pdo->prepare("SELECT full_name FROM users WHERE email = ?");

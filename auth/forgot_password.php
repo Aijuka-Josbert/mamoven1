@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$email]);
                 $user = $stmt->fetch();
                 if ($user) {
-                    $reset_code = sprintf('%05d', mt_rand(10000, 99999));
+                    $reset_code = sprintf('%05d', random_int(10000, 99999));
                     $expirySeconds = (int) PASSWORD_RESET_EXPIRY;
                     $stmt = $pdo->prepare("INSERT INTO password_resets (user_id, email, reset_code, expires_at, created_at)
                                          VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL {$expirySeconds} SECOND), NOW())

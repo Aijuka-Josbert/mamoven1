@@ -160,7 +160,7 @@ try {
                             <p><strong>Total Amount:</strong> UGX <?php echo number_format($order['total_amount']); ?></p>
                             <p><strong>Delivery To:</strong> <?php echo nl2br(htmlspecialchars($order['delivery_address'])); ?></p>
                             <p><strong>Contact Phone:</strong> <?php echo htmlspecialchars($order['delivery_phone']); ?></p>
-                            <?php if (($order['payment_method'] ?? 'cash_on_delivery') === 'mobile_money'): ?>
+                            <?php if (PESAJET_ENABLED && ($order['payment_method'] ?? 'cash_on_delivery') === 'mobile_money'): ?>
                                 <p>
                                     <strong>Payment:</strong> Mobile Money
                                     <span class="order-status-pill status-<?php echo htmlspecialchars($order['payment_status'] === 'completed' ? 'delivered' : ($order['payment_status'] === 'failed' ? 'cancelled' : 'pending')); ?>" id="payment-status-<?php echo $order['id']; ?>">
@@ -178,7 +178,7 @@ try {
                                 <a href="print_receipt.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-outline-primary" target="_blank">
                                     <i class="fas fa-print me-2"></i> Print Receipt
                                 </a>
-                                <?php if (($order['payment_method'] ?? '') === 'mobile_money' && in_array($order['payment_status'], ['pending', 'processing'])): ?>
+                                <?php if (PESAJET_ENABLED && ($order['payment_method'] ?? '') === 'mobile_money' && in_array($order['payment_status'], ['pending', 'processing'])): ?>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="checkPaymentStatus(<?php echo $order['id']; ?>)">
                                         <i class="fas fa-sync-alt me-2"></i> Check Payment Status
                                     </button>
