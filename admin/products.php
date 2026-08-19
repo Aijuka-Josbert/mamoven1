@@ -43,7 +43,6 @@ try {
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">Manage Products</h1>
     <a href="add_product.php" class="btn btn-primary">
         <i class="fas fa-plus"></i> Add New Product
     </a>

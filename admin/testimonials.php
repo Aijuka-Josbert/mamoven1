@@ -64,8 +64,7 @@ try {
 }
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">Manage Testimonials</h1>
+<div class="d-flex justify-content-end align-items-center mb-4">
     <a href="dashboard.php" class="btn btn-secondary">Back to Dashboard</a>
 </div>
 

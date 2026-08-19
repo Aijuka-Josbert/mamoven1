@@ -93,11 +93,13 @@ try {
     <div class="row">
         <?php if (empty($cart_items)): ?>
             <div class="col-12">
-                <div class="text-center py-5">
-                    <i class="fas fa-shopping-bag fa-4x text-muted mb-3"></i>
-                    <h4 class="mb-3">Your cart is empty</h4>
-                    <p class="text-muted">Looks like you haven't added any delicious treats yet.</p>
-                    <a href="products.php" class="btn btn-primary mt-3">Start Shopping</a>
+                <div class="cart-empty-state text-center py-5">
+                    <i class="fas fa-shopping-bag fa-4x mb-3"></i>
+                    <h4 class="mb-2">Your cart is empty</h4>
+                    <p class="text-muted mb-4">Looks like you haven't added any delicious treats yet.</p>
+                    <a href="products.php" class="btn btn-primary btn-lg rounded-pill px-4">
+                        <i class="fas fa-bread-slice me-2"></i> Start Shopping
+                    </a>
                 </div>
             </div>
         <?php else: ?>
@@ -111,11 +113,11 @@ try {
                                     <?php if (!empty($item['image']) && strpos($item['image'], 'data:image/') === 0): ?>
                                         <img src="<?php echo htmlspecialchars($item['image']); ?>" 
                                              alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                                             class="img-fluid rounded">
+                                             class="cart-item-thumb">
                                     <?php else: ?>
                                         <img src="<?php echo BASE_URL; ?>/assets/images/placeholder.jpg" 
                                              alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                                             class="img-fluid rounded">
+                                             class="cart-item-thumb">
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-md-4">
@@ -174,6 +176,9 @@ try {
                             <span>Total:</span>
                             <span id="total-amount">UGX <?php echo number_format($total); ?></span>
                         </div>
+                        <p class="cart-summary-note mb-0 mt-2">
+                            <i class="fas fa-truck me-1"></i> Pay with Cash on Delivery — no card needed.
+                        </p>
                         <div class="d-grid mt-4">
                              <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#checkoutModal">
                                 Proceed to Checkout

@@ -245,9 +245,14 @@ if (empty($relevance_products)) {
                     <?php foreach ($featured_products as $index => $product): ?>
                         <div class="col-lg-4 col-md-6 animate-on-scroll fade-in-up" style="animation-delay: <?php echo $index * 0.1; ?>s;">
                             <div class="product-card showcase-card text-center pb-4">
-                                <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper p-3 d-block">
-                                    <img src="<?php echo htmlspecialchars($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
-                                         alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image organic-blob">
+                                <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper catalog-image-frame p-3 d-block">
+                                    <span class="blob-frame">
+                                        <img src="<?php echo htmlspecialchars($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                                             alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image organic-blob">
+                                    </span>
+                                    <span class="quick-view-overlay">
+                                        <span class="quick-view-btn"><i class="fas fa-eye me-1"></i> Quick View</span>
+                                    </span>
                                 </a>
                                 <div class="product-info px-4">
                                     <h5 class="product-name font-weight-bold mt-2">
@@ -301,8 +306,13 @@ if (empty($relevance_products)) {
                         ?>
                         <div class="col-lg-3 col-md-6">
                             <div class="product-card relevance-card">
-                                <a href="product-details.php?id=<?php echo (int)$product['id']; ?>" class="product-image-wrapper p-3 d-block">
-                                    <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image">
+                                <a href="product-details.php?id=<?php echo (int)$product['id']; ?>" class="product-image-wrapper catalog-image-frame p-3 d-block">
+                                    <span class="blob-frame">
+                                        <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image organic-blob">
+                                    </span>
+                                    <span class="quick-view-overlay">
+                                        <span class="quick-view-btn"><i class="fas fa-eye me-1"></i> Quick View</span>
+                                    </span>
                                 </a>
                                 <div class="product-info px-4 pb-4">
                                     <div>

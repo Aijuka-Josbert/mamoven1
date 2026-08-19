@@ -59,8 +59,6 @@ try {
 }
 ?>
 
-<h1 class="h3 mb-4">Manage Categories</h1>
-
 <div class="row">
     <!-- Add Category Form -->
     <div class="col-lg-4 mb-4">

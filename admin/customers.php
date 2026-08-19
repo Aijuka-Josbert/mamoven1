@@ -53,10 +53,6 @@ try {
 }
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">Manage Users</h1>
-</div>
-
 <!-- Display success or error messages -->
 <?php if (!empty($errors)): ?>
     <div class="alert alert-danger">

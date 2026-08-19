@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">Edit User: <?php echo htmlspecialchars($user['full_name']); ?></h1>
+    <p class="text-muted mb-0">Editing: <strong><?php echo htmlspecialchars($user['full_name']); ?></strong></p>
     <a href="customers.php" class="btn btn-secondary">Back to User List</a>
 </div>
 

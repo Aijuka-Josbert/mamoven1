@@ -42,7 +42,7 @@ try {
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">Order #<?php echo htmlspecialchars($order['order_number']); ?></h1>
+    <p class="text-muted mb-0">Order: <strong>#<?php echo htmlspecialchars($order['order_number']); ?></strong></p>
     <a href="orders.php" class="btn btn-secondary">Back to Orders</a>
 </div>
 

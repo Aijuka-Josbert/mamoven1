@@ -93,13 +93,25 @@ try {
                 and to make every celebration memorable with thoughtful flavours and beautiful presentation.
             </p>
 
-            <h4 class="mt-3">Our Values</h4>
-            <ul class="text-muted">
-                <li><strong>Quality:</strong> We use premium ingredients and traditional techniques.</li>
-                <li><strong>Community:</strong> Supporting local suppliers and giving back where we can.</li>
-                <li><strong>Craftsmanship:</strong> Attention to detail in every product we make.</li>
-                <li><strong>Sustainability:</strong> Minimizing waste and choosing responsible packaging.</li>
-            </ul>
+            <h4 class="mt-4">Our Values</h4>
+            <div class="about-values-grid">
+                <div class="about-value-item">
+                    <i class="fas fa-award"></i>
+                    <div><strong>Quality</strong><span>Premium ingredients and traditional techniques.</span></div>
+                </div>
+                <div class="about-value-item">
+                    <i class="fas fa-hands-helping"></i>
+                    <div><strong>Community</strong><span>Supporting local suppliers and giving back.</span></div>
+                </div>
+                <div class="about-value-item">
+                    <i class="fas fa-cookie"></i>
+                    <div><strong>Craftsmanship</strong><span>Attention to detail in every product.</span></div>
+                </div>
+                <div class="about-value-item">
+                    <i class="fas fa-leaf"></i>
+                    <div><strong>Sustainability</strong><span>Minimizing waste, responsible packaging.</span></div>
+                </div>
+            </div>
 
             <a href="contact.php" class="btn btn-primary mt-3">Get in Touch</a>
         </div>
@@ -114,7 +126,7 @@ try {
 
         <!-- <div class="col-md-4 text-center"> -->
         <div class="text-center">
-            <img src="assets/image2/sheba.jpeg" alt="Head Baker" class="img-fluid rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;">
+            <img src="assets/image2/sheba.jpeg" alt="Head Baker" class="about-avatar-frame mb-3">
             <h5 class="mb-0">Nkinzi Sheba</h5>
             <small class="text-muted d-block mb-2">Head Baker & Founder</small>
             <p class="text-muted">Recipe guardian and flavor innovator.</p>
@@ -228,11 +240,11 @@ try {
     <!-- Sustainability / Local Sourcing -->
     <div class="row mt-5">
         <div class="col-md-6">
-            <h4>Local Ingredients</h4>
+            <h4><i class="fas fa-seedling me-2" style="color:#F39C6A;"></i>Local Ingredients</h4>
             <p class="text-muted">We partner with local farms and suppliers to source fresh produce and grains — supporting the community while ensuring superior flavor.</p>
         </div>
         <div class="col-md-6">
-            <h4>Sustainable Practices</h4>
+            <h4><i class="fas fa-recycle me-2" style="color:#F39C6A;"></i>Sustainable Practices</h4>
             <p class="text-muted">From recycled packaging choices to minimizing food waste, we strive to operate responsibly for our customers and the environment.</p>
         </div>
     </div>

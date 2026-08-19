@@ -122,14 +122,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
         </div>
         <!-- Contact Information Column -->
         <div class="col-lg-5">
-             <div class="card shadow border-0 h-100">
+             <div class="card shadow border-0 h-100 contact-info-card">
                 <div class="card-body p-4 p-md-5">
                     <h4 class="mb-4">Contact Information</h4>
-                    <p class="mb-3"><i class="fas fa-map-marker-alt fa-fw me-2 text-primary"></i>Plot 123, Main Street, Kampala, Uganda</p>
-                    <p class="mb-3"><i class="fas fa-phone fa-fw me-2 text-primary"></i><a href="tel:+256700123456">+256 700 123456</a></p>
-                    <p class="mb-3"><i class="fas fa-envelope fa-fw me-2 text-primary"></i><a href="mailto:<?php echo htmlspecialchars($supportEmail); ?>"><?php echo htmlspecialchars($supportEmail); ?></a></p>
+                    <div class="contact-info-row">
+                        <span class="contact-info-icon"><i class="fas fa-map-marker-alt"></i></span>
+                        <span>Plot 123, Main Street, Kampala, Uganda</span>
+                    </div>
+                    <div class="contact-info-row">
+                        <span class="contact-info-icon"><i class="fas fa-phone"></i></span>
+                        <a href="tel:+256700123456">+256 700 123456</a>
+                    </div>
+                    <div class="contact-info-row">
+                        <span class="contact-info-icon"><i class="fas fa-envelope"></i></span>
+                        <a href="mailto:<?php echo htmlspecialchars($supportEmail); ?>"><?php echo htmlspecialchars($supportEmail); ?></a>
+                    </div>
                     <hr>
-                    <h5 class="h6 mt-4">Business Hours</h5>
+                    <h5 class="h6 mt-4"><i class="fas fa-clock me-2" style="color:#F39C6A;"></i>Business Hours</h5>
                     <p class="text-muted mb-1">Everyday: 8:00 AM - 9:00 PM</p>
                 </div>
              </div>

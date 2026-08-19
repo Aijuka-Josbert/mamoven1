@@ -32,8 +32,6 @@ try {
 ?>
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4">Admin Dashboard</h1>
-
     <?php if (isset($error_message)): ?>
         <div class="alert alert-danger"><?php echo htmlspecialchars($error_message); ?></div>
     <?php endif; ?>
@@ -41,54 +39,38 @@ try {
     <!-- Statistics Cards -->
     <div class="row">
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Products</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $total_products; ?></div>
-                        </div>
-                        <div class="col-auto"><i class="fas fa-cookie-bite fa-2x text-gray-300"></i></div>
-                    </div>
+            <div class="stat-card stat-card-primary">
+                <div class="stat-card-icon"><i class="fas fa-cookie-bite"></i></div>
+                <div>
+                    <div class="stat-card-label">Total Products</div>
+                    <div class="stat-card-value"><?php echo $total_products; ?></div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Customers</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $total_customers; ?></div>
-                        </div>
-                        <div class="col-auto"><i class="fas fa-users fa-2x text-gray-300"></i></div>
-                    </div>
+            <div class="stat-card stat-card-success">
+                <div class="stat-card-icon"><i class="fas fa-users"></i></div>
+                <div>
+                    <div class="stat-card-label">Total Customers</div>
+                    <div class="stat-card-value"><?php echo $total_customers; ?></div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Orders</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $total_orders; ?></div>
-                        </div>
-                        <div class="col-auto"><i class="fas fa-box-open fa-2x text-gray-300"></i></div>
-                    </div>
+            <div class="stat-card stat-card-info">
+                <div class="stat-card-icon"><i class="fas fa-box-open"></i></div>
+                <div>
+                    <div class="stat-card-label">Total Orders</div>
+                    <div class="stat-card-value"><?php echo $total_orders; ?></div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Orders</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $pending_orders; ?></div>
-                        </div>
-                        <div class="col-auto"><i class="fas fa-clock fa-2x text-gray-300"></i></div>
-                    </div>
+            <div class="stat-card stat-card-warning">
+                <div class="stat-card-icon"><i class="fas fa-clock"></i></div>
+                <div>
+                    <div class="stat-card-label">Pending Orders</div>
+                    <div class="stat-card-value"><?php echo $pending_orders; ?></div>
                 </div>
             </div>
         </div>
@@ -100,12 +82,26 @@ try {
             <div class="card shadow">
                 <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6></div>
                 <div class="card-body">
-                    <a href="add_product.php" class="admin-actions-btn btn-primary mb-3 shadow-sm">Add New Product</a>
-                    <a href="orders.php" class="admin-actions-btn btn-info mb-3 shadow-sm">View All Orders</a>
-                    <a href="categories.php" class="admin-actions-btn btn-secondary mb-3 shadow-sm">Manage Categories</a>
-                    <a href="testimonials.php" class="admin-actions-btn btn-success mb-3 shadow-sm">Manage Feedback</a>
-                    <a href="promo_codes.php" class="admin-actions-btn btn-dark mb-3 shadow-sm">Manage Promo Codes</a>
-                    <a href="contact_messages.php" class="admin-actions-btn btn-warning mb-3 shadow-sm">View Contact Messages</a>
+                    <div class="admin-quick-actions">
+                        <a href="add_product.php" class="admin-quick-action">
+                            <i class="fas fa-plus-circle"></i> Add New Product
+                        </a>
+                        <a href="orders.php" class="admin-quick-action">
+                            <i class="fas fa-box-open"></i> View All Orders
+                        </a>
+                        <a href="categories.php" class="admin-quick-action">
+                            <i class="fas fa-tags"></i> Manage Categories
+                        </a>
+                        <a href="testimonials.php" class="admin-quick-action">
+                            <i class="fas fa-comment-dots"></i> Manage Feedback
+                        </a>
+                        <a href="promo_codes.php" class="admin-quick-action">
+                            <i class="fas fa-percent"></i> Manage Promo Codes
+                        </a>
+                        <a href="contact_messages.php" class="admin-quick-action">
+                            <i class="fas fa-envelope"></i> View Contact Messages
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -114,7 +110,7 @@ try {
                 <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Recent Orders</h6></div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover admin-table">
                             <thead>
                                 <tr>
                                     <th>Order #</th>
@@ -133,7 +129,7 @@ try {
                                         <td><?php echo htmlspecialchars($order['order_number']); ?></td>
                                         <td><?php echo htmlspecialchars($order['full_name']); ?></td>
                                         <td>UGX <?php echo number_format($order['total_amount']); ?></td>
-                                        <td><span class="badge bg-info text-dark"><?php echo ucfirst(htmlspecialchars($order['status'])); ?></span></td>
+                                        <td><span class="order-status-pill status-<?php echo htmlspecialchars($order['status']); ?>"><?php echo ucfirst(htmlspecialchars($order['status'])); ?></span></td>
                                         <td><a href="./order_details.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-outline-primary">View</a></td>
                                     </tr>
                                     <?php endforeach; ?>

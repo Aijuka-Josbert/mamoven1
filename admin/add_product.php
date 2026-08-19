@@ -91,8 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">Add New Product</h1>
+<div class="d-flex justify-content-end align-items-center mb-4">
     <a href="products.php" class="btn btn-secondary">Back to Products</a>
 </div>
 

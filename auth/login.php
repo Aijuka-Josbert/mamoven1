@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border-0 auth-card">
                 <div class="card-body p-5">
                     <div class="text-center mb-4">
                         <img src="../assets/images/logo.png" alt="Logo" style="height: 80px;" class="mb-3">

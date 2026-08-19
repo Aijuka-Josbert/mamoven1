@@ -134,24 +134,23 @@ try {
     <?php endif; ?>
 
     <?php if (empty($orders)): ?>
-        <div class="text-center py-5">
-            <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
-            <h4 class="mb-3">You haven't placed any orders yet.</h4>
-            <p class="text-muted">All your past orders will appear here once you've made a purchase.</p>
-            <a href="products.php" class="btn btn-primary mt-3">Browse Our Products</a>
+        <div class="cart-empty-state text-center py-5">
+            <i class="fas fa-receipt fa-4x mb-3"></i>
+            <h4 class="mb-2">You haven't placed any orders yet.</h4>
+            <p class="text-muted mb-4">All your past orders will appear here once you've made a purchase.</p>
+            <a href="products.php" class="btn btn-primary btn-lg rounded-pill px-4">
+                <i class="fas fa-bread-slice me-2"></i> Browse Our Products
+            </a>
         </div>
     <?php else: ?>
-        <div class="accordion" id="ordersAccordion">
+        <div class="accordion orders-accordion" id="ordersAccordion">
             <?php foreach ($orders as $index => $order): ?>
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="heading<?php echo $order['id']; ?>">
                         <button class="accordion-button <?php echo $index > 0 ? 'collapsed' : ''; ?>" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $order['id']; ?>">
                             <span class="fw-bold me-3">Order #<?php echo htmlspecialchars($order['order_number']); ?></span>
                             <span class="me-auto">Date: <?php echo date('d M Y', strtotime($order['created_at'])); ?></span>
-                            <span class="badge <?php 
-                                echo $order['status'] === 'cancelled' ? 'bg-danger' : 
-                                     ($order['status'] === 'delivered' ? 'bg-success' : 'bg-info'); 
-                            ?> text-white">
+                            <span class="order-status-pill status-<?php echo htmlspecialchars($order['status']); ?>">
                                 <?php echo ucfirst(htmlspecialchars($order['status'])); ?>
                             </span>
                         </button>

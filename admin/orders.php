@@ -144,7 +144,6 @@ try {
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">Manage Orders</h1>
     <!-- Filter Dropdown -->
     <form method="GET" class="d-flex align-items-center">
         <label for="status-filter" class="form-label me-2 mb-0">Filter:</label>
