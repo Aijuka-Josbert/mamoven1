@@ -1,16 +1,8 @@
 <?php
 // Admin Add Product Page
-require_once '../config/database.php';
-require_admin();
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header('Location: ../auth/login.php');
-    exit();
-}
-
-
 $page_title = 'Add New Product';
 require_once __DIR__ . '/includes/header.php';
+require_admin();
 
 $errors = [];
 
@@ -50,9 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $file = $_FILES['image'];
 
             // Check file type
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/avif', 'image/webp'];
             if (!in_array($file['type'], $allowed_types)) {
-                $errors[] = "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.";
+                $errors[] = "Invalid file type. Only JPG, PNG, GIF, AVIF and WEBP are allowed.";
             } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
                 $errors[] = "Image file is too large. Maximum size is 2MB.";
             } else {

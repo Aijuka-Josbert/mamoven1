@@ -62,9 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $file = $_FILES['image'];
 
             // Validate file type and size
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/avif', 'image/webp'];
             if (!in_array($file['type'], $allowed_types)) {
-                $errors[] = "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.";
+                $errors[] = "Invalid file type. Only JPG, PNG, GIF, AVIF and WEBP are allowed.";
             } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
                 $errors[] = "Image file is too large. Maximum size is 2MB.";
             } else {
