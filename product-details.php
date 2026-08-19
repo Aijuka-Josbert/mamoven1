@@ -59,19 +59,30 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
 } else {
     $image_url = BASE_URL . '/assets/images/placeholder.jpg';
 }
+
+// Split flavours into individual chips for display
+$flavour_chips = [];
+if (!empty($product['flavours'])) {
+    $flavour_chips = array_filter(array_map('trim', explode(',', $product['flavours'])));
+}
 ?>
 
 <div class="container my-5">
     <div class="row">
         <!-- Product Image -->
         <div class="col-lg-6 mb-4">
-            <div class="product-card">
-                 <div class="product-image-wrapper" style="height: 450px;">
-                    <!-- Main Product Image -->
+            <div class="pd-image-panel">
+                <?php if (!empty($product['category_name'])): ?>
+                    <span class="pd-category-badge"><?php echo htmlspecialchars($product['category_name']); ?></span>
+                <?php endif; ?>
+                <?php if (!empty($product['featured'])): ?>
+                    <span class="pd-featured-badge"><i class="fas fa-star"></i> Bestseller</span>
+                <?php endif; ?>
+                <span class="pd-blob-frame">
                     <img src="<?php echo htmlspecialchars($image_url); ?>" 
                          alt="<?php echo htmlspecialchars($product['name']); ?>" 
-                         class="product-image">
-                </div>
+                         class="pd-hero-image organic-blob">
+                </span>
             </div>
         </div>
 
@@ -113,17 +124,22 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
 
             <p class="lead text-muted"><?php echo nl2br(htmlspecialchars($product['description'])); ?></p>
             
-            <?php if (!empty($product['flavours'])): ?>
-                <p><strong>Flavours:</strong>
-                    <?php
-                        // display flavours as comma-separated plain text or as badges
-                        echo htmlspecialchars($product['flavours']);
-                    ?>
-                </p>
+            <?php if (!empty($flavour_chips)): ?>
+                <div class="pd-attribute-block">
+                    <span class="pd-attribute-label"><i class="fas fa-ice-cream me-1"></i> Flavours</span>
+                    <div class="pd-chip-row">
+                        <?php foreach ($flavour_chips as $flavour): ?>
+                            <span class="pd-chip"><?php echo htmlspecialchars($flavour); ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             <?php endif; ?>
 
             <?php if (!empty($product['ingredients'])): ?>
-                <p><strong>Ingredients:</strong> <?php echo nl2br(htmlspecialchars($product['ingredients'])); ?></p>
+                <div class="pd-attribute-block">
+                    <span class="pd-attribute-label"><i class="fas fa-leaf me-1"></i> Ingredients</span>
+                    <p class="mb-0 text-muted"><?php echo nl2br(htmlspecialchars($product['ingredients'])); ?></p>
+                </div>
             <?php endif; ?>
             
             <!-- Add to Cart Section -->
@@ -139,6 +155,13 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="pd-trust-row">
+                <div class="pd-trust-item"><i class="fas fa-bread-slice"></i> Baked Fresh</div>
+                <div class="pd-trust-item"><i class="fas fa-truck"></i> Cash on Delivery</div>
+                <div class="pd-trust-item"><i class="fas fa-shield-alt"></i> Quality Assured</div>
             </div>
         </div>
     </div>
@@ -219,11 +242,15 @@ if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0)
             <div class="row gy-4">
                 <?php foreach ($related_products as $related): ?>
                     <div class="col-lg-3 col-md-6">
-                         <div class="product-card">
-                            <a href="<?php echo BASE_URL . '/product-details.php?id=' . (int)$related['id']; ?>" class="product-image-wrapper">
-                                <!-- Related Product Images -->
-                                <img src="<?php echo htmlspecialchars($related['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
-                                     alt="<?php echo htmlspecialchars($related['name']); ?>" class="product-image">
+                         <div class="product-card catalog-card">
+                            <a href="<?php echo BASE_URL . '/product-details.php?id=' . (int)$related['id']; ?>" class="product-image-wrapper catalog-image-frame">
+                                <span class="blob-frame">
+                                    <img src="<?php echo htmlspecialchars($related['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                                         alt="<?php echo htmlspecialchars($related['name']); ?>" class="product-image organic-blob">
+                                </span>
+                                <span class="quick-view-overlay">
+                                    <span class="quick-view-btn"><i class="fas fa-eye me-1"></i> Quick View</span>
+                                </span>
                             </a>
                             <div class="product-info">
                                 <div>

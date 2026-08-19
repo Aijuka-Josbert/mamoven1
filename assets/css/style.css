@@ -1779,3 +1779,259 @@ body {
         height: 190px;
     }
 }
+/* ============================================================
+   PRODUCTS & PRODUCT DETAILS REDESIGN
+   Benchmarked against Magnolia Bakery / Curbside Bakes:
+   organic image framing, hover quick-view, storytelling strip,
+   trust badges. Scoped under new class names so it layers on
+   top of the existing card system without fighting it.
+   ============================================================ */
+
+/* --- Trust Strip (products.php, under the hero) --- */
+.trust-strip {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+}
+
+.trust-strip-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid rgba(90, 51, 31, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #5A331F;
+    box-shadow: 0 3px 12px rgba(90, 51, 31, 0.05);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.trust-strip-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(90, 51, 31, 0.1);
+}
+
+.trust-strip-item i {
+    color: #F39C6A;
+    font-size: 1.05rem;
+}
+
+/* --- Catalog Card Image Frame + Quick View --- */
+.catalog-image-frame {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    padding: 14px 0 22px;
+}
+
+.blob-frame {
+    display: block;
+    width: 190px;
+    height: 190px;
+}
+
+.catalog-image-frame .product-image.organic-blob {
+    width: 190px;
+    height: 190px;
+    object-fit: cover;
+    display: block;
+}
+
+.catalog-ribbon {
+    position: absolute;
+    top: 6px;
+    left: 14px;
+    z-index: 3;
+    background: linear-gradient(135deg, #F39C6A 0%, #c96f3d 100%);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(201, 111, 61, 0.35);
+    transform: rotate(-4deg);
+}
+
+.quick-view-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+
+.product-card:hover .quick-view-overlay {
+    opacity: 1;
+}
+
+.quick-view-btn {
+    background: rgba(90, 51, 31, 0.88);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(6px);
+    transition: transform 0.35s ease;
+}
+
+.product-card:hover .quick-view-btn {
+    transform: translateY(0);
+}
+
+.catalog-category-chip {
+    display: inline-block;
+    background: #FFF3E8;
+    color: #b1582e;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 6px;
+}
+
+/* --- Product Details Hero --- */
+.pd-image-panel {
+    position: relative;
+    background: radial-gradient(circle at 50% 40%, #fff8f1 0%, #fdf1e6 70%, #fdf1e6 100%);
+    border-radius: 24px;
+    padding: 48px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 420px;
+    box-shadow: 0 10px 30px rgba(90, 51, 31, 0.06);
+}
+
+.pd-blob-frame {
+    display: block;
+    width: 340px;
+    height: 340px;
+    max-width: 80%;
+    max-height: 80%;
+}
+
+.pd-hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    box-shadow: 0 15px 35px rgba(90, 51, 31, 0.18);
+}
+
+.pd-category-badge {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 3;
+    background: #fff;
+    color: #6a3b25;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(90, 51, 31, 0.12);
+}
+
+.pd-featured-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 3;
+    background: linear-gradient(135deg, #F39C6A 0%, #c96f3d 100%);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(201, 111, 61, 0.35);
+}
+
+/* --- Flavours / Ingredients chips --- */
+.pd-attribute-block {
+    margin-bottom: 18px;
+}
+
+.pd-attribute-label {
+    display: block;
+    font-weight: 700;
+    color: #5A331F;
+    font-size: 0.88rem;
+    margin-bottom: 8px;
+}
+
+.pd-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pd-chip {
+    background: #FFF3E8;
+    color: #b1582e;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(201, 111, 61, 0.2);
+}
+
+/* --- Product Details Trust Row --- */
+.pd-trust-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.pd-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #7a6a61;
+}
+
+.pd-trust-item i {
+    color: #F39C6A;
+}
+
+/* --- Mobile adjustments --- */
+@media (max-width: 768px) {
+    .blob-frame,
+    .catalog-image-frame .product-image.organic-blob {
+        width: 150px;
+        height: 150px;
+    }
+
+    .pd-image-panel {
+        min-height: 300px;
+        padding: 32px 16px;
+    }
+
+    .pd-blob-frame {
+        width: 240px;
+        height: 240px;
+    }
+
+    .trust-strip-item {
+        font-size: 0.8rem;
+        padding: 8px 14px;
+    }
+}

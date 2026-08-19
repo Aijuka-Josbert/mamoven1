@@ -14,7 +14,7 @@ try {
 }
 
 // Base SQL query
-$sql = "SELECT p.id, p.name, p.price, p.image, p.description, p.stock_quantity
+$sql = "SELECT p.id, p.name, p.price, p.image, p.description, p.stock_quantity, p.featured, c.name AS category_name
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.id
         WHERE p.status = 'active'";
@@ -50,13 +50,33 @@ try {
 
 <div class="container my-5 products-page">
     <!-- Page Header -->
-    <div class="products-hero text-center mb-5">
+    <div class="products-hero text-center mb-4">
         <span class="products-hero-kicker">Freshly Baked • Daily</span>
         <h1 class="section-title">Our Delicious Menu</h1>
         <p class="lead text-muted mb-2">Browse our selection of handcrafted cakes, snacks, and pastries.</p>
         <p class="small text-muted mb-0">
             Current payment method: <strong>Cash on Delivery</strong>. Other payment methods are coming soon.
         </p>
+    </div>
+
+    <!-- Trust Strip -->
+    <div class="trust-strip mb-5">
+        <div class="trust-strip-item">
+            <i class="fas fa-bread-slice"></i>
+            <span>Baked Fresh Daily</span>
+        </div>
+        <div class="trust-strip-item">
+            <i class="fas fa-heart"></i>
+            <span>Handcrafted With Love</span>
+        </div>
+        <div class="trust-strip-item">
+            <i class="fas fa-leaf"></i>
+            <span>Quality Ingredients</span>
+        </div>
+        <div class="trust-strip-item">
+            <i class="fas fa-truck"></i>
+            <span>Cash on Delivery</span>
+        </div>
     </div>
 
     <!-- Filters -->
@@ -129,14 +149,25 @@ try {
             <?php foreach ($products as $index => $product): ?>
                 <div class="col-lg-4 col-md-6 animate-on-scroll fade-in-up" style="animation-delay: <?php echo $index * 0.08; ?>s;">
                     <div class="product-card catalog-card">
-                        <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper">
-                            <img src="<?php echo !empty($product['image']) && strpos($product['image'], 'data:image/') === 0 
+                        <?php if (!empty($product['featured'])): ?>
+                            <span class="catalog-ribbon"><i class="fas fa-star"></i> Bestseller</span>
+                        <?php endif; ?>
+                        <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper catalog-image-frame">
+                            <span class="blob-frame">
+                                <img src="<?php echo !empty($product['image']) && strpos($product['image'], 'data:image/') === 0 
     ? htmlspecialchars($product['image']) 
     : BASE_URL . '/assets/images/placeholder.jpg'; ?>" 
      alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image organic-blob">
+                            </span>
+                            <span class="quick-view-overlay">
+                                <span class="quick-view-btn"><i class="fas fa-eye me-1"></i> Quick View</span>
+                            </span>
                         </a>
                         <div class="product-info">
                             <div>
+                                <?php if (!empty($product['category_name'])): ?>
+                                    <span class="catalog-category-chip"><?php echo htmlspecialchars($product['category_name']); ?></span>
+                                <?php endif; ?>
                                 <h5 class="product-name">
                                     <a href="product-details.php?id=<?php echo $product['id']; ?>" class="text-decoration-none">
                                         <?php echo htmlspecialchars($product['name']); ?>
