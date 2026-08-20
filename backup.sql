@@ -1,9 +1,9 @@
 /*M!999999\- enable the sandbox mode */ 
--- MariaDB dump 10.19-11.8.6-MariaDB, for debian-linux-gnu (x86_64)
+-- MariaDB dump 10.19-11.8.8-MariaDB, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: mamaove
 -- ------------------------------------------------------
--- Server version	11.8.6-MariaDB-5 from Debian
+-- Server version	11.8.8-MariaDB-1 from Debian
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -56,6 +56,69 @@ COMMIT;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 
 --
+-- Table structure for table `audit_log`
+--
+
+DROP TABLE IF EXISTS `audit_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `audit_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `username` varchar(100) DEFAULT NULL,
+  `role` varchar(20) DEFAULT NULL,
+  `action` varchar(100) NOT NULL,
+  `entity_type` varchar(50) DEFAULT NULL,
+  `entity_id` varchar(50) DEFAULT NULL,
+  `details` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_audit_user` (`user_id`),
+  KEY `idx_audit_action` (`action`),
+  KEY `idx_audit_created` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `audit_log`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `audit_log` WRITE;
+/*!40000 ALTER TABLE `audit_log` DISABLE KEYS */;
+INSERT INTO `audit_log` VALUES
+(1,1,'admin','admin','admin_login','user','1','Admin logged in.','127.0.0.1','2026-08-20 06:59:52'),
+(2,1,'admin','admin','admin_logout','user','1','','127.0.0.1','2026-08-20 07:11:21'),
+(3,1,'admin','admin','admin_login','user','1','Admin logged in.','127.0.0.1','2026-08-20 07:11:45'),
+(4,1,'admin','admin','admin_logout','user','1','','127.0.0.1','2026-08-20 07:21:21'),
+(5,1,'admin','admin','admin_login','user','1','Admin logged in.','127.0.0.1','2026-08-20 21:58:10'),
+(6,1,'admin','admin','admin_2fa_enabled','user','1','Two-factor authentication enabled (email code).','127.0.0.1','2026-08-20 22:04:53'),
+(7,1,'admin','admin','admin_logout','user','1','','127.0.0.1','2026-08-20 22:05:07'),
+(8,1,'admin','admin','admin_login','user','1','Admin logged in (2FA verified).','127.0.0.1','2026-08-20 22:05:47'),
+(9,1,'admin','admin','order_deleted','order','21','Order #MO2026081966CC5B permanently deleted.','127.0.0.1','2026-08-20 22:05:54'),
+(10,1,'admin','admin','order_deleted','order','20','Order #MO2026081958416C permanently deleted.','127.0.0.1','2026-08-20 22:06:00'),
+(11,1,'admin','admin','admin_2fa_disabled','user','1','Two-factor authentication disabled.','127.0.0.1','2026-08-20 22:06:51'),
+(12,1,'admin','admin','admin_logout','user','1','','127.0.0.1','2026-08-20 22:07:47'),
+(13,10,'jonah','customer','customer_login','user','10','','127.0.0.1','2026-08-20 22:07:51'),
+(14,10,'jonah','customer','customer_logout','user','10','','127.0.0.1','2026-08-20 22:08:16'),
+(15,1,'admin','admin','admin_login','user','1','Admin logged in.','127.0.0.1','2026-08-20 22:08:21'),
+(16,1,'admin','admin','customer_deleted','user','10','','127.0.0.1','2026-08-20 22:08:58'),
+(17,1,'admin','admin','admin_logout','user','1','','127.0.0.1','2026-08-20 22:09:04'),
+(18,NULL,NULL,NULL,'customer_registered','user','11','Username: jonah','127.0.0.1','2026-08-20 22:09:42'),
+(19,11,'jonah','customer','customer_verified','user','11','','127.0.0.1','2026-08-20 22:11:56'),
+(20,11,'jonah','customer','order_placed','order','22','Order #MO20260820E1C49B, UGX 15,800','127.0.0.1','2026-08-20 22:12:59'),
+(21,11,'jonah','customer','customer_logout','user','11','','127.0.0.1','2026-08-20 22:13:59'),
+(22,1,'admin','admin','admin_login','user','1','Admin logged in.','127.0.0.1','2026-08-20 22:14:04'),
+(23,1,'admin','admin','order_status_updated','order','22','Status changed to: confirmed','127.0.0.1','2026-08-20 22:14:13'),
+(24,1,'admin','admin','order_status_updated','order','22','Status changed to: ready','127.0.0.1','2026-08-20 22:15:18'),
+(25,1,'admin','admin','order_status_updated','order','22','Status changed to: delivered','127.0.0.1','2026-08-20 22:15:53');
+/*!40000 ALTER TABLE `audit_log` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
 -- Table structure for table `cart`
 --
 
@@ -73,7 +136,7 @@ CREATE TABLE `cart` (
   KEY `product_id` (`product_id`),
   CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -105,7 +168,7 @@ CREATE TABLE `categories` (
   `status` enum('active','inactive') NOT NULL DEFAULT 'active',
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -120,7 +183,8 @@ INSERT INTO `categories` VALUES
 (2,'Pastries','Freshly baked pastries','active'),
 (3,'Cookies','Assorted cookies','active'),
 (4,'biscuits','Bold sweet in all flavours','active'),
-(5,'maize','maize','active');
+(5,'maize','maize','active'),
+(6,'crunchies','for free time snack','active');
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -140,7 +204,7 @@ CREATE TABLE `contact_messages` (
   `message` text NOT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -157,7 +221,8 @@ INSERT INTO `contact_messages` VALUES
 (4,'jjj','josbert.aijuka@stud.umu.ac.ug','jhjhj','2026-01-01 17:28:25'),
 (5,'hey','josbertaijuka15@gmail.com','heyy','2026-04-20 08:06:19'),
 (6,'hehy','josbertaijuka15@gmail.com','need some help','2026-04-20 09:00:10'),
-(8,'Auto Contact','auto@test.local','AUTOTEST_CONTACT_DELETE','2026-04-20 10:26:56');
+(8,'Auto Contact','auto@test.local','AUTOTEST_CONTACT_DELETE','2026-04-20 10:26:56'),
+(9,'josbert','josbertaijuka15@gmail.com','good morning','2026-08-19 03:38:51');
 /*!40000 ALTER TABLE `contact_messages` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -175,8 +240,9 @@ CREATE TABLE `delivery_locations` (
   `name` varchar(100) NOT NULL,
   `fee` decimal(10,2) NOT NULL DEFAULT 5000.00,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_delivery_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -191,7 +257,70 @@ INSERT INTO `delivery_locations` VALUES
 (2,'Ntinda / Kiwatule',5000.00,1),
 (3,'Entebbe',15000.00,1),
 (4,'Mukono',10000.00,1),
-(5,'Bweyogerere',8000.00,1);
+(5,'Bweyogerere',8000.00,1),
+(6,'namugongo',7000.00,1),
+(7,'Nakasero',0.00,0),
+(8,'Old Kampala',0.00,0),
+(9,'Kamwokya',0.00,0),
+(10,'Kololo',0.00,0),
+(11,'Bukoto',0.00,0),
+(12,'Naguru',0.00,0),
+(13,'Ntinda',0.00,0),
+(14,'Kisaasi',0.00,0),
+(15,'Kyanja',0.00,0),
+(16,'Najjera',0.00,0),
+(17,'Kiwatule',0.00,0),
+(18,'Naalya',0.00,0),
+(19,'Kireka',0.00,0),
+(20,'Kyaliwajjala',0.00,0),
+(21,'Kira Town',0.00,0),
+(22,'Nakawa',0.00,0),
+(23,'Luzira',0.00,0),
+(24,'Butabika',0.00,0),
+(25,'Bugolobi',0.00,0),
+(26,'Mbuya',0.00,0),
+(27,'Banda',0.00,0),
+(28,'Kinawataka',0.00,0),
+(29,'Makindye',0.00,0),
+(30,'Nsambya',0.00,0),
+(31,'Kabalagala',0.00,0),
+(32,'Muyenga',0.00,0),
+(33,'Ggaba',0.00,0),
+(34,'Bunga',0.00,0),
+(35,'Kansanga',0.00,0),
+(36,'Najjanankumbi',0.00,0),
+(37,'Salaama',0.00,0),
+(38,'Kawempe',0.00,0),
+(39,'Bwaise',0.00,0),
+(40,'Kalerwe',0.00,0),
+(41,'Mpererwe',0.00,0),
+(42,'Kyebando',0.00,0),
+(43,'Kazo',0.00,0),
+(44,'Komamboga',0.00,0),
+(45,'Rubaga',0.00,0),
+(46,'Mengo',0.00,0),
+(47,'Namirembe',0.00,0),
+(48,'Nateete',0.00,0),
+(49,'Lubaga',0.00,0),
+(50,'Busega',0.00,0),
+(51,'Ndeeba',0.00,0),
+(52,'Kasubi',0.00,0),
+(53,'Wandegeya',0.00,0),
+(54,'Makerere',0.00,0),
+(55,'Mulago',0.00,0),
+(56,'Entebbe Road / Kajjansi',0.00,0),
+(57,'Entebbe Town',0.00,0),
+(58,'Najjera - Wakiso',0.00,0),
+(59,'Nansana',0.00,0),
+(60,'Namasuba',0.00,0),
+(61,'Ssabagabo',0.00,0),
+(62,'Gayaza',0.00,0),
+(63,'Matugga',0.00,0),
+(64,'Wakiso Town',0.00,0),
+(65,'Mukono Town',0.00,0),
+(66,'Seeta',0.00,0),
+(67,'Namanve',0.00,0),
+(68,'Jinja Town',0.00,0);
 /*!40000 ALTER TABLE `delivery_locations` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -284,7 +413,7 @@ CREATE TABLE `order_items` (
   KEY `product_id` (`product_id`),
   CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
   CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -309,7 +438,13 @@ INSERT INTO `order_items` VALUES
 (12,10,5,1,2300.00,2300.00),
 (13,11,4,1,5000.00,5000.00),
 (16,14,3,1,70000.00,70000.00),
-(17,15,3,1,70000.00,70000.00);
+(17,15,3,1,70000.00,70000.00),
+(19,17,5,1,2300.00,2300.00),
+(20,17,4,1,5000.00,5000.00),
+(21,18,4,1,5000.00,5000.00),
+(25,22,5,1,2300.00,2300.00),
+(26,22,4,1,5000.00,5000.00),
+(27,22,6,1,1500.00,1500.00);
 /*!40000 ALTER TABLE `order_items` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -363,6 +498,10 @@ CREATE TABLE `orders` (
   `order_number` varchar(32) NOT NULL,
   `total_amount` decimal(10,2) NOT NULL,
   `status` varchar(20) NOT NULL DEFAULT 'pending',
+  `payment_method` varchar(20) NOT NULL DEFAULT 'cash_on_delivery',
+  `payment_status` varchar(20) NOT NULL DEFAULT 'not_applicable',
+  `payment_reference` varchar(100) DEFAULT NULL,
+  `payment_provider` varchar(20) DEFAULT NULL,
   `delivery_address` varchar(255) NOT NULL,
   `delivery_phone` varchar(30) NOT NULL,
   `special_instructions` varchar(255) DEFAULT NULL,
@@ -381,9 +520,10 @@ CREATE TABLE `orders` (
   KEY `idx_orders_status` (`status`),
   KEY `idx_orders_user_status` (`user_id`,`status`),
   KEY `orders_ibfk_promo_code` (`promo_code_id`),
+  KEY `idx_orders_payment_reference` (`payment_reference`),
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `orders_ibfk_promo_code` FOREIGN KEY (`promo_code_id`) REFERENCES `promo_codes` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -394,19 +534,22 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
 INSERT INTO `orders` VALUES
-(1,1,'MO202510107336',75000.00,'pending','naalya','+256 7995044','ks',NULL,NULL,NULL,'2025-10-10 10:18:10','2026-04-18 13:49:46',NULL,NULL,0.00,0),
-(2,1,'MO202510101651',75000.00,'pending','haj','+256 759420168','s',NULL,NULL,NULL,'2025-10-10 10:41:16','2026-04-18 13:49:46',NULL,NULL,0.00,0),
-(3,3,'MO202510183842',145000.00,'cancelled','joosojo','+256 7995044','jakksjjjs',NULL,NULL,NULL,'2025-10-18 18:50:44','2026-04-18 13:49:46',NULL,NULL,0.00,0),
-(4,4,'MO202511148615',77300.00,'delivered','seta','+256 759420168','s',NULL,NULL,NULL,'2025-11-14 11:59:16','2026-04-18 15:08:53',NULL,NULL,0.00,0),
-(5,5,'MO202511146776',7300.00,'confirmed','Jttg','+256759420168','',NULL,NULL,NULL,'2025-11-14 12:14:47','2026-04-18 13:49:46',NULL,NULL,0.00,0),
-(6,6,'MO202511141695',105000.00,'ready','Lubaga','0754539083','Happy birthday 🎉',NULL,NULL,NULL,'2025-11-14 15:56:53','2026-04-18 13:49:46',NULL,NULL,0.00,0),
-(7,1,'MO202512064505',9600.00,'delivered','fggfg','+256 7995044','fs',NULL,NULL,NULL,'2025-12-06 19:19:18','2026-04-18 13:49:46',NULL,NULL,0.00,0),
-(8,3,'MO202604184899',7300.00,'delivered','jinja','+256759420168','this',NULL,NULL,NULL,'2026-04-18 14:23:01','2026-04-18 14:33:39',NULL,NULL,0.00,0),
-(9,3,'MO202604184262',75000.00,'cancelled','namugongo, near shrine','0708173219','dds',NULL,NULL,NULL,'2026-04-18 15:23:42','2026-04-20 12:46:25',NULL,NULL,0.00,0),
-(10,1,'MO202604188418',7300.00,'pending','this','099283-3-233','eew',NULL,NULL,NULL,'2026-04-18 15:54:01','2026-04-18 15:54:01',NULL,NULL,0.00,0),
-(11,1,'MO202604200FB28B',13000.00,'delivered','Bweyogerere - watoto','0708173219','',NULL,NULL,NULL,'2026-04-20 09:07:07','2026-04-20 09:10:49',NULL,NULL,0.00,0),
-(14,1,'MO20260420DCED99',73000.00,'pending','Kampala Central - near here','0708173219','leave at gate',NULL,NULL,NULL,'2026-04-20 12:57:16','2026-04-20 12:57:16',NULL,NULL,0.00,0),
-(15,1,'MO202604200578BE',73000.00,'pending','Kampala Central - aah','0708173219','leave at gate',NULL,NULL,NULL,'2026-04-20 13:00:49','2026-04-20 13:00:49',NULL,NULL,0.00,0);
+(1,1,'MO202510107336',75000.00,'pending','cash_on_delivery','not_applicable',NULL,NULL,'naalya','+256 7995044','ks',NULL,NULL,NULL,'2025-10-10 10:18:10','2026-04-18 13:49:46',NULL,NULL,0.00,0),
+(2,1,'MO202510101651',75000.00,'pending','cash_on_delivery','not_applicable',NULL,NULL,'haj','+256 759420168','s',NULL,NULL,NULL,'2025-10-10 10:41:16','2026-04-18 13:49:46',NULL,NULL,0.00,0),
+(3,3,'MO202510183842',145000.00,'cancelled','cash_on_delivery','not_applicable',NULL,NULL,'joosojo','+256 7995044','jakksjjjs',NULL,NULL,NULL,'2025-10-18 18:50:44','2026-04-18 13:49:46',NULL,NULL,0.00,0),
+(4,4,'MO202511148615',77300.00,'delivered','cash_on_delivery','not_applicable',NULL,NULL,'seta','+256 759420168','s',NULL,NULL,NULL,'2025-11-14 11:59:16','2026-04-18 15:08:53',NULL,NULL,0.00,0),
+(5,5,'MO202511146776',7300.00,'confirmed','cash_on_delivery','not_applicable',NULL,NULL,'Jttg','+256759420168','',NULL,NULL,NULL,'2025-11-14 12:14:47','2026-04-18 13:49:46',NULL,NULL,0.00,0),
+(6,6,'MO202511141695',105000.00,'ready','cash_on_delivery','not_applicable',NULL,NULL,'Lubaga','0754539083','Happy birthday 🎉',NULL,NULL,NULL,'2025-11-14 15:56:53','2026-04-18 13:49:46',NULL,NULL,0.00,0),
+(7,1,'MO202512064505',9600.00,'delivered','cash_on_delivery','not_applicable',NULL,NULL,'fggfg','+256 7995044','fs',NULL,NULL,NULL,'2025-12-06 19:19:18','2026-04-18 13:49:46',NULL,NULL,0.00,0),
+(8,3,'MO202604184899',7300.00,'delivered','cash_on_delivery','not_applicable',NULL,NULL,'jinja','+256759420168','this',NULL,NULL,NULL,'2026-04-18 14:23:01','2026-04-18 14:33:39',NULL,NULL,0.00,0),
+(9,3,'MO202604184262',75000.00,'cancelled','cash_on_delivery','not_applicable',NULL,NULL,'namugongo, near shrine','0708173219','dds',NULL,NULL,NULL,'2026-04-18 15:23:42','2026-04-20 12:46:25',NULL,NULL,0.00,0),
+(10,1,'MO202604188418',7300.00,'pending','cash_on_delivery','not_applicable',NULL,NULL,'this','099283-3-233','eew',NULL,NULL,NULL,'2026-04-18 15:54:01','2026-04-18 15:54:01',NULL,NULL,0.00,0),
+(11,1,'MO202604200FB28B',13000.00,'delivered','cash_on_delivery','not_applicable',NULL,NULL,'Bweyogerere - watoto','0708173219','',NULL,NULL,NULL,'2026-04-20 09:07:07','2026-04-20 09:10:49',NULL,NULL,0.00,0),
+(14,1,'MO20260420DCED99',73000.00,'pending','cash_on_delivery','not_applicable',NULL,NULL,'Kampala Central - near here','0708173219','leave at gate',NULL,NULL,NULL,'2026-04-20 12:57:16','2026-04-20 12:57:16',NULL,NULL,0.00,0),
+(15,1,'MO202604200578BE',73000.00,'pending','cash_on_delivery','not_applicable',NULL,NULL,'Kampala Central - aah','0708173219','leave at gate',NULL,NULL,NULL,'2026-04-20 13:00:49','2026-04-20 13:00:49',NULL,NULL,0.00,0),
+(17,1,'MO20260819A95090',17300.00,'pending','cash_on_delivery','not_applicable',NULL,NULL,'Mukono - thid snf thidq','0759420168','merry xmas',NULL,NULL,NULL,'2026-08-19 03:38:06','2026-08-19 03:38:06',NULL,NULL,0.00,0),
+(18,1,'MO2026081935D59F',7000.00,'cancelled','cash_on_delivery','not_applicable',NULL,NULL,'namugongo - kyaliwajjala','0759420168','ds',NULL,NULL,NULL,'2026-08-19 03:43:53','2026-08-20 22:07:20',NULL,7,5000.00,0),
+(22,11,'MO20260820E1C49B',15800.00,'delivered','cash_on_delivery','not_applicable',NULL,NULL,'namugongo - namugongo','+256786129181','snacks',NULL,NULL,NULL,'2026-08-20 22:12:59','2026-08-20 22:15:53',NULL,NULL,0.00,0);
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -429,7 +572,7 @@ CREATE TABLE `password_resets` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`,`email`),
   CONSTRAINT `password_resets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -439,6 +582,8 @@ CREATE TABLE `password_resets` (
 SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `password_resets` WRITE;
 /*!40000 ALTER TABLE `password_resets` DISABLE KEYS */;
+INSERT INTO `password_resets` VALUES
+(10,5,'josbertaijuka15@gmail.com','45123','2026-08-18 17:55:28','2026-08-18 12:55:28');
 /*!40000 ALTER TABLE `password_resets` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -542,7 +687,7 @@ CREATE TABLE `products` (
   KEY `idx_products_featured` (`featured`,`status`),
   KEY `idx_products_stock` (`stock_quantity`),
   CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -553,9 +698,10 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `products` WRITE;
 /*!40000 ALTER TABLE `products` DISABLE KEYS */;
 INSERT INTO `products` VALUES
-(3,'chocolate cake','cn','chocolate, flour','ch',70000.00,1,7,10,'active',1,'data:image/jpeg;base64,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','2025-10-10 10:09:36'),
-(4,'sugar cane juice','made of sugarcane','sugarcane','sugarcane, water',5000.00,3,23,10,'active',0,'data:image/jpeg;base64,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','2025-10-18 19:02:26'),
-(5,'chocolate biscuit','sweet','chocolate','dour, chocolate',2300.00,4,24,10,'active',0,'data:image/jpeg;base64,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','2025-11-13 18:35:39');
+(3,'chocolate cake','cn','chocolate, flour','ch',70000.00,1,6,10,'active',1,'b83a93fc09466be714304ac55e393bdb.jpg','2025-10-10 10:09:36'),
+(4,'sugar cane juice','made of sugarcane','sugarcane','sugarcane, water',5000.00,3,21,10,'active',0,'e807668c49f7c42dc4c5e3e825d38623.jpg','2025-10-18 19:02:26'),
+(5,'chocolate biscuit','sweet','chocolate','dour, chocolate',2300.00,4,22,10,'active',0,'19c17e3fd4ddb69728031f21a70463b9.jpg','2025-11-13 18:35:39'),
+(6,'crisps','tasty and crunchy','irish','irish',1500.00,6,99,10,'active',0,'d591b48ffc2cae4200104704bcfde0dc.avif','2026-08-19 04:00:09');
 /*!40000 ALTER TABLE `products` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -585,7 +731,7 @@ CREATE TABLE `promo_codes` (
   UNIQUE KEY `code` (`code`),
   KEY `status` (`status`),
   KEY `idx_promo_code_status` (`code`,`status`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -596,7 +742,7 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `promo_codes` WRITE;
 /*!40000 ALTER TABLE `promo_codes` DISABLE KEYS */;
 INSERT INTO `promo_codes` VALUES
-(6,'SUPER_MONDAY','20% off birthday cakes','fixed',5000.00,20.00,40,0,'2026-04-20 16:00:00','2026-04-21 16:00:00','active','2026-04-20 12:56:15');
+(7,'CHRISTMAS','20% off birthday cakes','fixed',5000.00,1.00,NULL,1,'2026-08-19 00:00:00','2026-08-20 00:00:00','active','2026-08-19 03:42:24');
 /*!40000 ALTER TABLE `promo_codes` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -622,7 +768,7 @@ CREATE TABLE `promo_usage` (
   CONSTRAINT `promo_usage_ibfk_1` FOREIGN KEY (`promo_id`) REFERENCES `promo_codes` (`id`) ON DELETE CASCADE,
   CONSTRAINT `promo_usage_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `promo_usage_ibfk_3` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -632,6 +778,8 @@ CREATE TABLE `promo_usage` (
 SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `promo_usage` WRITE;
 /*!40000 ALTER TABLE `promo_usage` DISABLE KEYS */;
+INSERT INTO `promo_usage` VALUES
+(3,7,1,18,'2026-08-19 03:43:53');
 /*!40000 ALTER TABLE `promo_usage` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -662,14 +810,16 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `request_rate_limits` WRITE;
 /*!40000 ALTER TABLE `request_rate_limits` DISABLE KEYS */;
 INSERT INTO `request_rate_limits` VALUES
-('4fc420eb92ab04d9bf2e183be6c6c3c8578b4880',1776689955,3,'2026-04-20 13:00:09'),
+('4fc420eb92ab04d9bf2e183be6c6c3c8578b4880',1787059134,1,'2026-08-18 13:18:54'),
 ('52b862b4ae790813e8c58d21fc8513daa8c5e7e2',1776689185,1,'2026-04-20 12:46:25'),
 ('577161c95e664c10a44ade8307663b097f13447d',1776690014,1,'2026-04-20 13:00:14'),
 ('6c8a20e1cfafb21bcb68baf949391ac99b016084',1776689150,1,'2026-04-20 12:45:50'),
-('7047cdc0c62c85adfa944529ec3128623d718cb4',1776689464,1,'2026-04-20 12:51:04'),
+('7047cdc0c62c85adfa944529ec3128623d718cb4',1787058780,5,'2026-08-18 13:14:35'),
 ('84ff686028ffdc0be067237ee8a69359d8277851',1776690016,1,'2026-04-20 13:00:16'),
-('cbbe9963c2340bd68891a80752ac54fba0383910',1776690016,3,'2026-04-20 13:00:48'),
-('d2da194dd41eb8d56096431f7a411ced0c1f292b',1776690021,1,'2026-04-20 13:00:21'),
+('88921a8c2917770e356a8fb79d15fe6c472742a8',1787057430,5,'2026-08-18 12:54:29'),
+('bf958d8d1b4eae62407f09dc1749be9c2b8d603d',1787057178,3,'2026-08-18 12:55:28'),
+('cbbe9963c2340bd68891a80752ac54fba0383910',1787059134,1,'2026-08-18 13:18:54'),
+('d2da194dd41eb8d56096431f7a411ced0c1f292b',1787055443,1,'2026-08-18 12:17:23'),
 ('f1bd3638f399d3242dd4c66da0aa7ee9d3393e46',1776690048,1,'2026-04-20 13:00:48');
 /*!40000 ALTER TABLE `request_rate_limits` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -771,7 +921,7 @@ CREATE TABLE `testimonials` (
   KEY `user_id` (`user_id`),
   KEY `status` (`status`),
   CONSTRAINT `testimonials_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -782,9 +932,54 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `testimonials` WRITE;
 /*!40000 ALTER TABLE `testimonials` DISABLE KEYS */;
 INSERT INTO `testimonials` VALUES
-(1,3,'Auto Test','auto@example.com','AUTOTEST_FEEDBACK_1776680760',5,'pending','2026-04-20 10:26:00'),
-(2,NULL,'Auto Test','auto@example.com','AUTOTEST_FEEDBACK_1776680816',5,'approved','2026-04-20 10:26:56');
+(1,3,'Auto Test','auto@example.com','AUTOTEST_FEEDBACK_1776680760',5,'approved','2026-04-20 10:26:00'),
+(2,NULL,'Auto Test','auto@example.com','AUTOTEST_FEEDBACK_1776680816',5,'approved','2026-04-20 10:26:56'),
+(3,NULL,'josbert',NULL,'best i have tested',5,'rejected','2026-08-19 03:45:03'),
+(4,NULL,'josbert',NULL,'best i have tested',5,'pending','2026-08-19 03:45:09');
 /*!40000 ALTER TABLE `testimonials` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `user_sessions`
+--
+
+DROP TABLE IF EXISTS `user_sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_sessions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `session_id_hash` varchar(64) NOT NULL,
+  `role` varchar(20) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `last_activity_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `revoked_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_session_hash` (`session_id_hash`),
+  KEY `idx_sessions_user` (`user_id`),
+  KEY `idx_sessions_activity` (`last_activity_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_sessions`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `user_sessions` WRITE;
+/*!40000 ALTER TABLE `user_sessions` DISABLE KEYS */;
+INSERT INTO `user_sessions` VALUES
+(1,1,'49cdf6c3085c61ab5063b60b84e864eb7afb5990751e697fc8c83c2b1a89a0df','admin','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 21:58:10','2026-08-20 22:04:53',NULL),
+(2,1,'6874ecc0ec1f6edb15f6ee39c3b7d4010e55b803b53b03c9bab569cc02beabc0','admin','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 22:05:47','2026-08-20 22:07:01',NULL),
+(3,10,'53f8eaa2ce5e7bc808842853ea2baa753bab42abb88e5572ccc2bc3412c033f0','customer','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 22:07:51','2026-08-20 22:07:51',NULL),
+(4,1,'dba7100d8aa086c10a2a44671ff10300c63c9570037ae4afba532e2a82f14f24','admin','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 22:08:21','2026-08-20 22:08:58',NULL),
+(5,11,'09dc987efa1ec9c71e9d6fa3848b59004cf34c899eb6ea7cd0dc7ab91c852ef3','customer','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 22:11:56','2026-08-20 22:11:56',NULL),
+(6,1,'4246ebbe45d98da200a914849dda5be33e2cb0197a8a148723f0baac89800f29','admin','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 22:14:03','2026-08-20 22:15:58',NULL);
+/*!40000 ALTER TABLE `user_sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
 SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
@@ -808,10 +1003,15 @@ CREATE TABLE `users` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `verification_code` varchar(10) DEFAULT NULL,
   `is_verified` tinyint(1) DEFAULT 0,
+  `two_factor_secret` varchar(32) DEFAULT NULL,
+  `two_factor_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `two_factor_method` enum('totp','email') DEFAULT NULL,
+  `email_otp_code` varchar(10) DEFAULT NULL,
+  `email_otp_expires` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -822,12 +1022,13 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
-(1,'admin','joszialvin@gmail.com','$2y$12$nozThHFNP4es9TrWGX60iOGpihMS477lo.kpwWmnNWuXenKzfU1zy','Administrator','','','admin','2025-10-10 06:39:07',NULL,1),
-(3,'samie','samanthak@gmail.com','$2y$12$F6h3EwU7YyuzQG.Kc.Tan.mZcOQqoepgC50NEkPFVVBUYpXy1D4BK','kawambe Samantha','0708173219','namugongo, near shrine','customer','2025-10-10 06:46:58',NULL,1),
-(4,'Sheba','sheba@gmail.com','$2y$12$Hi1CibexaU3b1qzXEhe0Ce4yRh.HkuQ5PNF.hNARuFM.2WsNcNw8q','Sheba1','0000000000',NULL,'customer','2025-11-13 16:20:05',NULL,1),
-(5,'0759420168','josbertaijuka15@gmail.com','$2y$12$TRvXQ3uDKvQowAoHwu7t4.qed5AO01IisfqRwPKj8l5yBqOoKJlMi','Aijuka Josbert','','','customer','2025-11-14 12:10:21',NULL,1),
-(6,'Joanitah ','nabayegojoanitah70@gmail.com','$2y$12$D7L5L9oMAuJeqqnvZB8RJObAXiAtGbmuh4h.4XsyFehqn3ifrid5a','Nabayego ','0000000000',NULL,'customer','2025-11-14 15:43:42',NULL,1),
-(9,'Aijuka','josbert.aijuka@stud.umu.ac.ug','$2y$12$8vvNIT8QOXbldIgJxem.suNgKrMU3mkVYFlPQeHmFKF1TlGDGeDxS','aijuka','0759420168',NULL,'customer','2026-04-18 17:35:34',NULL,1);
+(1,'admin','joszialvin@gmail.com','$2y$12$nozThHFNP4es9TrWGX60iOGpihMS477lo.kpwWmnNWuXenKzfU1zy','Administrator','0759420168','','admin','2025-10-10 06:39:07',NULL,1,NULL,0,NULL,NULL,NULL),
+(3,'samie','samanthak@gmail.com','$2y$12$F6h3EwU7YyuzQG.Kc.Tan.mZcOQqoepgC50NEkPFVVBUYpXy1D4BK','kawambe Samantha wokrach','0708173219','namugongo, near shrine','customer','2025-10-10 06:46:58',NULL,1,NULL,0,NULL,NULL,NULL),
+(4,'Sheba','sheba@gmail.com','$2y$12$Hi1CibexaU3b1qzXEhe0Ce4yRh.HkuQ5PNF.hNARuFM.2WsNcNw8q','Sheba1','0000000000',NULL,'customer','2025-11-13 16:20:05',NULL,1,NULL,0,NULL,NULL,NULL),
+(5,'0759420168','josbertaijuka15@gmail.com','$2y$12$TRvXQ3uDKvQowAoHwu7t4.qed5AO01IisfqRwPKj8l5yBqOoKJlMi','Aijuka Josbert','','','customer','2025-11-14 12:10:21',NULL,1,NULL,0,NULL,NULL,NULL),
+(6,'Joanitah ','nabayegojoanitah70@gmail.com','$2y$12$D7L5L9oMAuJeqqnvZB8RJObAXiAtGbmuh4h.4XsyFehqn3ifrid5a','Nabayego ','0000000000',NULL,'customer','2025-11-14 15:43:42',NULL,1,NULL,0,NULL,NULL,NULL),
+(9,'joszi','josbert.aijuka@stud.umu.ac.ug','$2y$12$8vvNIT8QOXbldIgJxem.suNgKrMU3mkVYFlPQeHmFKF1TlGDGeDxS','aijuka joszi','0759420168','','customer','2026-04-18 17:35:34',NULL,1,NULL,0,NULL,NULL,NULL),
+(11,'jonah','josbertaijuk@gmail.com','$2y$12$fD9s8frXhNxpZxcu5vGNNOJ4bOvlwCxwRb6GHnyJeRNYCJf449aUO','jonah','+256786129181','namugongo','customer','2026-08-20 22:09:42',NULL,1,NULL,0,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -842,4 +1043,4 @@ SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-04-20 16:01:19
+-- Dump completed on 2026-08-21  1:37:18
