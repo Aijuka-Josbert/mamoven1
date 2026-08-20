@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // Delete the product completely from the database
             $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
             $stmt->execute([$product_id]);
+            log_audit_event('product_deleted', 'product', $product_id);
             $success_message = "Product has been permanently deleted.";
         } else {
             $error_message = "Product not found.";

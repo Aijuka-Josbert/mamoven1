@@ -63,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $status,
                 ]);
 
+                log_audit_event('promo_code_created', 'promo_code', $pdo->lastInsertId(), $code);
                 $success_message = 'Promo code created successfully.';
             } catch (Throwable $e) {
                 if ($e instanceof PDOException && (int)$e->getCode() === 23000) {
@@ -82,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $update_stmt = $pdo->prepare('UPDATE promo_codes SET status = ? WHERE id = ?');
                 $update_stmt->execute([$next_status, $promo_id]);
+                log_audit_event('promo_code_status_changed', 'promo_code', $promo_id, 'New status: ' . $next_status);
                 $success_message = 'Promo status updated successfully.';
             } catch (PDOException $e) {
                 $error_message = 'Failed to update promo status: ' . $e->getMessage();
@@ -95,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $delete_stmt = $pdo->prepare('DELETE FROM promo_codes WHERE id = ?');
                 $delete_stmt->execute([$promo_id]);
+                log_audit_event('promo_code_deleted', 'promo_code', $promo_id);
                 $success_message = 'Promo code deleted successfully.';
             } catch (PDOException $e) {
                 $error_message = 'Failed to delete promo code: ' . $e->getMessage();

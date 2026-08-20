@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         try {
             $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
             $stmt->execute([$new_status, $order_id]);
+            log_audit_event('order_status_updated', 'order', $order_id, 'Status changed to: ' . $new_status);
 
             // Fetch user email and name for this order
             $stmt = $pdo->prepare("SELECT u.email, u.full_name, o.order_number FROM orders o JOIN users u ON o.user_id = u.id WHERE o.id = ?");
@@ -103,6 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
             $delete_stmt = $pdo->prepare("DELETE FROM orders WHERE id = ?");
             $delete_stmt->execute([$order_id]);
+            log_audit_event('order_deleted', 'order', $order_id, 'Order #' . $order_row['order_number'] . ' permanently deleted.');
 
             $pdo->commit();
 

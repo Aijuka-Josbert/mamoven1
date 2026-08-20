@@ -104,6 +104,18 @@ function is_active($page_name) {
                 </a>
             </li>
 
+            <li class="admin-nav-label">Security</li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo is_active('security_settings.php'); ?>" href="security_settings.php">
+                    <i class="fas fa-shield-alt fa-fw"></i> Security Settings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo is_active('audit_log.php'); ?>" href="audit_log.php">
+                    <i class="fas fa-history fa-fw"></i> Audit Log
+                </a>
+            </li>
+
             <li class="nav-item mt-auto">
                 <hr>
                 <a class="nav-link" href="../index.php" target="_blank">
@@ -136,6 +148,8 @@ function is_active($page_name) {
             'Manage Testimonials' => 'fa-comment-dots',
             'Promo Codes' => 'fa-percent',
             'Delivery Locations' => 'fa-truck',
+            'Security Settings' => 'fa-shield-alt',
+            'Audit Log' => 'fa-history',
         ];
         $admin_icon = $admin_page_icons[$page_title ?? ''] ?? 'fa-store';
         ?>

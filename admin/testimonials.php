@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && isset($_
         try {
             $stmt = $pdo->prepare("UPDATE testimonials SET status = ? WHERE id = ?");
             $stmt->execute([$status, $testimonial_id]);
+            log_audit_event('testimonial_' . $status, 'testimonial', $testimonial_id);
             $success_message = "Testimonial has been " . $status . ".";
         } catch (PDOException $e) {
             $error_message = "Failed to update testimonial: " . $e->getMessage();
@@ -42,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     try {
         $stmt = $pdo->prepare("DELETE FROM testimonials WHERE id = ?");
         $stmt->execute([$testimonial_id]);
+        log_audit_event('testimonial_deleted', 'testimonial', $testimonial_id);
         $success_message = "Testimonial has been deleted.";
     } catch (PDOException $e) {
         $error_message = "Failed to delete testimonial: " . $e->getMessage();

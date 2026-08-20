@@ -23,7 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         // We can add more checks here, e.g., prevent deleting the last admin account
         $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
         $stmt->execute([$user_id_to_delete]);
-        
+        log_audit_event('customer_deleted', 'user', $user_id_to_delete);
+
         // Redirect to avoid re-deleting on refresh
         header('Location: customers.php?status=deleted');
         exit();

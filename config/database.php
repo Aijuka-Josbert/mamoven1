@@ -124,6 +124,99 @@ define('PESAJET_ENABLED', filter_var(env_value('PESAJET_ENABLED', 'false'), FILT
 define('PESAJET_BASE_URL', env_value('PESAJET_BASE_URL', 'https://payments.pesajet.com/api/v1'));
 define('PESAJET_API_KEY', env_value('PESAJET_API_KEY', ''));
 
+// --------------------- AUDIT LOG ---------------------
+// Records a security-relevant event: who, what, on which record, from where.
+// Never throws — a logging failure must never break the action being logged.
+function log_audit_event(string $action, ?string $entity_type = null, $entity_id = null, string $details = ''): void
+{
+    global $pdo;
+    if (!isset($pdo)) return;
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO audit_log (user_id, username, role, action, entity_type, entity_id, details, ip_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $_SESSION['user_id'] ?? null,
+            $_SESSION['username'] ?? null,
+            $_SESSION['role'] ?? null,
+            $action,
+            $entity_type,
+            $entity_id !== null ? (string)$entity_id : null,
+            $details,
+            $_SERVER['REMOTE_ADDR'] ?? null,
+        ]);
+    } catch (Throwable $e) {
+        error_log('Audit log write failed: ' . $e->getMessage());
+    }
+}
+
+// --------------------- CRITICAL ERROR ALERTING ---------------------
+// Emails ADMIN_EMAIL when something fatal happens, throttled so one bad
+// deploy doesn't flood the inbox — at most one alert per distinct error
+// message every 30 minutes. Best-effort only: a failure here must never
+// itself throw, or it could mask the original error.
+function alert_on_critical_error(string $message): void
+{
+    try {
+        $throttleFile = __DIR__ . '/../logs/alert_throttle.json';
+        $key = substr(md5($message), 0, 16);
+        $throttleWindow = 1800; // 30 minutes
+
+        $throttleData = [];
+        if (is_readable($throttleFile)) {
+            $throttleData = json_decode((string)file_get_contents($throttleFile), true) ?: [];
+        }
+
+        if (isset($throttleData[$key]) && (time() - $throttleData[$key]) < $throttleWindow) {
+            return; // already alerted recently for this exact error
+        }
+
+        $throttleData[$key] = time();
+        // Prune old entries so this file doesn't grow forever.
+        $throttleData = array_filter($throttleData, fn($ts) => (time() - $ts) < 86400);
+        @file_put_contents($throttleFile, json_encode($throttleData));
+
+        if (!defined('ADMIN_EMAIL') || ADMIN_EMAIL === '') return;
+
+        $autoloadPath = __DIR__ . '/../vendor/autoload.php';
+        if (!is_readable($autoloadPath)) return;
+        require_once $autoloadPath;
+
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        configure_mailer_transport($mail);
+        $mail->setFrom(default_mail_from_address(), SITE_NAME . ' Alerts');
+        $mail->addAddress(ADMIN_EMAIL);
+        $mail->Subject = '[' . SITE_NAME . '] Critical Error Alert';
+        $mail->Body = "A critical error occurred on " . (IS_PRODUCTION ? 'PRODUCTION' : 'a non-production environment') . ":\n\n"
+            . $message . "\n\nTime: " . date('Y-m-d H:i:s') . "\nURL: " . ($_SERVER['REQUEST_URI'] ?? 'unknown');
+        send_mail_with_fallback($mail);
+    } catch (Throwable $e) {
+        error_log('alert_on_critical_error itself failed: ' . $e->getMessage());
+    }
+}
+
+set_exception_handler(function (Throwable $e) {
+    $message = get_class($e) . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+    error_log('Uncaught exception: ' . $message);
+    alert_on_critical_error($message);
+    http_response_code(500);
+    if (!IS_PRODUCTION) {
+        echo '<pre>' . htmlspecialchars($message) . "\n" . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+    } else {
+        echo 'Something went wrong. Please try again shortly.';
+    }
+});
+
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        $message = $error['message'] . ' in ' . $error['file'] . ':' . $error['line'];
+        error_log('Fatal error: ' . $message);
+        alert_on_critical_error($message);
+    }
+});
+
 function request_expects_json_response() {
     $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
     if (strpos($scriptName, '/api/') !== false) return true;
@@ -331,6 +424,27 @@ function require_admin() {
             exit;
         }
         header('Location: ' . BASE_URL . '/index.php');
+        exit;
+    }
+
+    // Admin session pinning: bind the session to the IP and browser that
+    // logged in. A stolen session cookie alone is no longer enough to act
+    // as an admin from a different network/device — this check runs on
+    // every admin page since require_admin() is called from all of them.
+    $current_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $current_ua_hash = hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? '');
+
+    if (!isset($_SESSION['admin_ip']) || !isset($_SESSION['admin_ua_hash'])) {
+        // Session predates this feature (or bypassed login) — bind it now
+        // rather than lock out an already-valid admin session.
+        $_SESSION['admin_ip'] = $current_ip;
+        $_SESSION['admin_ua_hash'] = $current_ua_hash;
+    } elseif ($_SESSION['admin_ip'] !== $current_ip || $_SESSION['admin_ua_hash'] !== $current_ua_hash) {
+        log_audit_event('admin_session_pin_mismatch', 'user', $_SESSION['user_id'] ?? null,
+            'Session bound to a different IP/device than login. Forcing re-authentication.');
+        session_unset();
+        session_destroy();
+        header('Location: ' . BASE_URL . '/auth/login.php?error=session_mismatch');
         exit;
     }
 }

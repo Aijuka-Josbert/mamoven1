@@ -82,7 +82,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
-            
+
+            if (($user['role'] ?? '') !== $role) {
+                log_audit_event('user_role_changed', 'user', $user_id, 'Role changed from ' . ($user['role'] ?? 'unknown') . ' to ' . $role);
+            } else {
+                log_audit_event('customer_updated', 'user', $user_id);
+            }
+
             // Redirect with a success message
             header('Location: customers.php?status=updated');
             exit();

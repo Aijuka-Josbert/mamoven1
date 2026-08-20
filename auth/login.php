@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Please fill in both username/email and password.';
         } else {
             try {
-                $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role, is_verified FROM users WHERE username = :username OR email = :email");
+                $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role, is_verified, two_factor_enabled, two_factor_secret FROM users WHERE username = :username OR email = :email");
                 $stmt->execute(['username' => $username, 'email' => $username]);
                 $user = $stmt->fetch();
 
@@ -57,6 +57,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     session_regenerate_id(true);
+
+                    // Admin with 2FA enabled: don't complete login yet — hold
+                    // it pending a verified TOTP code, same pattern as the
+                    // existing email-verification step for new customers.
+                    if ($user['role'] === 'admin' && !empty($user['two_factor_enabled'])) {
+                        $_SESSION['pending_2fa_user_id'] = $user['id'];
+                        $_SESSION['pending_2fa_remember_me'] = $remember_me ? 1 : 0;
+                        header('Location: ' . BASE_URL . '/auth/verify_2fa.php');
+                        exit;
+                    }
+
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['full_name'] = $user['full_name'];
@@ -65,6 +76,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     apply_auth_session_preferences($remember_me);
 
                     if ($user['role'] === 'admin') {
+                        $_SESSION['admin_ip'] = $_SERVER['REMOTE_ADDR'] ?? '';
+                        $_SESSION['admin_ua_hash'] = hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? '');
+                        log_audit_event('admin_login', 'user', $user['id'], 'Admin logged in.');
                         header('Location: ' . BASE_URL . '/admin/dashboard.php');
                     } else {
                         if (!empty($redirect_target) && strpos($redirect_target, 'http') !== 0 && strpos($redirect_target, '//') !== 0) {
@@ -76,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     exit;
                 } else {
+                    if (!empty($user) && ($user['role'] ?? '') === 'admin') {
+                        log_audit_event('admin_login_failed', 'user', $user['id'] ?? null, 'Failed admin login attempt (wrong password).');
+                    }
                     $error = 'Invalid username or password. Please try again.';
                 }
             } catch (PDOException $e) {

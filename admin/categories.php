@@ -42,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } else {
             $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
             $stmt->execute([$category_id]);
+            log_audit_event('category_deleted', 'category', $category_id);
             $success_message = "Category has been successfully deleted.";
         }
     } catch(PDOException $e) {
