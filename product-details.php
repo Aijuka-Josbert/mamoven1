@@ -53,12 +53,8 @@ try {
 
 $page_title = htmlspecialchars($product['name']);
 
-// Handle base64 or fallback to placeholder
-if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0) {
-    $image_url = $product['image'];
-} else {
-    $image_url = BASE_URL . '/assets/images/placeholder.jpg';
-}
+// Resolve the product image (file path, legacy base64, or placeholder)
+$image_url = product_image_url($product['image']);
 
 // Split flavours into individual chips for display
 $flavour_chips = [];
@@ -245,7 +241,7 @@ if (!empty($product['flavours'])) {
                          <div class="product-card catalog-card">
                             <a href="<?php echo BASE_URL . '/product-details.php?id=' . (int)$related['id']; ?>" class="product-image-wrapper catalog-image-frame">
                                 <span class="blob-frame">
-                                    <img src="<?php echo htmlspecialchars($related['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                                    <img src="<?php echo htmlspecialchars(product_image_url($related['image'])); ?>" 
                                          alt="<?php echo htmlspecialchars($related['name']); ?>" class="product-image organic-blob">
                                 </span>
                                 <span class="quick-view-overlay">

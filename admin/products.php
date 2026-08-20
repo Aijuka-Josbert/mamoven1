@@ -11,13 +11,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $product_id = (int)$_POST['id'];
     try {
         // Check if product exists first
-        $check_stmt = $pdo->prepare("SELECT id FROM products WHERE id = ?");
+        $check_stmt = $pdo->prepare("SELECT id, image FROM products WHERE id = ?");
         $check_stmt->execute([$product_id]);
-        if ($check_stmt->fetch()) {
+        $existing_product = $check_stmt->fetch();
+        if ($existing_product) {
             // Delete the product completely from the database
             $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
             $stmt->execute([$product_id]);
             log_audit_event('product_deleted', 'product', $product_id);
+
+            // Clean up the stored image file too, so deleted products don't
+            // leave orphaned files behind forever.
+            $img = $existing_product['image'] ?? '';
+            if (!empty($img) && strpos($img, 'data:image/') !== 0) {
+                $imgPath = __DIR__ . '/../assets/uploads/products/' . basename($img);
+                if (is_file($imgPath)) {
+                    @unlink($imgPath);
+                }
+            }
+
             $success_message = "Product has been permanently deleted.";
         } else {
             $error_message = "Product not found.";
@@ -78,15 +90,9 @@ try {
                         <?php foreach ($products as $product): ?>
                             <tr>
                                 <td>
-                                    <?php if (!empty($product['image']) && strpos($product['image'], 'data:image/') === 0): ?>
-                                        <img src="<?php echo htmlspecialchars($product['image']); ?>" 
-                                             alt="<?php echo htmlspecialchars($product['name']); ?>" 
-                                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
-                                    <?php else: ?>
-                                        <img src="<?php echo BASE_URL; ?>/assets/images/placeholder.jpg" 
-                                             alt="<?php echo htmlspecialchars($product['name']); ?>" 
-                                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
-                                    <?php endif; ?>
+                                    <img src="<?php echo htmlspecialchars(product_image_url($product['image'])); ?>" 
+                                         alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
                                 </td>
                                 <td><strong><?php echo htmlspecialchars($product['name']); ?></strong></td>
                                 <td><?php echo htmlspecialchars($product['category_name'] ?? 'N/A'); ?></td>

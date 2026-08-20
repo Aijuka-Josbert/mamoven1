@@ -230,6 +230,7 @@ try {
     $user = $stmt->fetch();
 
     $pdo->commit();
+    log_audit_event('order_placed', 'order', $order_id, 'Order #' . $order_number . ', UGX ' . number_format($total_amount));
 
     // --- Respond to the customer immediately ---
     // Everything from here down (PesaJet + confirmation emails) can take a

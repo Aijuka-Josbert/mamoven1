@@ -110,15 +110,9 @@ try {
                         <?php foreach ($cart_items as $item): ?>
                             <div class="row align-items-center mb-4">
                                 <div class="col-md-2">
-                                    <?php if (!empty($item['image']) && strpos($item['image'], 'data:image/') === 0): ?>
-                                        <img src="<?php echo htmlspecialchars($item['image']); ?>" 
-                                             alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                                             class="cart-item-thumb">
-                                    <?php else: ?>
-                                        <img src="<?php echo BASE_URL; ?>/assets/images/placeholder.jpg" 
-                                             alt="<?php echo htmlspecialchars($item['name']); ?>" 
-                                             class="cart-item-thumb">
-                                    <?php endif; ?>
+                                    <img src="<?php echo htmlspecialchars(product_image_url($item['image'])); ?>" 
+                                         alt="<?php echo htmlspecialchars($item['name']); ?>" 
+                                         class="cart-item-thumb">
                                 </div>
                                 <div class="col-md-4">
                                     <h5 class="mb-1"><?php echo htmlspecialchars($item['name']); ?></h5>

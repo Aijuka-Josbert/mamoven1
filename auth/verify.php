@@ -50,6 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['role'] = $user_data['role'];
                     $remember_me = !empty($_SESSION['pending_remember_me']);
                     apply_auth_session_preferences($remember_me);
+                    record_user_session($user_data['id'], $user_data['role']);
+                    log_audit_event('customer_verified', 'user', $user_data['id']);
                     unset($_SESSION['verify_email']);
                     unset($_SESSION['pending_remember_me']);
                     $redirect = $_SESSION['redirect_after_login'] ?? BASE_URL . '/index.php?registered=1';

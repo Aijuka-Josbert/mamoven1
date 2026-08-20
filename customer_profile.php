@@ -32,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $stmt = $pdo->prepare("UPDATE users SET full_name = ?, phone = ?, address = ? WHERE id = ?");
                 $stmt->execute([$full_name, $phone, $address, $user_id]);
+                log_audit_event('profile_updated', 'user', $user_id);
                 $_SESSION['full_name'] = $full_name;
                 $success = 'Profile updated successfully!';
             } catch (PDOException $e) {

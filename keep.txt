@@ -1,9 +1,1 @@
-https://github.com/Aijuka-Josbert/mamoven1/tree/main 
-
-okay now to this first tour the entire repo and confirm u understand its flow and confirm if all the security is upto to point and its effieciiency to be accessibkw by 100k people at the same time  for more additions we to bench mark this https://www.magnoliabakery.com/ and https://www.curbsidebakes.com/ but maitaining my color lets improve this page by page and makig sure its security is top notch and also add in ur requirement u feel theyare needed
-
-for the mtn credentials those are the sandboxed ones they arent real. still failed to get access to the real one anyways lets start on the project and follow the orfeer u would wnat to follow rn am unders ur quidances strictlylets move one to the other pages too this is nice and should give that appetite to people like a feel of food in all its pages with ur suggestions and all
-the products page redesign.
-i use infinity free as a test deploy env to show the owner of the project not my exact place where it will be.
-
-i think lets go with this CSRF across the API. then  tho we have to redesign all the pages in to give the best looks as u see the benchmarked sites above 
+now time to rehost it to infinity free show me all the db changes i have to include there. and do i have to alwasy run this php /var/www/html/mamoven1/scripts/migrate_images_to_files.php or it was or one time only and order history seems not to be changing with the status and when that done we can call it a project for this while anad i move to another then find me a site where i can get the payments for airtel and mtn without asking for business document but to charge on transactions

@@ -17,7 +17,26 @@ function asset_url($path) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo generate_csrf_token(); ?>">
     <title><?php echo isset($page_title) ? htmlspecialchars($page_title) . ' | ' : ''; ?><?php echo SITE_NAME; ?></title>
-    
+
+    <?php
+    $seo_description = isset($page_description) && $page_description !== ''
+        ? $page_description
+        : "Freshly baked cakes, snacks, and pastries delivered across Kampala. Order online from " . SITE_NAME . " — handcrafted daily with quality ingredients.";
+    $seo_canonical = BASE_URL . '/' . ltrim(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+    $seo_image = BASE_URL . '/assets/images/logo.png';
+    ?>
+    <meta name="description" content="<?php echo htmlspecialchars($seo_description); ?>">
+    <link rel="canonical" href="<?php echo htmlspecialchars($seo_canonical); ?>">
+
+    <!-- Open Graph / social sharing -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="<?php echo htmlspecialchars(SITE_NAME); ?>">
+    <meta property="og:title" content="<?php echo isset($page_title) ? htmlspecialchars($page_title) . ' | ' : ''; ?><?php echo htmlspecialchars(SITE_NAME); ?>">
+    <meta property="og:description" content="<?php echo htmlspecialchars($seo_description); ?>">
+    <meta property="og:url" content="<?php echo htmlspecialchars($seo_canonical); ?>">
+    <meta property="og:image" content="<?php echo htmlspecialchars($seo_image); ?>">
+    <meta name="twitter:card" content="summary_large_image">
+
     <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">

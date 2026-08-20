@@ -154,9 +154,7 @@ try {
                         <?php endif; ?>
                         <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper catalog-image-frame">
                             <span class="blob-frame">
-                                <img src="<?php echo !empty($product['image']) && strpos($product['image'], 'data:image/') === 0 
-    ? htmlspecialchars($product['image']) 
-    : BASE_URL . '/assets/images/placeholder.jpg'; ?>" 
+                                <img src="<?php echo htmlspecialchars(product_image_url($product['image'])); ?>" 
      alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image organic-blob">
                             </span>
                             <span class="quick-view-overlay">

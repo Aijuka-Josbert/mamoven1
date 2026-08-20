@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $stmt = $pdo->prepare("INSERT INTO delivery_locations (name, fee) VALUES (?, ?)");
             $stmt->execute([$name, $fee]);
+            log_audit_event('delivery_location_created', 'delivery_location', $pdo->lastInsertId(), $name);
             $success_msg = "Delivery location added successfully!";
         } catch (PDOException $e) {
             $error_msg = "Error adding location. It might already exist.";
@@ -23,7 +24,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int)$_POST['location_id'];
         $stmt = $pdo->prepare("DELETE FROM delivery_locations WHERE id = ?");
         $stmt->execute([$id]);
+        log_audit_event('delivery_location_deleted', 'delivery_location', $id);
         $success_msg = "Location removed.";
+    } elseif (isset($_POST['update_location'])) {
+        $id = (int)$_POST['location_id'];
+        $fee = (float)($_POST['fee'] ?? 0);
+        $is_active = isset($_POST['is_active']) ? 1 : 0;
+        $stmt = $pdo->prepare("UPDATE delivery_locations SET fee = ?, is_active = ? WHERE id = ?");
+        $stmt->execute([$fee, $is_active, $id]);
+        log_audit_event('delivery_location_updated', 'delivery_location', $id, 'Fee: ' . $fee . ', Active: ' . ($is_active ? 'yes' : 'no'));
+        $success_msg = "Location updated.";
     }
 }
 
@@ -60,21 +70,27 @@ $locations = $pdo->query("SELECT * FROM delivery_locations ORDER BY name ASC")->
         <div class="col-md-8">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <table class="table table-bordered">
+                    <table class="table table-bordered align-middle">
                         <thead>
-                            <tr><th>Location</th><th>Fee (UGX)</th><th>Action</th></tr>
+                            <tr><th>Location</th><th style="width:160px;">Fee (UGX)</th><th style="width:90px;">Active</th><th style="width:170px;">Action</th></tr>
                         </thead>
                         <tbody>
                             <?php foreach ($locations as $loc): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($loc['name']); ?></td>
-                                <td><?php echo number_format($loc['fee']); ?></td>
+                            <?php $formId = 'loc-form-' . $loc['id']; ?>
+                            <tr class="<?php echo (!$loc['is_active'] || $loc['fee'] == 0) ? 'table-warning' : ''; ?>">
                                 <td>
-                                    <form method="POST" onsubmit="return confirm('Delete this location?');">
+                                    <form id="<?php echo $formId; ?>" method="POST" class="d-none">
                                         <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                         <input type="hidden" name="location_id" value="<?php echo $loc['id']; ?>">
-                                        <button type="submit" name="delete_location" class="btn btn-sm btn-danger">Delete</button>
                                     </form>
+                                    <?php echo htmlspecialchars($loc['name']); ?>
+                                    <?php if ($loc['fee'] == 0): ?><span class="badge bg-secondary ms-1">Not priced</span><?php endif; ?>
+                                </td>
+                                <td><input type="number" step="0.01" min="0" name="fee" form="<?php echo $formId; ?>" value="<?php echo $loc['fee']; ?>" class="form-control form-control-sm"></td>
+                                <td class="text-center"><input type="checkbox" name="is_active" form="<?php echo $formId; ?>" class="form-check-input" <?php echo $loc['is_active'] ? 'checked' : ''; ?>></td>
+                                <td class="d-flex gap-1">
+                                    <button type="submit" name="update_location" form="<?php echo $formId; ?>" class="btn btn-sm btn-outline-primary">Save</button>
+                                    <button type="submit" name="delete_location" form="<?php echo $formId; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this location?');">Del</button>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -85,4 +101,4 @@ $locations = $pdo->query("SELECT * FROM delivery_locations ORDER BY name ASC")->
         </div>
     </div>
 </div>
-<?php require_once __DIR__ . '/includes/header.php'; ?>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

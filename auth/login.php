@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Please fill in both username/email and password.';
         } else {
             try {
-                $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role, is_verified, two_factor_enabled, two_factor_secret FROM users WHERE username = :username OR email = :email");
+                $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role, is_verified, two_factor_enabled, two_factor_method, two_factor_secret FROM users WHERE username = :username OR email = :email");
                 $stmt->execute(['username' => $username, 'email' => $username]);
                 $user = $stmt->fetch();
 
@@ -59,11 +59,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     session_regenerate_id(true);
 
                     // Admin with 2FA enabled: don't complete login yet — hold
-                    // it pending a verified TOTP code, same pattern as the
-                    // existing email-verification step for new customers.
+                    // it pending a verified code (app or email), same pattern
+                    // as the existing email-verification step for new
+                    // customers.
                     if ($user['role'] === 'admin' && !empty($user['two_factor_enabled'])) {
                         $_SESSION['pending_2fa_user_id'] = $user['id'];
                         $_SESSION['pending_2fa_remember_me'] = $remember_me ? 1 : 0;
+
+                        if ($user['two_factor_method'] === 'email') {
+                            $otpCode = sprintf('%06d', random_int(100000, 999999));
+                            $update = $pdo->prepare("UPDATE users SET email_otp_code = ?, email_otp_expires = DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE id = ?");
+                            $update->execute([$otpCode, $user['id']]);
+                            send_login_2fa_email($user['email'], $otpCode);
+                        }
+
                         header('Location: ' . BASE_URL . '/auth/verify_2fa.php');
                         exit;
                     }
@@ -74,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['role'] = $user['role'];
                     $_SESSION['email'] = $user['email'];
                     apply_auth_session_preferences($remember_me);
+                    record_user_session($user['id'], $user['role']);
 
                     if ($user['role'] === 'admin') {
                         $_SESSION['admin_ip'] = $_SERVER['REMOTE_ADDR'] ?? '';
@@ -81,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         log_audit_event('admin_login', 'user', $user['id'], 'Admin logged in.');
                         header('Location: ' . BASE_URL . '/admin/dashboard.php');
                     } else {
+                        log_audit_event('customer_login', 'user', $user['id']);
                         if (!empty($redirect_target) && strpos($redirect_target, 'http') !== 0 && strpos($redirect_target, '//') !== 0) {
                             $redirect_target = ltrim($redirect_target, '/');
                             header('Location: ' . BASE_URL . '/' . $redirect_target);

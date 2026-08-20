@@ -62,17 +62,7 @@ try {
     ");
     $update_stmt->execute([$order_id]);
 
-    // Log activity
-    $log_stmt = $pdo->prepare("
-        INSERT INTO activity_logs (user_id, username, activity_type, activity_description, ip_address) 
-        VALUES (?, ?, 'order_cancellation', ?, ?)
-    ");
-    $log_stmt->execute([
-        $user_id,
-        $_SESSION['username'] ?? 'Unknown',
-        "Order #" . $order['order_number'] . " cancelled",
-        $_SERVER['REMOTE_ADDR']
-    ]);
+    log_audit_event('order_cancelled', 'order', $order_id, 'Order #' . $order['order_number'] . ' cancelled by customer.');
 
     $pdo->commit();
 

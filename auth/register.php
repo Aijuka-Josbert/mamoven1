@@ -111,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $inputs['address'],
                     $verification_code,
                 ]);
+                log_audit_event('customer_registered', 'user', $pdo->lastInsertId(), 'Username: ' . $inputs['username']);
 
                 // Send the verification email; registration still succeeds even if this fails —
                 // the user can request a new code from the verify page.

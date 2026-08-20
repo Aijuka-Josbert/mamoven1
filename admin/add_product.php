@@ -36,25 +36,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($price <= 0) $errors[] = "Price must be a positive number.";
         if (empty($category_id)) $errors[] = "Please select a category.";
 
-        // --- Image Upload & Base64 Conversion ---
-        $image_base64 = null;
+        // --- Image Upload: saved as a real file, not base64-in-DB ---
+        // Base64-encoding an image inflates it ~33% and bloats every SELECT,
+        // backup, and replication of the products table. Storing a filename
+        // and serving the file directly is lighter in every dimension.
+        $image_filename = null;
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['image'];
 
-            // Check file type
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/avif', 'image/webp'];
-            if (!in_array($file['type'], $allowed_types)) {
-                $errors[] = "Invalid file type. Only JPG, PNG, GIF, AVIF and WEBP are allowed.";
+            // Detect the REAL content type from the file bytes — the
+            // client-reported $file['type'] is trivially spoofable and
+            // must never be trusted for a security decision.
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $real_mime = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+
+            $allowed_types = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/gif' => 'gif',
+                'image/webp' => 'webp',
+            ];
+
+            if (!isset($allowed_types[$real_mime])) {
+                $errors[] = "Invalid file type. Only JPG, PNG, GIF and WEBP are allowed.";
             } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
                 $errors[] = "Image file is too large. Maximum size is 2MB.";
             } else {
-                // Read the image file content
-                $image_data = file_get_contents($file['tmp_name']);
-                if ($image_data !== false) {
-                    // Convert to base64
-                    $image_base64 = 'data:' . $file['type'] . ';base64,' . base64_encode($image_data);
-                } else {
-                    $errors[] = "Failed to read the image file.";
+                $uploadDir = __DIR__ . '/../assets/uploads/products/';
+                $image_filename = bin2hex(random_bytes(16)) . '.' . $allowed_types[$real_mime];
+                if (!move_uploaded_file($file['tmp_name'], $uploadDir . $image_filename)) {
+                    $errors[] = "Failed to save the uploaded image.";
+                    $image_filename = null;
                 }
             }
         } else {
@@ -77,8 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stock_quantity,
                     $status,
                     $featured,
-                    $image_base64
+                    $image_filename
                 ]);
+                log_audit_event('product_created', 'product', $pdo->lastInsertId(), $name);
 
                 // Redirect with success message
                 header("Location: products.php?status=added");

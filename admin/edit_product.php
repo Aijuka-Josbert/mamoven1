@@ -55,26 +55,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($price <= 0) $errors[] = "Price must be a positive number.";
         if (empty($category_id)) $errors[] = "Please select a category.";
 
-        // --- Image Upload Logic ---
-        $image_base64 = $product['image']; // Keep existing base64 image by default
+        // --- Image Upload Logic: real file storage, not base64-in-DB ---
+        $image_filename = $product['image']; // Keep existing image by default
+        $old_image_to_delete = null;
 
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['image'];
 
-            // Validate file type and size
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/avif', 'image/webp'];
-            if (!in_array($file['type'], $allowed_types)) {
-                $errors[] = "Invalid file type. Only JPG, PNG, GIF, AVIF and WEBP are allowed.";
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $real_mime = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+
+            $allowed_types = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/gif' => 'gif',
+                'image/webp' => 'webp',
+            ];
+
+            if (!isset($allowed_types[$real_mime])) {
+                $errors[] = "Invalid file type. Only JPG, PNG, GIF and WEBP are allowed.";
             } elseif ($file['size'] > 2 * 1024 * 1024) { // 2MB limit
                 $errors[] = "Image file is too large. Maximum size is 2MB.";
             } else {
-                // Read the image file content
-                $image_data = file_get_contents($file['tmp_name']);
-                if ($image_data !== false) {
-                    // Convert to base64
-                    $image_base64 = 'data:' . $file['type'] . ';base64,' . base64_encode($image_data);
+                $uploadDir = __DIR__ . '/../assets/uploads/products/';
+                $new_filename = bin2hex(random_bytes(16)) . '.' . $allowed_types[$real_mime];
+                if (move_uploaded_file($file['tmp_name'], $uploadDir . $new_filename)) {
+                    // Only delete the old file if it was a real stored file,
+                    // not a legacy base64 row or empty.
+                    if (!empty($image_filename) && strpos($image_filename, 'data:image/') !== 0) {
+                        $old_image_to_delete = $uploadDir . basename($image_filename);
+                    }
+                    $image_filename = $new_filename;
                 } else {
-                    $errors[] = "Failed to read the image file.";
+                    $errors[] = "Failed to save the uploaded image.";
                 }
             }
         }
@@ -83,7 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $sql = "UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, stock_quantity = ?, status = ?, featured = ?, image = ? WHERE id = ?";
                 $stmt = $pdo->prepare($sql);
-                $stmt->execute([$name, $description, $price, $category_id, $stock_quantity, $status, $featured, $image_base64, $product_id]);
+                $stmt->execute([$name, $description, $price, $category_id, $stock_quantity, $status, $featured, $image_filename, $product_id]);
+                if ($old_image_to_delete && is_file($old_image_to_delete)) {
+                    @unlink($old_image_to_delete);
+                }
+                log_audit_event('product_updated', 'product', $product_id, $name);
 
                 // Redirect with success message
                 header("Location: " . 'products.php?status=updated');
@@ -170,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input class="form-control" type="file" id="image" name="image" onchange="previewImage(this, 'imagePreview')">
                         <p class="form-text">Leave blank to keep the current image.</p>
                         <img id="imagePreview"
-                            src="<?php echo $product['image'] ? BASE_URL . '/' . $product['image'] : '#'; ?>"
+                            src="<?php echo product_image_url($product['image']); ?>"
                             alt="Current Image"
                             class="mt-3 img-fluid rounded"
                             style="<?php echo $product['image'] ? 'display:block;' : 'display:none;'; ?> max-height: 200px;">

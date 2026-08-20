@@ -115,6 +115,11 @@ function is_active($page_name) {
                     <i class="fas fa-history fa-fw"></i> Audit Log
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo is_active('sessions.php'); ?>" href="sessions.php">
+                    <i class="fas fa-desktop fa-fw"></i> Active Sessions
+                </a>
+            </li>
 
             <li class="nav-item mt-auto">
                 <hr>
@@ -150,6 +155,7 @@ function is_active($page_name) {
             'Delivery Locations' => 'fa-truck',
             'Security Settings' => 'fa-shield-alt',
             'Audit Log' => 'fa-history',
+            'Active Sessions' => 'fa-desktop',
         ];
         $admin_icon = $admin_page_icons[$page_title ?? ''] ?? 'fa-store';
         ?>

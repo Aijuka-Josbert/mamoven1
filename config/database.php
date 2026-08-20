@@ -98,8 +98,30 @@ try {
     exit;
 }
 
+// Auto-detect BASE_URL from where this file actually sits relative to the
+// web server's document root — works correctly whether the app lives in a
+// subfolder (/mamoven1) or at the domain root, on any host, without needing
+// a code change. An explicit BASE_URL in .env always wins when set; this is
+// only the fallback for when it isn't.
+function detect_base_url(): string
+{
+    $documentRoot = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/\\');
+    $appRoot = rtrim(str_replace('\\', '/', dirname(__DIR__)), '/'); // one level up from config/
+    $basePath = '';
+
+    if ($documentRoot !== '' && strpos($appRoot, $documentRoot) === 0) {
+        $basePath = substr($appRoot, strlen($documentRoot));
+    }
+
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $scheme = $isHttps ? 'https' : 'http';
+
+    return $scheme . '://' . $host . $basePath;
+}
+
 // Constants
-define('BASE_URL', rtrim(env_value('BASE_URL', $isLocalhost ? 'http://localhost/mamoven1' : 'https://mamoven.infinityfreeapp.com/mamoven1'), '/'));
+define('BASE_URL', rtrim(env_value('BASE_URL', detect_base_url()), '/'));
 define('IS_PRODUCTION', $isProduction);
 define('IS_INFINITY_HOSTING', $isInfinityHosting);
 define('SITE_NAME', env_value('SITE_NAME', "Mama's Oven"));
@@ -374,6 +396,48 @@ function email_logo_html($mail, $height = 80) {
     return "<strong style='color:#8B4513;font-size:22px;display:inline-block;margin-bottom:15px;'>" . htmlspecialchars(SITE_NAME) . "</strong>";
 }
 
+// Resolves a product/cart image field to a real URL, handling all three
+// states in one place: empty (placeholder), legacy base64 data URI (still
+// rendered as-is for rows not yet migrated), or a stored file path under
+// assets/uploads/products/ (the current, DB-light storage method). Every
+// page that renders a product image should go through this instead of
+// duplicating the base64-check inline.
+function product_image_url(?string $image): string
+{
+    if (empty($image)) {
+        return BASE_URL . '/assets/images/placeholder.jpg';
+    }
+    if (strpos($image, 'data:image/') === 0) {
+        return $image; // legacy base64 row, not yet migrated
+    }
+    if (strpos($image, 'http://') === 0 || strpos($image, 'https://') === 0) {
+        return $image;
+    }
+    return BASE_URL . '/assets/uploads/products/' . ltrim($image, '/');
+}
+
+function send_login_2fa_email(string $email, string $code): bool
+{
+    $autoloadPath = __DIR__ . '/../vendor/autoload.php';
+    if (!is_readable($autoloadPath)) return false;
+    require_once $autoloadPath;
+
+    try {
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        configure_mailer_transport($mail);
+        $mail->setFrom(default_mail_from_address(), SITE_NAME);
+        $mail->addAddress($email);
+        $mail->isHTML(true);
+        $mail->Subject = 'Your ' . SITE_NAME . ' Sign-In Code';
+        $mail->Body = "<p>Your two-factor sign-in code is:</p><h2 style='letter-spacing:4px;'>{$code}</h2><p>This code expires in 10 minutes. If you didn't try to sign in, you can ignore this email.</p>";
+        $mail->AltBody = "Your sign-in code is: $code (expires in 10 minutes)";
+        return send_mail_with_fallback($mail);
+    } catch (\Throwable $e) {
+        error_log('Login 2FA email failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
 // --------------------- SECURITY HELPERS ---------------------
 function is_password_compromised($password) {
     $hash = strtoupper(sha1($password));
@@ -403,6 +467,57 @@ function is_password_compromised($password) {
     return false;
 }
 
+// --------------------- SESSION TRACKING ---------------------
+// Call once, right after a login (customer or admin) fully completes.
+function record_user_session(int $user_id, string $role): void
+{
+    global $pdo;
+    try {
+        $hash = hash('sha256', session_id());
+        $stmt = $pdo->prepare("
+            INSERT INTO user_sessions (user_id, session_id_hash, role, ip_address, user_agent)
+            VALUES (?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE last_activity_at = NOW(), revoked_at = NULL
+        ");
+        $stmt->execute([
+            $user_id,
+            $hash,
+            $role,
+            $_SERVER['REMOTE_ADDR'] ?? null,
+            substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
+        ]);
+    } catch (Throwable $e) {
+        error_log('record_user_session failed: ' . $e->getMessage());
+    }
+}
+
+// Call on every authenticated request. Updates last-seen time and, more
+// importantly, checks whether an admin has revoked this exact session from
+// the sessions management page — if so, forces an immediate logout even
+// though the PHP session cookie itself is still technically valid.
+function touch_user_session(): void
+{
+    global $pdo;
+    if (!isset($_SESSION['user_id'])) return;
+    try {
+        $hash = hash('sha256', session_id());
+        $stmt = $pdo->prepare("SELECT revoked_at FROM user_sessions WHERE session_id_hash = ?");
+        $stmt->execute([$hash]);
+        $row = $stmt->fetch();
+
+        if ($row && $row['revoked_at'] !== null) {
+            session_unset();
+            session_destroy();
+            header('Location: ' . BASE_URL . '/auth/login.php?error=session_revoked');
+            exit;
+        }
+
+        $pdo->prepare("UPDATE user_sessions SET last_activity_at = NOW() WHERE session_id_hash = ?")->execute([$hash]);
+    } catch (Throwable $e) {
+        error_log('touch_user_session failed: ' . $e->getMessage());
+    }
+}
+
 function require_login() {
     if (!isset($_SESSION['user_id'])) {
         if (request_expects_json_response()) {
@@ -413,6 +528,7 @@ function require_login() {
         header('Location: ' . BASE_URL . '/auth/login.php');
         exit;
     }
+    touch_user_session();
 }
 
 function require_admin() {

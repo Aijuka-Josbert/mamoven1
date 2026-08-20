@@ -250,7 +250,7 @@ if (empty($relevance_products)) {
                             <div class="product-card showcase-card text-center pb-4">
                                 <a href="product-details.php?id=<?php echo $product['id']; ?>" class="product-image-wrapper catalog-image-frame p-3 d-block">
                                     <span class="blob-frame">
-                                        <img src="<?php echo htmlspecialchars($product['image'] ?: 'assets/images/placeholder.jpg'); ?>" 
+                                        <img src="<?php echo htmlspecialchars(product_image_url($product['image'])); ?>" 
                                              alt="<?php echo htmlspecialchars($product['name']); ?>" class="product-image organic-blob">
                                     </span>
                                     <span class="quick-view-overlay">
@@ -305,7 +305,7 @@ if (empty($relevance_products)) {
                             $stock = (int)($product['stock_quantity'] ?? 0);
                             $review_count = (int)($product['review_count'] ?? 0);
                             $avg_rating = round((float)($product['avg_rating'] ?? 0), 1);
-                            $image = !empty($product['image']) ? $product['image'] : 'assets/images/placeholder.jpg';
+                            $image = product_image_url($product['image']);
                         ?>
                         <div class="col-lg-3 col-md-6">
                             <div class="product-card relevance-card">
