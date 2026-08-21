@@ -100,8 +100,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $error = "Failed to send the code. Please try again later.";
                 }
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 $error = "Failed to send the code. Please try again later.";
+                error_log('Resend verification code failed: ' . $e->getMessage());
             }
         }
     }

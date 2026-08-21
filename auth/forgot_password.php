@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         } else {
                             $error = 'Failed to send reset email. Please try again later.';
                         }
-                    } catch (Exception $e) {
+                    } catch (\Throwable $e) {
                         $error = 'Failed to send reset email. Please try again later.';
                         error_log('Password reset email failed: ' . $e->getMessage());
                     }

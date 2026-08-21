@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_message'])) {
                 $mail->AltBody = $body;
 
                 $email_sent = send_mail_with_fallback($mail);
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 error_log('Contact notification failed: ' . $e->getMessage());
             }
 

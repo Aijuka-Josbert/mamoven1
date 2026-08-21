@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    </html>";
                     $mail->AltBody = "Welcome to " . SITE_NAME . "! Your verification code is: $verification_code";
                     $emailSent = send_mail_with_fallback($mail);
-                } catch (Exception $e) {
+                } catch (\Throwable $e) {
                     error_log('Registration verification email failed: ' . $e->getMessage());
                     $emailSent = false;
                 }

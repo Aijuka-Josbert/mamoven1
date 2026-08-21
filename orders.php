@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                     ";
 
                     send_mail_with_fallback($mail);
-                } catch (Exception $e) {
+                } catch (\Throwable $e) {
                     error_log("Failed to send cancellation email to admin: " . $e->getMessage());
                 }
 

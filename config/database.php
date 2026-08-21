@@ -440,31 +440,40 @@ function send_login_2fa_email(string $email, string $code): bool
 
 // --------------------- SECURITY HELPERS ---------------------
 function is_password_compromised($password) {
-    $hash = strtoupper(sha1($password));
-    $prefix = substr($hash, 0, 5);
-    $suffix = substr($hash, 5);
-    $url = "https://api.pwnedpasswords.com/range/" . $prefix;
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 3,
-        CURLOPT_USERAGENT => 'MamaOven/1.0',
-    ]);
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    if ($httpCode !== 200 || $response === false) {
-        error_log('Pwned Passwords API unavailable, skipping breach check.');
+    if (!function_exists('curl_init')) {
+        error_log('is_password_compromised: curl extension unavailable, skipping breach check.');
         return false;
     }
-    foreach (explode("\r\n", $response) as $line) {
-        list($hashSuffix, $count) = explode(':', $line);
-        if (strcasecmp($hashSuffix, $suffix) === 0) {
-            return true;
+    try {
+        $hash = strtoupper(sha1($password));
+        $prefix = substr($hash, 0, 5);
+        $suffix = substr($hash, 5);
+        $url = "https://api.pwnedpasswords.com/range/" . $prefix;
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 3,
+            CURLOPT_USERAGENT => 'MamaOven/1.0',
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($httpCode !== 200 || $response === false) {
+            error_log('Pwned Passwords API unavailable, skipping breach check.');
+            return false;
         }
+        foreach (explode("\r\n", $response) as $line) {
+            list($hashSuffix, $count) = explode(':', $line);
+            if (strcasecmp($hashSuffix, $suffix) === 0) {
+                return true;
+            }
+        }
+        return false;
+    } catch (\Throwable $e) {
+        error_log('is_password_compromised failed unexpectedly, skipping breach check: ' . $e->getMessage());
+        return false;
     }
-    return false;
 }
 
 // --------------------- SESSION TRACKING ---------------------
