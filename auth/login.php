@@ -40,8 +40,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Please fill in both username/email and password.';
         } else {
             try {
-                $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role, is_verified, two_factor_enabled, two_factor_method, two_factor_secret FROM users WHERE username = :username OR email = :email");
-                $stmt->execute(['username' => $username, 'email' => $username]);
+                try {
+                    $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role, is_verified, two_factor_enabled, two_factor_method, two_factor_secret FROM users WHERE username = :username OR email = :email");
+                    $stmt->execute(['username' => $username, 'email' => $username]);
+                } catch (PDOException $e) {
+                    // The 2FA migration hasn't been run yet on this database.
+                    // Don't let every single login on the site fail because
+                    // of it — fall back to a query without those columns and
+                    // treat 2FA as unavailable rather than fatal.
+                    error_log('Login query missing 2FA columns (run database/migration_security_hardening.sql): ' . $e->getMessage());
+                    $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role, is_verified FROM users WHERE username = :username OR email = :email");
+                    $stmt->execute(['username' => $username, 'email' => $username]);
+                }
                 $user = $stmt->fetch();
 
                 if ($user && password_verify($password, $user['password'])) {

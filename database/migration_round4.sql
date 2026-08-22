@@ -2,9 +2,9 @@
 
 -- --- Email-based 2FA (alongside the existing TOTP option) ---
 ALTER TABLE `users`
-    ADD COLUMN `two_factor_method` ENUM('totp','email') DEFAULT NULL AFTER `two_factor_enabled`,
-    ADD COLUMN `email_otp_code` VARCHAR(10) DEFAULT NULL AFTER `two_factor_method`,
-    ADD COLUMN `email_otp_expires` DATETIME DEFAULT NULL AFTER `email_otp_code`;
+    ADD COLUMN IF NOT EXISTS `two_factor_method` ENUM('totp','email') DEFAULT NULL AFTER `two_factor_enabled`,
+    ADD COLUMN IF NOT EXISTS `email_otp_code` VARCHAR(10) DEFAULT NULL AFTER `two_factor_method`,
+    ADD COLUMN IF NOT EXISTS `email_otp_expires` DATETIME DEFAULT NULL AFTER `email_otp_code`;
 
 -- --- Session tracking (for the admin "active sessions" view + revocation) ---
 CREATE TABLE IF NOT EXISTS `user_sessions` (
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `user_sessions` (
 -- delivering to Karamoja). All seeded INACTIVE with fee=0 — nothing shows
 -- on the client checkout until you open admin/delivery_locations.php,
 -- assign a real fee, and activate it.
-ALTER TABLE `delivery_locations` ADD UNIQUE KEY `idx_delivery_name` (`name`);
+ALTER TABLE `delivery_locations` ADD UNIQUE KEY IF NOT EXISTS `idx_delivery_name` (`name`);
 
 INSERT IGNORE INTO `delivery_locations` (`name`, `fee`, `is_active`) VALUES
 ('Kampala Central', 0, 0),

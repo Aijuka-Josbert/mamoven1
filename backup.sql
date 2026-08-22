@@ -77,7 +77,7 @@ CREATE TABLE `audit_log` (
   KEY `idx_audit_user` (`user_id`),
   KEY `idx_audit_action` (`action`),
   KEY `idx_audit_created` (`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -112,7 +112,9 @@ INSERT INTO `audit_log` VALUES
 (22,1,'admin','admin','admin_login','user','1','Admin logged in.','127.0.0.1','2026-08-20 22:14:04'),
 (23,1,'admin','admin','order_status_updated','order','22','Status changed to: confirmed','127.0.0.1','2026-08-20 22:14:13'),
 (24,1,'admin','admin','order_status_updated','order','22','Status changed to: ready','127.0.0.1','2026-08-20 22:15:18'),
-(25,1,'admin','admin','order_status_updated','order','22','Status changed to: delivered','127.0.0.1','2026-08-20 22:15:53');
+(25,1,'admin','admin','order_status_updated','order','22','Status changed to: delivered','127.0.0.1','2026-08-20 22:15:53'),
+(26,1,'admin','admin','admin_logout','user','1','','127.0.0.1','2026-08-20 22:42:25'),
+(27,1,'admin','admin','admin_login','user','1','Admin logged in.','127.0.0.1','2026-08-21 07:56:13');
 /*!40000 ALTER TABLE `audit_log` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -242,7 +244,7 @@ CREATE TABLE `delivery_locations` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_delivery_name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=69 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -962,7 +964,7 @@ CREATE TABLE `user_sessions` (
   UNIQUE KEY `idx_session_hash` (`session_id_hash`),
   KEY `idx_sessions_user` (`user_id`),
   KEY `idx_sessions_activity` (`last_activity_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -978,7 +980,8 @@ INSERT INTO `user_sessions` VALUES
 (3,10,'53f8eaa2ce5e7bc808842853ea2baa753bab42abb88e5572ccc2bc3412c033f0','customer','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 22:07:51','2026-08-20 22:07:51',NULL),
 (4,1,'dba7100d8aa086c10a2a44671ff10300c63c9570037ae4afba532e2a82f14f24','admin','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 22:08:21','2026-08-20 22:08:58',NULL),
 (5,11,'09dc987efa1ec9c71e9d6fa3848b59004cf34c899eb6ea7cd0dc7ab91c852ef3','customer','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 22:11:56','2026-08-20 22:11:56',NULL),
-(6,1,'4246ebbe45d98da200a914849dda5be33e2cb0197a8a148723f0baac89800f29','admin','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 22:14:03','2026-08-20 22:15:58',NULL);
+(6,1,'4246ebbe45d98da200a914849dda5be33e2cb0197a8a148723f0baac89800f29','admin','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-20 22:14:03','2026-08-20 22:15:58',NULL),
+(7,1,'e4175249bfc95799a33e015232da33396d5d9d6dea99a1bebaec379f5f7fb25a','admin','127.0.0.1','Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0','2026-08-21 07:56:13','2026-08-21 07:56:49',NULL);
 /*!40000 ALTER TABLE `user_sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -1043,4 +1046,4 @@ SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-08-21  1:37:18
+-- Dump completed on 2026-08-22 17:16:17

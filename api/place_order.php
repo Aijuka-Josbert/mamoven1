@@ -158,11 +158,26 @@ try {
     }
 
     // Create order
-    $stmt = $pdo->prepare("
-        INSERT INTO orders (user_id, order_number, total_amount, delivery_address, delivery_phone, special_instructions, promo_code_id, discount_amount, payment_method) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->execute([$user_id, $order_number, $total_amount, $full_delivery_address, $delivery_phone, $special_instructions, $promo_code_id, $discount_amount, $payment_method]);
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO orders (user_id, order_number, total_amount, delivery_address, delivery_phone, special_instructions, promo_code_id, discount_amount, payment_method) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([$user_id, $order_number, $total_amount, $full_delivery_address, $delivery_phone, $special_instructions, $promo_code_id, $discount_amount, $payment_method]);
+    } catch (PDOException $e) {
+        // The payment tracking migration hasn't been run yet on this
+        // database (run database/migration_pesajet_payments.sql). Don't let
+        // checkout hard-fail because of it — fall back to inserting without
+        // the payment_method column. Orders will simply default to
+        // cash-on-delivery behavior until the migration is applied.
+        error_log('Order insert missing payment_method column (run database/migration_pesajet_payments.sql): ' . $e->getMessage());
+        $stmt = $pdo->prepare("
+            INSERT INTO orders (user_id, order_number, total_amount, delivery_address, delivery_phone, special_instructions, promo_code_id, discount_amount) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([$user_id, $order_number, $total_amount, $full_delivery_address, $delivery_phone, $special_instructions, $promo_code_id, $discount_amount]);
+        $payment_method = 'cash_on_delivery'; // force COD path below since the column can't store mobile_money anyway
+    }
     $order_id = $pdo->lastInsertId();
 
     // Log promo usage if code was applied

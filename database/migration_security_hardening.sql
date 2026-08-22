@@ -1,8 +1,8 @@
 -- Run once: mysql -u root mamaove < database/migration_security_hardening.sql
 
 ALTER TABLE `users`
-    ADD COLUMN `two_factor_secret` VARCHAR(32) DEFAULT NULL AFTER `is_verified`,
-    ADD COLUMN `two_factor_enabled` TINYINT(1) NOT NULL DEFAULT 0 AFTER `two_factor_secret`;
+    ADD COLUMN IF NOT EXISTS `two_factor_secret` VARCHAR(32) DEFAULT NULL AFTER `is_verified`,
+    ADD COLUMN IF NOT EXISTS `two_factor_enabled` TINYINT(1) NOT NULL DEFAULT 0 AFTER `two_factor_secret`;
 
 CREATE TABLE IF NOT EXISTS `audit_log` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
